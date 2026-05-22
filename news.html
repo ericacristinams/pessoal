@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light" data-view="newsletter" data-hero="gradient">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Executive Report</title>
+
+  <style>
+    :root{
+      --bg:#f7f4ef;
+      --card:#ffffff;
+      --card2:#fffaf5;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#eadfd2;
+      --primary:#EC7000;
+      --blue:#FF8C00;
+      --green:#12b76a;
+      --yellow:#f79009;
+      --red:#f04438;
+      --shadow:0 18px 48px rgba(120,72,24,.10);
+      --radius:26px;
+    }
+
+    html[data-theme="dark"]{
+      --bg:#050505;
+      --card:#0f1115;
+      --card2:#171a21;
+      --text:#f9fafb;
+      --muted:#a1a1aa;
+      --line:#27272a;
+      --primary:#FF8C00;
+      --blue:#FFB066;
+      --shadow:0 20px 60px rgba(0,0,0,.65);
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Arial,Helvetica,sans-serif;
+      color:var(--text);
+      line-height:1.5;
+    }
+
+    .page{
+      max-width:1220px;
+      margin:auto;
+      padding:28px;
+    }
+
+    .controls{
+      position:sticky;
+      top:14px;
+      z-index:10;
+      margin-bottom:18px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .group{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    button{
+      border:1px solid var(--line);
+      background:var(--card2);
+      color:var(--text);
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    button.active{
+      background:linear-gradient(135deg,#EC7000,#FF8C00);
+      color:#fff;
+      border-color:transparent;
+    }
+
+    .hero{
+      color:#fff;
+      border-radius:34px;
+      padding:40px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      position:relative;
+      background-size:cover;
+      background-position:center;
+    }
+
+    html[data-hero="gradient"] .hero{
+      background:linear-gradient(135deg,#78350f,#EC7000 58%,#FF8C00);
+    }
+
+    html[data-hero="image"] .hero{
+      background:
+        linear-gradient(135deg,rgba(0,0,0,.72),rgba(236,112,0,.45)),
+        var(--hero-image);
+      background-size:cover;
+      background-position:center;
+    }
+
+    .hero:after{
+      content:"";
+      position:absolute;
+      width:360px;
+      height:360px;
+      border-radius:50%;
+      right:-130px;
+      top:-130px;
+      background:rgba(255,255,255,.12);
+    }
+
+    .hero-top{
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      position:relative;
+      z-index:1;
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      font-weight:900;
+    }
+
+    .mark{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      background:rgba(255,255,255,.16);
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(255,255,255,.28);
+    }
+
+    .badge{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.24);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    h1{
+      font-size:clamp(32px,5vw,52px);
+      line-height:1.04;
+      margin:34px 0 12px;
+      max-width:850px;
+      letter-spacing:-.04em;
+      position:relative;
+      z-index:1;
+    }
+
+    .hero p{
+      max-width:830px;
+      color:rgba(255,255,255,.86);
+      position:relative;
+      z-index:1;
+    }
+
+    .meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:22px;
+      position:relative;
+      z-index:1;
+    }
+
+    .meta span{
+      padding:9px 12px;
+      border-radius:12px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.20);
+      font-size:13px;
+    }
+
+    section{
+      margin-top:22px;
+      padding:28px;
+      border-radius:var(--radius);
+      background:var(--card);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+    }
+
+    .head{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+      margin-bottom:18px;
+    }
+
+    h2{
+      margin:0;
+      color:var(--primary);
+      font-size:23px;
+    }
+
+    h3{margin:0 0 10px}
+
+    .muted{color:var(--muted)}
+
+    .tag{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .green{background:rgba(18,183,106,.13);color:#12b76a}
+    .yellow{background:rgba(247,144,9,.14);color:#f79009}
+    .red{background:rgba(240,68,56,.13);color:#f04438}
+    .blue{background:rgba(236,112,0,.12);color:var(--blue)}
+
+    .roadmap,
+    .grid3,
+    .teams{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+    }
+
+    .roadmap{grid-template-columns:repeat(5,1fr)}
+
+    .card,
+    .step{
+      padding:18px;
+      border-radius:20px;
+      background:var(--card2);
+      border:1px solid var(--line);
+    }
+
+    .step{
+      min-height:170px;
+    }
+
+    .step strong{
+      display:block;
+      margin:8px 0 8px;
+    }
+
+    .step p{
+      font-size:13px;
+      margin:0 0 14px;
+    }
+
+    .progress-wrap{
+      position:relative;
+      margin-top:34px;
+      padding-top:30px;
+    }
+
+    .progress-meta,
+    .milestones{
+      display:flex;
+      justify-content:space-between;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .bar{
+      height:18px;
+      border-radius:999px;
+      background:rgba(152,162,179,.22);
+      overflow:hidden;
+      margin:9px 0 12px;
+    }
+
+    .fill{
+      height:100%;
+      width:68%;
+      border-radius:999px;
+      background:linear-gradient(90deg,#EC7000,#12b76a);
+    }
+
+    .golive{
+      position:absolute;
+      top:0;
+      left:82%;
+      height:96px;
+      border-left:3px solid var(--red);
+    }
+
+    .golive span{
+      position:absolute;
+      top:-28px;
+      left:50%;
+      transform:translateX(-50%);
+      background:var(--red);
+      color:#fff;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .gauge-area{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:24px;
+      align-items:center;
+      margin-top:8px;
+    }
+
+    .gauge{
+      text-align:center;
+      padding:8px;
+    }
+
+    .gauge svg{
+      width:150px;
+      max-width:100%;
+      height:auto;
+    }
+
+    .gauge-bg{
+      fill:none;
+      stroke:rgba(152,162,179,.22);
+      stroke-width:12;
+      stroke-linecap:round;
+    }
+
+    .gauge-fill{
+      fill:none;
+      stroke:var(--primary);
+      stroke-width:12;
+      stroke-linecap:round;
+      stroke-dasharray:220;
+      stroke-dashoffset:70;
+    }
+
+    .gauge.green-fill{stroke:var(--green)}
+    .gauge.yellow-fill{stroke:var(--yellow)}
+
+    .gauge-number{
+      font-size:28px;
+      font-weight:950;
+      fill:var(--text);
+    }
+
+    .gauge-label{
+      margin-top:8px;
+      font-weight:800;
+      color:var(--text);
+    }
+
+    .gauge-sub{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .item{
+      padding:13px 0;
+      border-top:1px solid var(--line);
+    }
+
+    .item:first-child{border-top:0}
+
+    .item-title{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .mini-bar{
+      height:9px;
+      border-radius:999px;
+      background:rgba(152,162,179,.22);
+      overflow:hidden;
+    }
+
+    .mini-fill{
+      height:100%;
+      background:var(--blue);
+    }
+
+    .check-list{
+      list-style:none;
+      margin:0;
+      padding:0;
+    }
+
+    .check-list li{
+      display:flex;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px solid var(--line);
+    }
+
+    .check-list li:first-child{border-top:0}
+
+    .check{
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      background:var(--green);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      flex:0 0 auto;
+    }
+
+    .risk-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:14px;
+    }
+
+    .risk-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .demo-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:18px;
+    }
+
+    .video{
+      min-height:260px;
+      border-radius:26px;
+      background:linear-gradient(135deg,#111,#EC7000);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:30px;
+    }
+
+    .play{
+      width:74px;
+      height:74px;
+      margin:auto auto 14px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:rgba(255,255,255,.16);
+      font-size:30px;
+    }
+
+    .links a{
+      display:block;
+      margin-bottom:10px;
+      padding:14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--card);
+      color:var(--blue);
+      text-decoration:none;
+      font-weight:900;
+    }
+
+    .banner{
+      background:linear-gradient(135deg,#EC7000,#FF8C00);
+      color:#fff;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+    }
+
+    .banner h2{
+      color:#fff;
+      font-size:27px;
+    }
+
+    .date-box{
+      min-width:220px;
+      text-align:center;
+      padding:18px;
+      border-radius:20px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.22);
+      backdrop-filter:blur(12px);
+    }
+
+    .date-box strong{
+      display:block;
+      font-size:28px;
+    }
+
+    .role{
+      display:grid;
+      grid-template-columns:70px 1fr;
+      gap:10px;
+      padding:8px 0;
+      border-top:1px solid var(--line);
+    }
+
+    .role:first-of-type{border-top:0}
+
+    .role span{
+      color:var(--muted);
+      font-weight:900;
+    }
+
+    html[data-view="showcase"] [data-section="cockpit-detail"],
+    html[data-view="showcase"] [data-section="risks"]{
+      display:none;
+    }
+
+    html[data-view="cockpit"] [data-section="summary"],
+    html[data-view="cockpit"] [data-section="demo"]{
+      display:none;
+    }
+
+    html[data-view="newsletter"] [data-section="cockpit-only"]{
+      display:none;
+    }
+
+    @media(max-width:920px){
+      .controls,
+      .hero-top,
+      .head,
+      .banner{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+
+      .roadmap,
+      .grid3,
+      .teams,
+      .risk-grid,
+      .demo-grid,
+      .gauge-area{
+        grid-template-columns:1fr;
+      }
+
+      .golive{display:none}
+
+      .page{padding:18px}
+    }
+
+    @media print{
+      .controls{display:none}
+      body{background:#fff}
+      section,.hero{
+        box-shadow:none;
+        break-inside:avoid;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+
+    <div class="controls">
+      <div class="group">
+        <span class="label">Tipo de template</span>
+        <button class="view-btn active" data-view-option="newsletter">Newsletter</button>
+        <button class="view-btn" data-view-option="showcase">Showcase</button>
+        <button class="view-btn" data-view-option="cockpit">Cockpit</button>
+      </div>
+
+      <div class="group">
+        <span class="label">Tema</span>
+        <button class="theme-btn active" data-theme-option="light">Light</button>
+        <button class="theme-btn" data-theme-option="dark">Dark</button>
+      </div>
+
+      <div class="group">
+        <span class="label">Header</span>
+        <button class="hero-btn active" data-hero-option="gradient">Gradiente</button>
+        <button class="hero-btn" data-hero-option="image">Imagem</button>
+      </div>
+    </div>
+
+    <header class="hero" style="--hero-image:url('sua-imagem-aqui.jpg');">
+      <div class="hero-top">
+        <div class="brand">
+          <div class="mark">EX</div>
+          <div>
+            Executive Report<br>
+            <small style="color:rgba(255,255,255,.72)">Newsletter • Showcase • Cockpit</small>
+          </div>
+        </div>
+
+        <span class="badge" id="viewBadge">Newsletter Executivo</span>
+      </div>
+
+      <h1>Novo Portal Comercial/Crédito com Integração de Agentes de IA</h1>
+
+      <p>
+        Visão executiva para acompanhamento da iniciativa, consolidando contexto,
+        progresso, indicadores, marcos, riscos, pedidos de ajuda, demo e times envolvidos.
+      </p>
+
+      <div class="meta">
+        <span><strong>Gerado em:</strong> <span id="generatedAt">--</span></span>
+        <span><strong>Tempo de leitura:</strong> 4 min</span>
+        <span><strong>Status geral:</strong> Evolução controlada</span>
+      </div>
+    </header>
+
+    <section data-section="summary">
+      <div class="head">
+        <div>
+          <h2>Resumo da iniciativa</h2>
+          <p class="muted">
+            Modernizar a jornada comercial/crédito com plataforma responsiva,
+            integrada, escalável e habilitada por IA.
+          </p>
+        </div>
+        <span class="tag blue">Visão executiva</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="head">
+        <div>
+          <h2>Roadmap executivo</h2>
+          <p class="muted">Visão consolidada dos principais marcos até o Go Live.</p>
+        </div>
+        <span class="tag yellow">Programa estratégico</span>
+      </div>
+
+      <div class="roadmap">
+        <div class="step">
+          <small class="muted">Janeiro</small>
+          <strong>Discovery</strong>
+          <p class="muted">Definição da visão, escopo e alinhamento executivo.</p>
+          <span class="tag green">Concluído</span>
+        </div>
+
+        <div class="step">
+          <small class="muted">Fevereiro</small>
+          <strong>Arquitetura</strong>
+          <p class="muted">Setup técnico, integrações e direcionamento da solução.</p>
+          <span class="tag green">Concluído</span>
+        </div>
+
+        <div class="step">
+          <small class="muted">Março • Junho</small>
+          <strong>Desenvolvimento</strong>
+          <p class="muted">Construção das jornadas, integrações e observabilidade.</p>
+          <span class="tag yellow">Em andamento</span>
+        </div>
+
+        <div class="step">
+          <small class="muted">Julho</small>
+          <strong>Piloto</strong>
+          <p class="muted">Validação controlada com usuários estratégicos.</p>
+          <span class="tag blue">Próximo</span>
+        </div>
+
+        <div class="step">
+          <small class="muted">Agosto</small>
+          <strong>🚀 Go Live</strong>
+          <p class="muted">Entrada controlada em produção.</p>
+          <span class="tag red">Planejado</span>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="golive">
+          <span>🚀 GO LIVE</span>
+        </div>
+
+        <div class="progress-meta">
+          <span>Início do programa</span>
+          <strong>68% concluído</strong>
+          <span>Produção</span>
+        </div>
+
+        <div class="bar">
+          <div class="fill"></div>
+        </div>
+
+        <div class="milestones">
+          <span>Discovery</span>
+          <span>Arquitetura</span>
+          <span>Build</span>
+          <span>Piloto</span>
+          <span>Go Live</span>
+        </div>
+      </div>
+    </section>
+
+    <section data-section="cockpit-only">
+      <div class="head">
+        <div>
+          <h2>Leitura executiva do cockpit</h2>
+          <p class="muted">
+            Projeto com tendência positiva, mas com atenção em dependências externas,
+            aceite e agenda dos especialistas.
+          </p>
+        </div>
+        <span class="tag yellow">Atenção gerencial</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="head">
+        <div>
+          <h2>Indicadores executivos</h2>
+          <p class="muted">Resumo visual do status atual do programa.</p>
+        </div>
+        <span class="tag green">Farol geral verde</span>
+      </div>
+
+      <div class="gauge-area">
+
+        <div class="gauge">
+          <svg viewBox="0 0 160 100">
+            <path class="gauge-bg" d="M30 80 A50 50 0 0 1 130 80"/>
+            <path class="gauge-fill" d="M30 80 A50 50 0 0 1 130 80"/>
+            <text x="80" y="76" text-anchor="middle" class="gauge-number">68%</text>
+          </svg>
+          <div class="gauge-label">Conclusão geral</div>
+          <div class="gauge-sub">Piloto em evolução</div>
+        </div>
+
+        <div class="gauge">
+          <svg viewBox="0 0 160 100">
+            <path class="gauge-bg" d="M30 80 A50 50 0 0 1 130 80"/>
+            <path class="gauge-fill yellow-fill" d="M30 80 A50 50 0 0 1 130 80" style="stroke-dashoffset:92"/>
+            <text x="80" y="76" text-anchor="middle" class="gauge-number">12</text>
+          </svg>
+          <div class="gauge-label">Funcionalidades</div>
+          <div class="gauge-sub">8 concluídas</div>
+        </div>
+
+        <div class="gauge">
+          <svg viewBox="0 0 160 100">
+            <path class="gauge-bg" d="M30 80 A50 50 0 0 1 130 80"/>
+            <path class="gauge-fill green-fill" d="M30 80 A50 50 0 0 1 130 80" style="stroke-dashoffset:48"/>
+            <text x="80" y="76" text-anchor="middle" class="gauge-number">7/9</text>
+          </svg>
+          <div class="gauge-label">Integrações</div>
+          <div class="gauge-sub">Validadas</div>
+        </div>
+
+        <div class="gauge">
+          <svg viewBox="0 0 160 100">
+            <path class="gauge-bg" d="M30 80 A50 50 0 0 1 130 80"/>
+            <path class="gauge-fill green-fill" d="M30 80 A50 50 0 0 1 130 80" style="stroke-dashoffset:38"/>
+            <text x="80" y="76" text-anchor="middle" class="gauge-number">OK</text>
+          </svg>
+          <div class="gauge-label">Farol</div>
+          <div class="gauge-sub">Verde</div>
+        </div>
+
+      </div>
+    </section>
+
+    <section data-section="cockpit-detail">
+      <div class="head">
+        <div>
+          <h2>Próximos passos e evolução das entregas</h2>
+          <p class="muted">Visão por status para acompanhamento da execução.</p>
+        </div>
+      </div>
+
+      <div class="grid3">
+
+        <div class="card">
+          <h3>Concluídos</h3>
+          <ul class="check-list">
+            <li><span class="check">✓</span><span>Arquitetura base definida — <strong>100%</strong></span></li>
+            <li><span class="check">✓</span><span>Setup de ambientes — <strong>100%</strong></span></li>
+            <li><span class="check">✓</span><span>Protótipo executivo validado — <strong>100%</strong></span></li>
+            <li><span class="check">✓</span><span>Backlog inicial priorizado — <strong>100%</strong></span></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Em andamento</h3>
+
+          <div class="item">
+            <div class="item-title"><span>Jornada principal do piloto</span><span>72%</span></div>
+            <div class="mini-bar"><div class="mini-fill" style="width:72%"></div></div>
+          </div>
+
+          <div class="item">
+            <div class="item-title"><span>Integração com agentes de IA</span><span>58%</span></div>
+            <div class="mini-bar"><div class="mini-fill" style="width:58%"></div></div>
+          </div>
+
+          <div class="item">
+            <div class="item-title"><span>Observabilidade e indicadores</span><span>64%</span></div>
+            <div class="mini-bar"><div class="mini-fill" style="width:64%"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Próximas entregas</h3>
+
+          <div class="item">
+            <div class="item-title"><span>Homologação com usuários-chave</span><span>20%</span></div>
+            <div class="mini-bar"><div class="mini-fill" style="width:20%"></div></div>
+          </div>
+
+          <div class="item">
+            <div class="item-title"><span>Plano de rollout controlado</span><span>35%</span></div>
+            <div class="mini-bar"><div class="mini-fill" style="width:35%"></div></div>
+          </div>
+
+          <div class="item">
+            <div class="item-title"><span>Comunicação para áreas impactadas</span><span>15%</span></div>
+            <div class="mini-bar"><div class="mini-fill" style="width:15%"></div></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section data-section="risks">
+      <div class="head">
+        <div>
+          <h2>Riscos e pedidos de ajuda</h2>
+          <p class="muted">
+            Pontos que precisam de acompanhamento, decisão ou remoção de impedimento.
+          </p>
+        </div>
+        <span class="tag yellow">Gestão ativa</span>
+      </div>
+
+      <div class="risk-grid">
+        <div class="card">
+          <div class="risk-head">
+            <strong>Dependência de integração externa</strong>
+            <span class="tag yellow">Risco</span>
+          </div>
+          <p class="muted">
+            Status: em mitigação. Acompanhar liberação da API para evitar impacto no piloto.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="risk-head">
+            <strong>Priorização de agenda com SMEs</strong>
+            <span class="tag blue">Pedido de ajuda</span>
+          </div>
+          <p class="muted">
+            Status: pendente. Apoio para garantir disponibilidade dos especialistas.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="risk-head">
+            <strong>Critérios de aceite do piloto</strong>
+            <span class="tag yellow">Risco</span>
+          </div>
+          <p class="muted">
+            Status: em definição. Reforçar escopo mínimo para evitar expansão não planejada.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="risk-head">
+            <strong>Decisão sobre rollout faseado</strong>
+            <span class="tag blue">Pedido de ajuda</span>
+          </div>
+          <p class="muted">
+            Status: decisão executiva necessária. Definir grupo piloto ou abertura ampla.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section data-section="demo">
+      <div class="head">
+        <div>
+          <h2>Demo e materiais de apoio</h2>
+          <p class="muted">
+            Espaço para vídeo, GIF, repositório, documentação ou evidências.
+          </p>
+        </div>
+      </div>
+
+      <div class="demo-grid">
+        <div class="video">
+          <div>
+            <div class="play">▶</div>
+            <h3>Demo executiva do piloto</h3>
+            <p style="color:rgba(255,255,255,.80)">
+              Substitua por vídeo, GIF animado ou thumbnail clicável.
+            </p>
+          </div>
+        </div>
+
+        <div class="links">
+          <a href="#">Acessar vídeo da demo</a>
+          <a href="#">Acessar repositório Git</a>
+          <a href="#">Acessar documentação executiva</a>
+          <a href="#">Acessar evidências de homologação</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="banner">
+      <div>
+        <h2>🚀 Go Live planejado</h2>
+        <p style="color:rgba(255,255,255,.82)">
+          Entrada controlada em produção após homologação executiva,
+          mitigação dos riscos críticos e aceite das áreas estratégicas.
+        </p>
+      </div>
+
+      <div class="date-box">
+        <span>GO LIVE</span>
+        <strong>30/08/2026</strong>
+      </div>
+    </section>
+
+    <section>
+      <div class="head">
+        <div>
+          <h2>Times envolvidos</h2>
+          <p class="muted">Tríade por frente: PM, Tech e SME.</p>
+        </div>
+      </div>
+
+      <div class="teams">
+        <div class="card">
+          <h3>Time Plataforma</h3>
+          <div class="role"><span>PM</span><strong>Nome do PM</strong></div>
+          <div class="role"><span>Tech</span><strong>Nome do Tech Lead</strong></div>
+          <div class="role"><span>SME</span><strong>Nome do Especialista</strong></div>
+        </div>
+
+        <div class="card">
+          <h3>Time Jornada</h3>
+          <div class="role"><span>PM</span><strong>Nome do PM</strong></div>
+          <div class="role"><span>Tech</span><strong>Nome do Tech Lead</strong></div>
+          <div class="role"><span>SME</span><strong>Nome do Especialista</strong></div>
+        </div>
+
+        <div class="card">
+          <h3>Time Integrações/IA</h3>
+          <div class="role"><span>PM</span><strong>Nome do PM</strong></div>
+          <div class="role"><span>Tech</span><strong>Nome do Tech Lead</strong></div>
+          <div class="role"><span>SME</span><strong>Nome do Especialista</strong></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const root = document.documentElement;
+    const generatedAt = document.getElementById("generatedAt");
+    const viewBadge = document.getElementById("viewBadge");
+
+    generatedAt.textContent = new Date().toLocaleString("pt-BR", {
+      day:"2-digit",
+      month:"2-digit",
+      year:"numeric",
+      hour:"2-digit",
+      minute:"2-digit"
+    });
+
+    const labels = {
+      newsletter: "Newsletter Executivo",
+      showcase: "Showcase Executivo",
+      cockpit: "Cockpit Executivo"
+    };
+
+    document.querySelectorAll(".view-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        root.dataset.view = btn.dataset.viewOption;
+        viewBadge.textContent = labels[btn.dataset.viewOption];
+
+        document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    document.querySelectorAll(".theme-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        root.dataset.theme = btn.dataset.themeOption;
+
+        document.querySelectorAll(".theme-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+
+    document.querySelectorAll(".hero-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        root.dataset.hero = btn.dataset.heroOption;
+
+        document.querySelectorAll(".hero-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>
