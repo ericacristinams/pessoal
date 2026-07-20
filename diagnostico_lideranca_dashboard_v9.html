@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Liderança — v3</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#080d17; --panel:#111827; --panel2:#172033; --line:#29344b; --text:#f5f7fb;
+  --muted:#aab3c5; --yellow:#e5c84b; --blue:#32a8e6; --green:#38d996; --pink:#ef6b9a;
+  --purple:#b7a4f6; --red:#ef6464; --amber:#e4b64a;
+}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top right,#172740 0,#080d17 38%);
+color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+.container{max-width:1450px;margin:auto;padding:28px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px}
+h1{margin:0;font-size:30px;letter-spacing:.4px}.subtitle{color:var(--muted);margin-top:8px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+button,.file-label{border:1px solid #35425d;background:#182338;color:white;padding:11px 15px;border-radius:10px;
+font-weight:700;cursor:pointer}.file-label:hover,button:hover{background:#22304a}
+input[type=file]{display:none}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kpi,.card{background:linear-gradient(145deg,rgba(23,32,51,.98),rgba(13,20,34,.98));border:1px solid var(--line);
+border-radius:16px;box-shadow:0 14px 35px rgba(0,0,0,.18)}
+.kpi{padding:18px}.kpi span{color:var(--muted);font-size:13px}.kpi strong{display:block;font-size:30px;margin-top:7px}
+.grid{display:grid;grid-template-columns:1fr 1.35fr;gap:18px}.card{padding:20px}.card h2{margin:0 0 16px;font-size:18px}
+.chart-wrap{height:420px}.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.dim-list{display:grid;gap:10px}.dim-card{border:1px solid var(--line);border-radius:12px;background:#0d1524;overflow:hidden}
+.dim-head{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:15px;cursor:pointer}
+.dim-name{font-weight:800}.score-badge{padding:7px 10px;border-radius:8px;font-size:12px;font-weight:800}
+.status-low{background:#51252a;color:#ff9c9c}.status-mid{background:#4b3c18;color:#ffd76d}.status-high{background:#174733;color:#83efb9}
+.progress{height:6px;background:#303a4b;border-radius:99px;overflow:hidden;margin-top:9px}.bar{height:100%;border-radius:99px}
+.dim-body{display:none;padding:0 15px 16px;border-top:1px solid var(--line)}.dim-card.open .dim-body{display:block}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.detail{background:#121c2d;border-radius:10px;padding:13px}
+.detail h3{font-size:12px;text-transform:uppercase;letter-spacing:.7px;margin:0 0 7px;color:var(--muted)}
+.detail p{margin:0;line-height:1.5;font-size:14px}.full{grid-column:1/-1}
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:14px}.quad{padding:17px;border-radius:13px;border:1px solid var(--line);min-height:220px}
+.quad h3{margin:0 0 12px}.quad ul{padding-left:18px;margin:0}.quad li{margin-bottom:11px;line-height:1.35}
+.q-força{background:rgba(56,217,150,.08)}.q-fraqueza{background:rgba(239,100,100,.08)}
+.q-oportunidade{background:rgba(50,168,230,.08)}.q-ameaça{background:rgba(228,182,74,.08)}
+.section{margin-top:18px}.footer{margin:20px 0;color:var(--muted);font-size:12px;text-align:right}
+.notice{display:none;margin-bottom:14px;padding:12px;border:1px solid #654f20;background:#33290f;color:#ffe39a;border-radius:10px}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.container{padding:14px}.kpis{grid-template-columns:1fr}.swot,.detail-grid{grid-template-columns:1fr}
+.full{grid-column:auto}header{display:block}.actions{margin-top:15px}.chart-wrap{height:330px}}
+
+.people-embedded{margin-top:18px;padding-top:18px;border-top:1px solid #2c3952}
+.embedded-title{font-size:16px;margin:0 0 14px;color:#eef2f8}
+.people-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:15px}
+.people-kpi{background:#0d1524;border:1px solid var(--line);border-radius:12px;padding:15px}
+.people-kpi span{color:var(--muted);font-size:12px}.people-kpi strong{display:block;margin-top:7px;font-size:22px}
+.team-card{border:1px solid var(--line);border-radius:13px;background:#0d1524;margin-bottom:11px;overflow:hidden}
+.team-head{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:16px;cursor:pointer}
+.team-body{display:none;padding:0 16px 16px;border-top:1px solid var(--line)}
+.team-card.open .team-body{display:block}
+.team-meta{color:var(--muted);font-size:13px;margin-top:5px}
+.team-overview{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.person-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.person-card{border:1px solid #2b3852;background:#121c2d;border-radius:12px;padding:14px}
+.person-top{display:flex;justify-content:space-between;gap:10px}.person-name{font-weight:800}.person-role{color:var(--muted);font-size:12px;margin-top:3px}
+.motivation-box{margin:12px 0;padding:12px;border:1px solid #d8e2ec;border-radius:10px;background:#f7fafc}
+.motivation-box h4{margin-top:0;color:#16324F}
+.motivation-box p{margin:5px 0}
+.person-card h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:13px 0 5px}
+.person-card p{margin:0;font-size:13px;line-height:1.45}
+.plans-risks{display:grid;gap:12px}.pr-dimension{border:1px solid var(--line);border-radius:12px;background:#0d1524;padding:15px}
+.pr-dimension h3{margin:0 0 12px}.pr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pr-item{padding:13px;border-radius:10px;background:#121c2d}.pr-item.action{border-left:4px solid var(--green)}.pr-item.risk{border-left:4px solid var(--red)}
+.pr-item .tag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.pr-item h4{margin:7px 0;font-size:14px}.pr-item p{margin:5px 0;color:#d5dbea;font-size:13px;line-height:1.4}
+@media(max-width:800px){.people-summary,.team-overview,.person-grid,.pr-grid{grid-template-columns:1fr}}
+
+
+.pr-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:12px}
+.pr-stat{background:#121c2d;border:1px solid #2b3852;border-radius:10px;padding:10px;text-align:center}
+.pr-stat span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.pr-stat strong{display:block;font-size:18px;margin-top:4px}
+.execution-track{height:7px;background:#303a4b;border-radius:99px;overflow:hidden;margin:4px 0 14px}
+.execution-fill{height:100%;background:var(--green);border-radius:99px}
+.pr-item.completed{opacity:.7}
+.pr-item.completed h4,.pr-item.completed .action-description{text-decoration:line-through;text-decoration-thickness:2px}
+.pr-item.completed{border-left-color:#667085}
+.action-check{appearance:none;-webkit-appearance:none;display:inline-grid;place-content:center;width:20px;height:20px;border-radius:6px;border:1px solid #516078;background:#0e1727;margin:0 8px 0 0;vertical-align:middle;cursor:pointer;flex:0 0 auto}
+.action-check::before{content:'✓';font-size:13px;font-weight:900;color:#07130d;transform:scale(0);transition:transform .12s ease}
+.action-check:checked{background:var(--green);border-color:var(--green)}
+.action-check:checked::before{transform:scale(1)}
+.action-title{display:flex;align-items:flex-start}
+.plan-note{margin:9px 0 0;color:var(--muted);font-size:12px}
+.status-chip{display:inline-block;margin-top:7px;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:800}
+.status-concluido{background:#174733;color:#83efb9}
+.status-andamento{background:#4b3c18;color:#ffd76d}
+.status-pendente{background:#25334c;color:#a9c7ff}
+.status-aberto{background:#51252a;color:#ff9c9c}
+.plans-embedded{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.plans-embedded .embedded-title{margin-bottom:12px}
+@media(max-width:800px){.pr-summary{grid-template-columns:1fr 1fr}}
+
+@media print{.actions,.notice{display:none}.container{max-width:none}.card,.kpi{break-inside:avoid;box-shadow:none}}
+.suggestion-panel{margin:20px 0;padding:20px;border:1px solid #2d3b52;border-radius:18px;background:linear-gradient(145deg,#172033,#111827)}
+.suggestion-title{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.suggestion-title h2{margin:0 0 4px;font-size:19px;color:#f5f7fb}
+.suggestion-title p{margin:0;color:#aeb9ca;font-size:13px}
+.suggestion-badge{padding:6px 10px;border-radius:999px;background:#26364f;color:#cfe1ff;font-size:12px;font-weight:700}
+.suggestion-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.suggestion-card{padding:14px;border-radius:14px;background:#1d293d;border:1px solid #34445e}
+.suggestion-card .level{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#8fb7e8;font-weight:800}
+.suggestion-card strong{display:block;margin:6px 0;color:#fff;font-size:15px}
+.suggestion-card p{margin:0;color:#c9d2df;font-size:13px;line-height:1.45}
+.auto-suggestion{margin-top:10px;padding:11px 12px;border-left:3px solid #7aa7e8;background:#162236;border-radius:8px}
+.auto-suggestion h4{margin:0 0 5px;color:#a9ccff}
+.auto-suggestion p{margin:0}
+@media(max-width:900px){.suggestion-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div><h1>Diagnóstico de Liderança</h1><div class="subtitle">Maturidade por dimensão, aderência, evidências e plano de evolução</div></div>
+  <div class="actions">
+    <label class="file-label">Carregar Excel<input id="fileInput" type="file" accept=".xlsx,.xls"></label>
+    <button onclick="window.print()">Exportar / Imprimir PDF</button>
+  </div>
+</header>
+<div id="notice" class="notice"></div>
+<section class="kpis">
+  <div class="kpi"><span>Aderência geral ponderada</span><strong id="avgScore">—</strong></div>
+  <div class="kpi"><span>Dimensões fortes</span><strong id="strongCount">—</strong></div>
+  <div class="kpi"><span>Pontos de atenção</span><strong id="attentionCount">—</strong></div>
+  <div class="kpi"><span>Maior gap</span><strong id="biggestGap">—</strong></div>
+</section>
+
+<section class="grid">
+  <div class="card"><h2>Radar de maturidade</h2><div class="chart-wrap"><canvas id="radar"></canvas></div>
+    <div class="legend">Atual x posicionamento ideal de cada dimensão</div>
+  </div>
+  <div class="card"><h2>Aderência por dimensão</h2><div id="dimensionList" class="dim-list"></div></div>
+</section>
+
+
+
+
+<section class="card section"><h2>Análise SWOT</h2><div id="swot" class="swot"></div></section>
+<div class="footer">Fonte: arquivo Excel selecionado · Ações concluídas aparecem tachadas automaticamente</div>
+</div>
+
+<script>
+const FALLBACK_DIMS = [{"ID": 1, "Dimensão": "Processos e Clareza Operacional", "Pontuação Atual": 28, "Pontuação Ideal": 80, "Peso": 20, "Descrição do Pilar": "Avalia se os processos críticos possuem fluxo claro, responsáveis definidos, decisões registradas e continuidade sem dependência excessiva de pessoas.", "Critério de Avaliação": "Donos definidos; RACI; trade-offs formalizados; roadmaps priorizados; fluxos documentados; catálogo de serviços; critérios de escalonamento.", "Pontos Fortes": "Proximidade da liderança com a operação; visão sistêmica; conhecimento dos fluxos e gargalos.", "Pontos Fracos": "Trade-offs e decisões nem sempre formalizados; ausência de RACI; roadmaps podem iniciar sem priorização clara; processos e conhecimentos dependentes de pessoas; serviços core ainda não estruturados.", "Oportunidades": "Criar governança de decisões; formalizar RACI e trade-offs; implantar catálogo de serviços; priorizar roadmaps antes do início; estruturar serviços core.", "Ações Recomendadas": "Mapear processos e serviços críticos, definir RACI, criar registro de decisões e estabelecer um rito de priorização de roadmap.", "Responsável": "Coordenação + PMs + Techs + Arquitetura", "Prazo": "60 dias", "Aderência": "Ponto de Atenção", "Gap": 52, "Recomendação": "Construir e validar a RACI."}, {"ID": 2, "Dimensão": "Indicadores e Visibilidade", "Pontuação Atual": 51, "Pontuação Ideal": 85, "Peso": 20, "Descrição do Pilar": "Mede a capacidade de transformar dados em informação confiável para decisão, com métricas oficiais, rastreabilidade e visão executiva.", "Critério de Avaliação": "Fontes oficiais; conceitos únicos; métricas com dono; catálogo de dados; qualidade; tendência; risco; decisão esperada.", "Pontos Fortes": "Existência de um GT de Dados mobilizado; preocupação crescente com indicadores e transparência.", "Pontos Fracos": "Dados divergentes entre fontes; informações inexistentes; métricas sem definição oficial; dificuldade de produzir uma visão única e confiável.", "Oportunidades": "Aproveitar o GT de Dados para definir métricas oficiais, catálogo, donos, qualidade e priorização das lacunas mais críticas.", "Ações Recomendadas": "Criar inventário de métricas, identificar fontes oficiais e publicar cockpit com meta, realizado, tendência, risco e responsável.", "Responsável": "GT de Dados + Coordenação + Negócio", "Prazo": "60 dias", "Aderência": "Em Desenvolvimento", "Gap": 34, "Recomendação": "Criar backlog de lacunas de dados."}, {"ID": 3, "Dimensão": "Desenvolvimento de Pessoas", "Pontuação Atual": 54, "Pontuação Ideal": 80, "Peso": 20, "Descrição do Pilar": "Avalia práticas de desenvolvimento, feedback, sucessão, retenção, autonomia e compreensão do perfil comportamental e profissional das pessoas.", "Critério de Avaliação": "1:1; skill gap; PDI; DISC; motivadores; perfil demográfico; retenção; sucessão; evidências de performance.", "Pontos Fortes": "Liderança próxima; rotina de 1:1; atenção ao desenvolvimento e à performance; conhecimento individual do time.", "Pontos Fracos": "Informações sobre perfil comportamental, motivadores, risco de retenção e sucessão ainda pouco consolidadas; desenvolvimento pode depender da agenda da coordenação.", "Oportunidades": "Integrar RH e liderança na aplicação de DISC; analisar demografia e perfil das pessoas que permanecem e geram resultados; conectar skill gap, PDI e sucessão.", "Ações Recomendadas": "Executar piloto de DISC, consolidar matriz de skills, mapear motivadores e criar plano sucessório para posições críticas.", "Responsável": "RH + Coordenação + TLs", "Prazo": "90 dias", "Aderência": "Em Desenvolvimento", "Gap": 26, "Recomendação": "Criar matriz de sucessão."}, {"ID": 4, "Dimensão": "Rituais e Cadência de Gestão", "Pontuação Atual": 33, "Pontuação Ideal": 80, "Peso": 20, "Descrição do Pilar": "Avalia se os fóruns, acordos de trabalho e mecanismos de decisão garantem alinhamento, confiança e execução entre PM, Tech, SME e liderança.", "Critério de Avaliação": "Contrato social; acordos PM-Tech-SME; papéis claros; pauta; decisão esperada; registro; cadência; acompanhamento.", "Pontos Fortes": "Presença ativa da liderança; disponibilidade para alinhamento; busca por parceria entre os papéis da tríade.", "Pontos Fracos": "Acordos entre PMs e Techs ainda implícitos; silos; baixa previsibilidade de envolvimento; agendas sobrepostas; decisões e responsabilidades dispersas.", "Oportunidades": "Construir contrato social dos times; formalizar acordos da tríade; separar fóruns operacionais, táticos e estratégicos; revisar compromissos periodicamente.", "Ações Recomendadas": "Realizar workshop por time para definir contrato social, responsabilidades, canais, escalonamento e regras de atualização.", "Responsável": "Coordenação + PMs + Techs + SMEs", "Prazo": "45 dias", "Aderência": "Ponto de Atenção", "Gap": 47, "Recomendação": "Construir contrato social."}, {"ID": 5, "Dimensão": "Presença e Posicionamento", "Pontuação Atual": 46, "Pontuação Ideal": 80, "Peso": 20, "Descrição do Pilar": "Mede clareza de posicionamento, influência, comunicação executiva e capacidade de mobilizar áreas para decisões compartilhadas.", "Critério de Avaliação": "Narrativa baseada em fatos; contexto, risco, impacto, proposta e decisão; alianças; conflitos tratados; responsabilidades explícitas.", "Pontos Fortes": "Coragem para sinalizar riscos; visão sistêmica; colaboração; proximidade com times e liderança.", "Pontos Fracos": "Sinalizações podem ser percebidas como reativas quando não há governança ou acordos prévios; riscos podem ficar sem dono ou sem decisão executiva.", "Oportunidades": "Usar dashboard executivo, registro de decisões e matriz RACI para sustentar conversas; antecipar escalonamentos e explicitar pedidos de decisão.", "Ações Recomendadas": "Padronizar comunicação executiva e instituir um rito semanal de riscos, decisões e dependências.", "Responsável": "Coordenação + Gerência", "Prazo": "30 dias", "Aderência": "Ponto de Atenção", "Gap": 34, "Recomendação": "Definir níveis e prazos de escalonamento."}];
+const FALLBACK_TIMES = [{"ID Time": "T01", "Time": "Time Regulatório", "Responsável": "Tech 1", "Maturidade Geral": 71, "Maturidade Ideal": 80, "Estágio": "Em desenvolvimento", "Descrição do Momento": "Time com boa capacidade técnica e forte senso de responsabilidade, ainda consolidando autonomia e previsibilidade.", "Pontos Fortes do Time": "Conhecimento de negócio; comprometimento; atuação em temas críticos.", "Pontos de Desenvolvimento": "Distribuição de contexto; antecipação de riscos; comunicação entre os papéis da tríade.", "Riscos do Time": "Concentração de conhecimento e dependência de poucas pessoas em decisões críticas.", "Próxima Evolução Esperada": "Aumentar autonomia e formalizar backups para os principais domínios.", "Recomendação": "Revisar contrato social, segurança psicológica, carga e acordos de trabalho."}, {"ID Time": "T02", "Time": "Time Modernização", "Responsável": "Tech 2", "Maturidade Geral": 58, "Maturidade Ideal": 80, "Estágio": "Em desenvolvimento", "Descrição do Momento": "Time em evolução, com iniciativas relevantes, mas dependente de decisões e prioridades externas.", "Pontos Fortes do Time": "Capacidade de adaptação; colaboração técnica; visão de modernização.", "Pontos de Desenvolvimento": "Gestão de dependências; comunicação executiva; planejamento de médio prazo.", "Riscos do Time": "Paralisação por dependências externas e perda de ritmo do time.", "Próxima Evolução Esperada": "Criar governança de dependências e critérios claros de escalonamento.", "Recomendação": "Revisar contrato social, segurança psicológica, carga e acordos de trabalho."}, {"ID Time": "T03", "Time": "Time Discovery A", "Responsável": "Tech 3", "Maturidade Geral": 53, "Maturidade Ideal": 80, "Estágio": "Em desenvolvimento", "Descrição do Momento": "Time com temas ainda pouco definidos e baixa clareza sobre próximos marcos de execução.", "Pontos Fortes do Time": "Disponibilidade para apoiar discovery; abertura para novos direcionamentos.", "Pontos de Desenvolvimento": "Clareza de papéis; ownership; transformação de discovery em decisões.", "Riscos do Time": "Desmobilização, baixa percepção de avanço e dependência de outras áreas.", "Próxima Evolução Esperada": "Definir entregáveis de discovery, responsáveis e datas de decisão.", "Recomendação": "Revisar roadmap, capacidade, dependências e critérios de pronto."}, {"ID Time": "T04", "Time": "Time Discovery B", "Responsável": "Tech 4", "Maturidade Geral": 60, "Maturidade Ideal": 80, "Estágio": "Em desenvolvimento", "Descrição do Momento": "Time com potencial técnico, mas com necessidade de maior coesão e clareza operacional.", "Pontos Fortes do Time": "Conhecimento técnico; flexibilidade; capacidade de absorver novos temas.", "Pontos de Desenvolvimento": "Acordos internos; cadência; alinhamento entre PM, Tech e SME.", "Riscos do Time": "Silos, perda de informação e sobreposição de responsabilidades.", "Próxima Evolução Esperada": "Implantar acordos de trabalho e uma cadência mínima de alinhamento.", "Recomendação": "Revisar contrato social, segurança psicológica, carga e acordos de trabalho."}];
+const FALLBACK_PEOPLE = [{"ID Pessoa": "P01", "ID Time": "T01", "Nome": "Pessoa 1", "Cargo/Papel": "Tech Lead", "Senioridade": "Sênior", "Maturidade": 77, "Perfil Profissional": "Referência técnica, orientada a solução e com boa leitura de risco.", "Estilo de Trabalho": "Analítico, direto e independente.", "Comportamentos Observados": "Assume temas críticos; compartilha contexto quando acionado; precisa ampliar comunicação preventiva.", "Pontos Fortes": "Conhecimento técnico; confiabilidade; visão de risco.", "Pontos de Desenvolvimento": "Delegação; comunicação proativa; formação de sucessores.", "Risco de Pessoas": "Sobrecarga e centralização de conhecimento.", "Ação de Desenvolvimento": "Definir backup técnico e realizar sessões quinzenais de compartilhamento.", "Prazo": "45 dias", "Evidências": "Condução de incidentes e temas regulatórios.", "Perfil Motivacional": "Cérebro", "Principal Motivador": "Aprendizado e desafio", "Como Engajar": "Oferecer projetos complexos, capacitação e desenvolvimento", "Recomendação": "Praticar comunicação preventiva, síntese executiva e registro de decisões."}, {"ID Pessoa": "P02", "ID Time": "T01", "Nome": "Pessoa 2", "Cargo/Papel": "Engenheiro(a)", "Senioridade": "Pleno", "Maturidade": 64, "Perfil Profissional": "Profissional consistente, colaborativo e em evolução de autonomia.", "Estilo de Trabalho": "Colaborativo e cuidadoso.", "Comportamentos Observados": "Entrega com qualidade; pede validação em decisões de maior impacto.", "Pontos Fortes": "Qualidade; cooperação; disciplina.", "Pontos de Desenvolvimento": "Tomada de decisão; exposição técnica; priorização.", "Risco de Pessoas": "Dependência excessiva de validação.", "Ação de Desenvolvimento": "Liderar uma iniciativa de média complexidade com checkpoints definidos.", "Prazo": "60 dias", "Evidências": "Entregas estáveis e boa parceria com o time.", "Perfil Motivacional": "Escada", "Principal Motivador": "Crescimento profissional", "Como Engajar": "Mostrar possibilidades de carreira, promoção e novas responsabilidades", "Recomendação": "Dar protagonismo em fóruns, mentoria e condução de decisões."}, {"ID Pessoa": "P03", "ID Time": "T02", "Nome": "Pessoa 3", "Cargo/Papel": "Tech Lead", "Senioridade": "Sênior", "Maturidade": 74, "Perfil Profissional": "Perfil estratégico, com boa visão de arquitetura e dependências.", "Estilo de Trabalho": "Analítico e conciliador.", "Comportamentos Observados": "Mapeia cenários; busca alinhamento; pode demorar para escalar bloqueios.", "Pontos Fortes": "Visão sistêmica; capacidade de negociação; arquitetura.", "Pontos de Desenvolvimento": "Agilidade no escalonamento; comunicação executiva.", "Risco de Pessoas": "Dependências permanecerem tempo demais sem decisão.", "Ação de Desenvolvimento": "Criar atualização semanal de riscos com pedido de decisão objetivo.", "Prazo": "30 dias", "Evidências": "Mapeamento de dependências e suporte ao discovery.", "Perfil Motivacional": "Liberdade", "Principal Motivador": "Autonomia e flexibilidade", "Como Engajar": "Dar confiança, espaço de decisão e reduzir microgestão", "Recomendação": "Praticar comunicação preventiva, síntese executiva e registro de decisões."}, {"ID Pessoa": "P04", "ID Time": "T02", "Nome": "Pessoa 4", "Cargo/Papel": "Engenheiro(a)", "Senioridade": "Júnior", "Maturidade": 48, "Perfil Profissional": "Profissional em fase de consolidação técnica e de entendimento do domínio.", "Estilo de Trabalho": "Executivo e receptivo a direcionamento.", "Comportamentos Observados": "Executa bem tarefas estruturadas; ainda tem baixa segurança em temas ambíguos.", "Pontos Fortes": "Aprendizado; comprometimento; abertura a feedback.", "Pontos de Desenvolvimento": "Autonomia; domínio de negócio; comunicação.", "Risco de Pessoas": "Desmotivação em períodos sem construção clara.", "Ação de Desenvolvimento": "Plano de aprendizagem do domínio e pairing semanal com pessoa sênior.", "Prazo": "75 dias", "Evidências": "Boa evolução em tarefas com escopo definido.", "Perfil Motivacional": "Cérebro", "Principal Motivador": "Aprendizado e desafio", "Como Engajar": "Oferecer projetos complexos, capacitação e desenvolvimento", "Recomendação": "Dar protagonismo em fóruns, mentoria e condução de decisões."}, {"ID Pessoa": "P05", "ID Time": "T03", "Nome": "Pessoa 5", "Cargo/Papel": "SME", "Senioridade": "Pleno", "Maturidade": 63, "Perfil Profissional": "Conhece o negócio e ajuda na tradução de necessidades, mas precisa formalizar decisões.", "Estilo de Trabalho": "Relacional e orientado ao negócio.", "Comportamentos Observados": "Traz contexto relevante; decisões ficam dispersas em conversas.", "Pontos Fortes": "Conhecimento de negócio; proximidade com stakeholders.", "Pontos de Desenvolvimento": "Documentação; objetividade; fechamento de decisões.", "Risco de Pessoas": "Perda de histórico e retrabalho.", "Ação de Desenvolvimento": "Registrar decisões e critérios de aceite após cada discovery.", "Prazo": "30 dias", "Evidências": "Participação ativa nas discussões de negócio.", "Perfil Motivacional": "Coração", "Principal Motivador": "Pertencimento e propósito", "Como Engajar": "Reforçar impacto, conexão com o time e reconhecimento próximo", "Recomendação": "Revisar priorização, planejamento e previsibilidade das entregas."}, {"ID Pessoa": "P06", "ID Time": "T04", "Nome": "Pessoa 6", "Cargo/Papel": "Engenheiro(a)", "Senioridade": "Sênior", "Maturidade": 69, "Perfil Profissional": "Boa capacidade técnica e atitude de apoio, com potencial para ampliar liderança informal.", "Estilo de Trabalho": "Pragmático e colaborativo.", "Comportamentos Observados": "Resolve problemas; apoia colegas; nem sempre explicita riscos e discordâncias.", "Pontos Fortes": "Resolução; cooperação; experiência.", "Pontos de Desenvolvimento": "Posicionamento; influência; mentoria.", "Risco de Pessoas": "Riscos técnicos não comunicados com antecedência.", "Ação de Desenvolvimento": "Conduzir revisão técnica mensal e mentorar uma pessoa do time.", "Prazo": "60 dias", "Evidências": "Apoio recorrente em temas de maior complexidade.", "Perfil Motivacional": "Estrela", "Principal Motivador": "Reconhecimento e visibilidade", "Como Engajar": "Dar exposição, elogiar entregas e criar espaço de protagonismo", "Recomendação": "Praticar comunicação preventiva, síntese executiva e registro de decisões."}];
+const FALLBACK_PR = [{"ID": 1, "Dimensão": "Processos e Clareza Operacional", "Tipo": "Plano de ação", "Descrição": "Formalizar trade-offs relevantes com contexto, alternativas, impacto, decisão e aprovador.", "Prioridade": "Alta", "Responsável": "PM + Tech + Coordenação", "Prazo": "30 dias", "Status": "Não iniciado", "Impacto Esperado": "Decisões rastreáveis e menor retrabalho.", "Mitigação/Próximo Passo": "Criar template e registrar em repositório único."}, {"ID": 2, "Dimensão": "Processos e Clareza Operacional", "Tipo": "Plano de ação", "Descrição": "Criar Matriz RACI para decisões, projetos e processos críticos.", "Prioridade": "Alta", "Responsável": "Coordenação + PMs + Techs", "Prazo": "45 dias", "Status": "Não iniciado", "Impacto Esperado": "Clareza de papéis e redução de lacunas de comunicação.", "Mitigação/Próximo Passo": "Começar pelos cinco fluxos mais críticos."}, {"ID": 3, "Dimensão": "Processos e Clareza Operacional", "Tipo": "Plano de ação", "Descrição": "Estabelecer priorização de roadmap antes do início do discovery e da formação dos times.", "Prioridade": "Alta", "Responsável": "Gerência + Negócio + PMs", "Prazo": "30 dias", "Status": "Planejamento mais estável e melhor uso de capacidade.", "Impacto Esperado": "Definir critérios de valor, risco, urgência e dependências.", "Mitigação/Próximo Passo": null}, {"ID": 4, "Dimensão": "Processos e Clareza Operacional", "Tipo": "Plano de ação", "Descrição": "Criar catálogo de serviços, sistemas, responsáveis e dependências.", "Prioridade": "Alta", "Responsável": "Arquitetura + Techs", "Prazo": "60 dias", "Status": "Visibilidade operacional e menor dependência de conhecimento tácito.", "Impacto Esperado": "Publicar versão mínima e revisar mensalmente.", "Mitigação/Próximo Passo": null}, {"ID": 5, "Dimensão": "Processos e Clareza Operacional", "Tipo": "Plano de ação", "Descrição": "Definir roadmap para criação dos serviços core compartilhados da área.", "Prioridade": "Alta", "Responsável": "Arquitetura + Gerência", "Prazo": "90 dias", "Status": "Redução de duplicidade, acoplamento e soluções locais.", "Impacto Esperado": "Priorizar os serviços com maior reutilização e risco.", "Mitigação/Próximo Passo": null}, {"ID": 6, "Dimensão": "Processos e Clareza Operacional", "Tipo": "Risco", "Descrição": "Processos e decisões permanecem dependentes de pessoas específicas.", "Prioridade": "Alta", "Responsável": "Coordenação", "Prazo": "Imediato", "Status": "Aberto", "Impacto Esperado": "Atrasos, perda de conhecimento e indisponibilidade operacional.", "Mitigação/Próximo Passo": "Definir backups, documentação mínima e donos formais."}, {"ID": 7, "Dimensão": "Processos e Clareza Operacional", "Tipo": "Risco", "Descrição": "Projetos iniciarem sem priorização e alinhamento executivo do roadmap.", "Prioridade": "Alta", "Responsável": "Gerência + Negócio", "Prazo": "Imediato", "Status": "Aberto", "Impacto Esperado": "Paralisações, mudanças tardias e desperdício de capacidade.", "Mitigação/Próximo Passo": "Usar gate de priorização antes do discovery."}, {"ID": 8, "Dimensão": "Indicadores e Visibilidade", "Tipo": "Plano de ação", "Descrição": "Consolidar inventário das métricas existentes, divergentes e inexistentes.", "Prioridade": "Alta", "Responsável": "GT de Dados", "Prazo": "30 dias", "Status": "Em andamento", "Impacto Esperado": "Visão clara das lacunas e prioridade de correção.", "Mitigação/Próximo Passo": "Classificar por impacto e criticidade."}, {"ID": 9, "Dimensão": "Indicadores e Visibilidade", "Tipo": "Plano de ação", "Descrição": "Definir métricas oficiais, fonte de verdade, conceito, responsável e frequência.", "Prioridade": "Alta", "Responsável": "GT de Dados + Negócio", "Prazo": "60 dias", "Status": "Em andamento", "Impacto Esperado": "Decisões baseadas em dados consistentes.", "Mitigação/Próximo Passo": "Publicar dicionário de métricas."}, {"ID": 10, "Dimensão": "Indicadores e Visibilidade", "Tipo": "Plano de ação", "Descrição": "Criar catálogo de dados e regras mínimas de Data Governance.", "Prioridade": "Alta", "Responsável": "GT de Dados + Data Office", "Prazo": "90 dias", "Status": "Planejado", "Impacto Esperado": "Melhor rastreabilidade e qualidade de dados.", "Mitigação/Próximo Passo": "Definir owners, consumidores e controles."}, {"ID": 11, "Dimensão": "Indicadores e Visibilidade", "Tipo": "Plano de ação", "Descrição": "Atualizar cockpit executivo com meta, realizado, tendência, risco e decisão esperada.", "Prioridade": "Média", "Responsável": "Coordenação", "Prazo": "20 dias", "Status": "Em andamento", "Impacto Esperado": "Maior antecipação e qualidade nas decisões.", "Mitigação/Próximo Passo": "Limitar a indicadores que geram ação."}, {"ID": 12, "Dimensão": "Indicadores e Visibilidade", "Tipo": "Risco", "Descrição": "Dados divergentes ou inexistentes impedirem leitura confiável da operação.", "Prioridade": "Alta", "Responsável": "GT de Dados", "Prazo": "Imediato", "Status": "Aberto", "Impacto Esperado": "Decisões equivocadas, retrabalho e perda de credibilidade.", "Mitigação/Próximo Passo": "Sinalizar nível de confiança e plano de saneamento."}, {"ID": 13, "Dimensão": "Desenvolvimento de Pessoas", "Tipo": "Plano de ação", "Descrição": "Realizar piloto de análise comportamental e teste DISC com apoio do RH.", "Prioridade": "Média", "Responsável": "RH + Coordenação", "Prazo": "60 dias", "Status": "Planejado", "Impacto Esperado": "Melhor alocação, comunicação e desenvolvimento.", "Mitigação/Próximo Passo": "Definir propósito, consentimento e devolutiva individual."}, {"ID": 14, "Dimensão": "Desenvolvimento de Pessoas", "Tipo": "Plano de ação", "Descrição": "Mapear demografia e características das pessoas que permanecem e geram resultados.", "Prioridade": "Média", "Responsável": "RH", "Prazo": "90 dias", "Status": "Planejado", "Impacto Esperado": "Melhoria de contratação, retenção e sucessão.", "Mitigação/Próximo Passo": "Analisar dados agregados, evitando conclusões discriminatórias."}, {"ID": 15, "Dimensão": "Desenvolvimento de Pessoas", "Tipo": "Plano de ação", "Descrição": "Conectar skill gap, PDI, motivadores, risco de retenção e plano sucessório.", "Prioridade": "Alta", "Responsável": "Coordenação + TLs", "Prazo": "60 dias", "Status": "Em andamento", "Impacto Esperado": "Evolução mais objetiva e redução de risco de pessoas.", "Mitigação/Próximo Passo": "Revisão mensal por time."}, {"ID": 16, "Dimensão": "Desenvolvimento de Pessoas", "Tipo": "Risco", "Descrição": "Conhecimento de perfil, motivadores e sucessores permanecer informal.", "Prioridade": "Alta", "Responsável": "Coordenação + RH", "Prazo": "Imediato", "Status": "Aberto", "Impacto Esperado": "Turnover, alocação inadequada e perda de conhecimento.", "Mitigação/Próximo Passo": "Criar mapa de pessoas com acesso restrito e critérios claros."}, {"ID": 17, "Dimensão": "Rituais e Cadência de Gestão", "Tipo": "Plano de ação", "Descrição": "Formalizar acordos de trabalho entre PM, Tech e SME.", "Prioridade": "Alta", "Responsável": "Coordenação + Tríades", "Prazo": "30 dias", "Status": "Não iniciado", "Impacto Esperado": "Maior clareza, parceria e previsibilidade.", "Mitigação/Próximo Passo": "Definir envolvimento, atualização, decisão, cobertura e escalonamento."}, {"ID": 18, "Dimensão": "Rituais e Cadência de Gestão", "Tipo": "Plano de ação", "Descrição": "Construir contrato social para cada time.", "Prioridade": "Alta", "Responsável": "Liderança do Time", "Prazo": "45 dias", "Status": "Não iniciado", "Impacto Esperado": "Mais confiança, segurança e eficiência na execução.", "Mitigação/Próximo Passo": "Workshop com combinados de comunicação, conflitos e compromissos."}, {"ID": 19, "Dimensão": "Rituais e Cadência de Gestão", "Tipo": "Plano de ação", "Descrição": "Revisar agendas por propósito, decisão, participantes e cadência.", "Prioridade": "Média", "Responsável": "Coordenação + Gerência", "Prazo": "30 dias", "Status": "Em andamento", "Impacto Esperado": "Menos reuniões e mais tempo para execução.", "Mitigação/Próximo Passo": "Cancelar, delegar ou consolidar fóruns de baixo valor."}, {"ID": 20, "Dimensão": "Rituais e Cadência de Gestão", "Tipo": "Risco", "Descrição": "Acordos implícitos entre PMs e Techs gerarem silos e conflitos.", "Prioridade": "Alta", "Responsável": "Coordenação + Gerência", "Prazo": "Imediato", "Status": "Aberto", "Impacto Esperado": "Retrabalho, baixa confiança e perda de contexto.", "Mitigação/Próximo Passo": "Aplicar contrato social e retrospectiva dos acordos."}, {"ID": 21, "Dimensão": "Presença e Posicionamento", "Tipo": "Plano de ação", "Descrição": "Padronizar sinalização executiva em contexto, risco, impacto, proposta, responsável e decisão.", "Prioridade": "Alta", "Responsável": "Coordenação", "Prazo": "20 dias", "Status": "Em andamento", "Impacto Esperado": "Comunicação mais objetiva e menor percepção de cobrança reativa.", "Mitigação/Próximo Passo": "Usar o template nos temas críticos."}, {"ID": 22, "Dimensão": "Presença e Posicionamento", "Tipo": "Plano de ação", "Descrição": "Criar rito semanal de riscos, dependências e decisões pendentes.", "Prioridade": "Alta", "Responsável": "Coordenação + Gerência", "Prazo": "15 dias", "Status": "Planejado", "Impacto Esperado": "Antecipação e responsabilização das decisões.", "Mitigação/Próximo Passo": "Manter histórico, prazo e dono de cada item."}, {"ID": 23, "Dimensão": "Presença e Posicionamento", "Tipo": "Risco", "Descrição": "Temas críticos permanecerem sem escalonamento, dono ou decisão formal.", "Prioridade": "Alta", "Responsável": "Coordenação + Gerência", "Prazo": "Imediato", "Status": "Aberto", "Impacto Esperado": "Cobranças tardias, atrasos e desgaste entre áreas.", "Mitigação/Próximo Passo": "Usar cockpit e registro de decisão."}];
+const FALLBACK_SWOT = [{"Quadrante": "Força", "Tema": "Liderança próxima", "Descrição": "Acompanhamento próximo dos times, pessoas e temas críticos.", "Prioridade": "Alta", "Dimensão Relacionada": "Desenvolvimento de Pessoas"}, {"Quadrante": "Força", "Tema": "Visão sistêmica", "Descrição": "Capacidade de enxergar dependências, riscos e impactos entre áreas.", "Prioridade": "Alta", "Dimensão Relacionada": "Presença e Posicionamento"}, {"Quadrante": "Força", "Tema": "Colaboração", "Descrição": "Busca por parceria e alinhamento entre PMs, Techs, SMEs e liderança.", "Prioridade": "Alta", "Dimensão Relacionada": "Rituais e Cadência de Gestão"}, {"Quadrante": "Fraqueza", "Tema": "RACI inexistente ou incompleto", "Descrição": "Responsabilidades e aprovadores não estão claros em todos os processos.", "Prioridade": "Alta", "Dimensão Relacionada": "Processos e Clareza Operacional"}, {"Quadrante": "Fraqueza", "Tema": "Trade-offs não formalizados", "Descrição": "Decisões e impactos podem ficar dispersos em conversas.", "Prioridade": "Alta", "Dimensão Relacionada": "Processos e Clareza Operacional"}, {"Quadrante": "Fraqueza", "Tema": "Dependência da liderança e de pessoas-chave", "Descrição": "Fluxos, contexto e decisões ainda se concentram em poucos profissionais.", "Prioridade": "Alta", "Dimensão Relacionada": "Processos e Clareza Operacional"}, {"Quadrante": "Fraqueza", "Tema": "Dados divergentes ou inexistentes", "Descrição": "Não há uma fonte confiável para todas as métricas necessárias.", "Prioridade": "Alta", "Dimensão Relacionada": "Indicadores e Visibilidade"}, {"Quadrante": "Fraqueza", "Tema": "Serviços core inexistentes", "Descrição": "Capacidades comuns ainda podem ser duplicadas ou tratadas localmente.", "Prioridade": "Alta", "Dimensão Relacionada": "Processos e Clareza Operacional"}, {"Quadrante": "Oportunidade", "Tema": "GT de Dados", "Descrição": "Estruturar métricas oficiais, catálogo, qualidade e governança de dados.", "Prioridade": "Alta", "Dimensão Relacionada": "Indicadores e Visibilidade"}, {"Quadrante": "Oportunidade", "Tema": "DISC e análise comportamental", "Descrição": "Aprimorar comunicação, desenvolvimento e composição dos times.", "Prioridade": "Média", "Dimensão Relacionada": "Desenvolvimento de Pessoas"}, {"Quadrante": "Oportunidade", "Tema": "Contrato social", "Descrição": "Criar combinados claros para confiança, comunicação e resolução de conflitos.", "Prioridade": "Alta", "Dimensão Relacionada": "Rituais e Cadência de Gestão"}, {"Quadrante": "Oportunidade", "Tema": "Governança PM x Tech", "Descrição": "Formalizar acordos de trabalho e responsabilidades da tríade.", "Prioridade": "Alta", "Dimensão Relacionada": "Rituais e Cadência de Gestão"}, {"Quadrante": "Oportunidade", "Tema": "Catálogo de serviços", "Descrição": "Dar visibilidade de sistemas, donos, dependências e serviços core.", "Prioridade": "Alta", "Dimensão Relacionada": "Processos e Clareza Operacional"}, {"Quadrante": "Oportunidade", "Tema": "Dashboard executivo", "Descrição": "Consolidar riscos, decisões, metas, tendências e responsáveis.", "Prioridade": "Alta", "Dimensão Relacionada": "Indicadores e Visibilidade"}, {"Quadrante": "Oportunidade", "Tema": "Plano sucessório", "Descrição": "Reduzir dependência e desenvolver backups para posições críticas.", "Prioridade": "Alta", "Dimensão Relacionada": "Desenvolvimento de Pessoas"}, {"Quadrante": "Ameaça", "Tema": "Turnover e perda de conhecimento", "Descrição": "Saídas podem comprometer a continuidade devido à concentração de contexto.", "Prioridade": "Alta", "Dimensão Relacionada": "Desenvolvimento de Pessoas"}, {"Quadrante": "Ameaça", "Tema": "Retrabalho", "Descrição": "Decisões não formalizadas e dados divergentes podem provocar refações.", "Prioridade": "Alta", "Dimensão Relacionada": "Processos e Clareza Operacional"}, {"Quadrante": "Ameaça", "Tema": "Silos", "Descrição": "Baixo compartilhamento entre papéis e áreas reduz a qualidade das decisões.", "Prioridade": "Alta", "Dimensão Relacionada": "Rituais e Cadência de Gestão"}, {"Quadrante": "Ameaça", "Tema": "Roadmaps sem priorização", "Descrição": "Projetos podem parar ou mudar após mobilização de pessoas.", "Prioridade": "Alta", "Dimensão Relacionada": "Processos e Clareza Operacional"}, {"Quadrante": "Ameaça", "Tema": "Conflitos PM x Tech", "Descrição": "Expectativas implícitas podem gerar desgaste e baixa confiança.", "Prioridade": "Alta", "Dimensão Relacionada": "Rituais e Cadência de Gestão"}];
+const COLORS = ['#e5c84b','#32a8e6','#38d996','#ef6b9a','#b7a4f6'];
+let radarChart;
+
+function clean(v){ return v == null ? '' : String(v).trim(); }
+function num(v, d=0){ const n=Number(v); return Number.isFinite(n)?n:d; }
+function status(score){
+  if(score>=80) return {label:'Ponto Forte', cls:'status-high'};
+  if(score>=50) return {label:'Em Desenvolvimento', cls:'status-mid'};
+  return {label:'Ponto de Atenção', cls:'status-low'};
+}
+function render(dims, swot, teams=FALLBACK_TIMES, people=FALLBACK_PEOPLE, plans=FALLBACK_PR){
+  dims = dims.filter(x => clean(x['Dimensão']));
+  const totalWeight = dims.reduce((a,x)=>a+num(x['Peso'],20),0)||1;
+  const avg = dims.reduce((a,x)=>a+num(x['Pontuação Atual'])*num(x['Peso'],20),0)/totalWeight;
+  document.getElementById('avgScore').textContent = Math.round(avg)+'%';
+  document.getElementById('strongCount').textContent = dims.filter(x=>num(x['Pontuação Atual'])>=80).length;
+  document.getElementById('attentionCount').textContent = dims.filter(x=>num(x['Pontuação Atual'])<50).length;
+  const maxGap = dims.reduce((best,x)=>{
+    const gap=num(x['Pontuação Ideal'],80)-num(x['Pontuação Atual']);
+    return gap>best.gap?{gap,name:clean(x['Dimensão'])}:best;
+  },{gap:-Infinity,name:'—'});
+  document.getElementById('biggestGap').textContent = maxGap.gap+' pts';
+
+  const priorities=[];
+  dims.forEach(x=>priorities.push({
+    level:'Dimensão', item:clean(x['Dimensão']), score:num(x['Pontuação Atual']),
+    suggestion:clean(x['Recomendação'])||clean(x['Ações Recomendadas'])
+  }));
+  (teams||[]).filter(x=>clean(x['Time'])).forEach(x=>priorities.push({
+    level:'Time', item:clean(x['Time']), score:num(x['Maturidade Geral']),
+    suggestion:clean(x['Recomendação'])||clean(x['Próxima Evolução Esperada'])
+  }));
+  (people||[]).filter(x=>clean(x['Nome'])).forEach(x=>priorities.push({
+    level:'Pessoa', item:clean(x['Nome']), score:num(x['Maturidade']),
+    suggestion:clean(x['Recomendação'])||clean(x['Ação de Desenvolvimento'])
+  }));
+  const priorityEl=document.getElementById('prioritySuggestions');
+  if(priorityEl){
+    priorityEl.innerHTML=priorities
+      .filter(x=>x.score>0)
+      .sort((a,b)=>a.score-b.score)
+      .slice(0,6)
+      .map(x=>`<div class="suggestion-card"><span class="level">${x.level} · ${Math.round(x.score)}%</span><strong>${x.item}</strong><p>${x.suggestion||'Revisar o menor critério do assessment.'}</p></div>`)
+      .join('');
+  }
+
+  const labels=dims.map(x=>clean(x['Dimensão']).replace(' e ',' & '));
+  const current=dims.map(x=>num(x['Pontuação Atual']));
+  const ideal=dims.map(x=>num(x['Pontuação Ideal'],80));
+  if(radarChart) radarChart.destroy();
+  radarChart = new Chart(document.getElementById('radar'),{
+    type:'radar',
+    data:{labels,datasets:[
+      {label:'Atual',data:current,borderColor:'#ef6b9a',backgroundColor:'rgba(239,107,154,.18)',pointBackgroundColor:'#ef6b9a',borderWidth:3},
+      {label:'Ideal',data:ideal,borderColor:'#d9deea',backgroundColor:'rgba(217,222,234,.04)',pointBackgroundColor:'#d9deea',borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{min:0,max:100,ticks:{display:false,stepSize:20},grid:{color:'#334058'},angleLines:{color:'#334058'},
+        pointLabels:{color:'#eef2f8',font:{size:12,weight:'600'}}}},
+      plugins:{legend:{labels:{color:'#cbd3e1'}}}
+    }
+  });
+
+  function normalizedStatus(v){
+    return clean(v).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  }
+  function isCompleted(x){
+    return normalizedStatus(x['Status']) === 'concluido';
+  }
+  function statusClass(v){
+    const s=normalizedStatus(v);
+    if(s==='concluido') return 'status-concluido';
+    if(s==='em andamento') return 'status-andamento';
+    if(s==='nao iniciado') return 'status-pendente';
+    if(s==='aberto') return 'status-aberto';
+    return 'status-pendente';
+  }
+  function planKey(item,dimension,index){
+    return 'diag-plan::'+clean(item['ID']||dimension+'::'+item['Descrição']+'::'+index);
+  }
+  function savedCheck(key,defaultValue){
+    const value=localStorage.getItem(key);
+    return value===null?defaultValue:value==='1';
+  }
+  function refreshPlanSummary(container){
+    if(!container)return;
+    const actions=[...container.querySelectorAll('.pr-item.action')];
+    const completed=actions.filter(x=>x.classList.contains('completed')).length;
+    const inProgress=actions.filter(x=>!x.classList.contains('completed') && normalizedStatus(x.dataset.originalStatus)==='em andamento').length;
+    const pending=Math.max(0,actions.length-completed-inProgress);
+    const execution=actions.length?Math.round((completed/actions.length)*100):0;
+    const set=(name,value)=>{const el=container.querySelector(`[data-count="${name}"]`);if(el)el.textContent=value;};
+    set('actions',actions.length); set('completed',completed); set('progress',inProgress); set('pending',pending); set('execution',execution+'%');
+    const fill=container.querySelector('.execution-fill'); if(fill)fill.style.width=execution+'%';
+  }
+  function bindPlanChecks(root){
+    root.querySelectorAll('.action-check').forEach(box=>{
+      box.addEventListener('change',()=>{
+        const item=box.closest('.pr-item');
+        const done=box.checked;
+        item.classList.toggle('completed',done);
+        const chip=item.querySelector('.status-chip');
+        if(chip){
+          const status=done?'Concluído':item.dataset.originalStatus;
+          chip.textContent=status||'—';
+          chip.className='status-chip '+statusClass(status);
+        }
+        localStorage.setItem(box.dataset.storageKey,done?'1':'0');
+        refreshPlanSummary(box.closest('.plans-embedded'));
+      });
+    });
+  }
+  function buildPlansRisks(dimension){
+    const dimensionKey=clean(dimension).toLocaleLowerCase('pt-BR');
+    const items=(plans||[]).filter(x=>clean(x['Dimensão']).toLocaleLowerCase('pt-BR')===dimensionKey);
+    if(!items.length){
+      return `<div class="plans-embedded"><h3 class="embedded-title">Planos de ação e riscos</h3><p class="legend">Nenhum plano ou risco cadastrado para esta dimensão.</p></div>`;
+    }
+    const prepared=items.map((x,index)=>{
+      const isRisk=clean(x['Tipo']).toLowerCase().includes('risco');
+      const key=planKey(x,dimension,index);
+      const done=!isRisk && savedCheck(key,isCompleted(x));
+      return {x,index,isRisk,key,done};
+    });
+    const actions=prepared.filter(i=>!i.isRisk);
+    const completed=actions.filter(i=>i.done).length;
+    const inProgress=actions.filter(i=>!i.done && normalizedStatus(i.x['Status'])==='em andamento').length;
+    const pending=Math.max(0,actions.length-completed-inProgress);
+    const execution=actions.length?Math.round((completed/actions.length)*100):0;
+    return `<div class="plans-embedded">
+      <h3 class="embedded-title">Planos de ação e riscos</h3>
+      <div class="pr-summary">
+        <div class="pr-stat"><span>Ações</span><strong data-count="actions">${actions.length}</strong></div>
+        <div class="pr-stat"><span>Concluídas</span><strong data-count="completed">${completed}</strong></div>
+        <div class="pr-stat"><span>Em andamento</span><strong data-count="progress">${inProgress}</strong></div>
+        <div class="pr-stat"><span>Pendentes</span><strong data-count="pending">${pending}</strong></div>
+        <div class="pr-stat"><span>Execução</span><strong data-count="execution">${execution}%</strong></div>
+      </div>
+      <div class="execution-track"><div class="execution-fill" style="width:${execution}%"></div></div>
+      <div class="pr-grid">${prepared.map(({x,isRisk,key,done})=>{
+        const originalStatus=clean(x['Status'])||'—';
+        const shownStatus=done?'Concluído':originalStatus;
+        return `<div class="pr-item ${isRisk?'risk':'action'} ${done?'completed':''}" data-original-status="${originalStatus.replace(/"/g,'&quot;')}">
+          <div class="tag">${clean(x['Tipo'])} · ${clean(x['Prioridade'])}</div>
+          <h4 class="action-title">${isRisk?'':`<input class="action-check" type="checkbox" ${done?'checked':''} data-storage-key="${key.replace(/"/g,'&quot;')}" aria-label="Marcar ação como concluída">`}<span class="action-description">${clean(x['Descrição'])}</span></h4>
+          <span class="status-chip ${statusClass(shownStatus)}">${shownStatus}</span>
+          <p><strong>Responsável:</strong> ${clean(x['Responsável'])||'—'} · <strong>Prazo:</strong> ${clean(x['Prazo'])||'—'}</p>
+          <p><strong>${isRisk?'Mitigação':'Impacto esperado'}:</strong> ${isRisk?clean(x['Mitigação/Próximo Passo']):clean(x['Impacto Esperado'])}</p>
+        </div>`;
+      }).join('')}</div>
+      <p class="plan-note">As ações e quantidades são carregadas da aba <strong>Planos_Riscos</strong>. As marcações feitas aqui ficam salvas neste navegador e não alteram o arquivo Excel.</p>
+    </div>`;
+  }
+
+  const list=document.getElementById('dimensionList'); list.innerHTML='';
+  dims.forEach((x,i)=>{
+    const score=num(x['Pontuação Atual']), st=status(score);
+    const el=document.createElement('div'); el.className='dim-card';
+    el.innerHTML=`<div class="dim-head">
+      <div><div class="dim-name">${clean(x['Dimensão'])}</div><div class="progress"><div class="bar" style="width:${score}%;background:${COLORS[i%COLORS.length]}"></div></div></div>
+      <div class="score-badge ${st.cls}">${score}% — ${st.label}</div><div>⌄</div></div>
+      <div class="dim-body"><div class="detail-grid">
+       <div class="detail full"><h3>Descrição do pilar</h3><p>${clean(x['Descrição do Pilar'])}</p></div>
+       <div class="detail full"><h3>Critério de avaliação</h3><p>${clean(x['Critério de Avaliação'])}</p></div>
+       <div class="detail"><h3>Pontos fortes</h3><p>${clean(x['Pontos Fortes'])}</p></div>
+       <div class="detail"><h3>Pontos fracos</h3><p>${clean(x['Pontos Fracos'])}</p></div>
+       <div class="detail"><h3>Oportunidades</h3><p>${clean(x['Oportunidades'])}</p></div>
+       <div class="detail"><h3>Ações recomendadas</h3><p>${clean(x['Ações Recomendadas'])}</p></div>
+       <div class="detail"><h3>Recomendação</h3><p>${clean(x['Recomendação'])||'Preencha o questionário para gerar a recomendação.'}</p></div>
+       <div class="detail"><h3>Responsável</h3><p>${clean(x['Responsável'])||'—'}</p></div>
+       <div class="detail"><h3>Prazo</h3><p>${clean(x['Prazo'])||'—'}</p></div>
+      </div>
+      ${clean(x['Dimensão'])==='Desenvolvimento de Pessoas' ? `
+      <div class="people-embedded">
+        <h3 class="embedded-title">Pessoas — maturidade dos times e indivíduos</h3>
+        <div class="people-summary">
+          <div class="people-kpi"><span>Maturidade geral dos times</span><strong id="teamsAvg">—</strong></div>
+          <div class="people-kpi"><span>Time mais maduro</span><strong id="bestTeam">—</strong></div>
+          <div class="people-kpi"><span>Pessoas mapeadas</span><strong id="peopleCount">—</strong></div>
+        </div>
+        <div id="teamsAccordion" class="teams-accordion"></div>
+      </div>` : ''}
+      ${buildPlansRisks(clean(x['Dimensão']))}
+      </div>`;
+    el.querySelector('.dim-head').onclick=()=>el.classList.toggle('open');
+    list.appendChild(el);
+  });
+  bindPlanChecks(list);
+
+
+  // People and team maturity
+  const teamsClean=(teams||[]).filter(x=>clean(x['Time']));
+  const peopleClean=(people||[]).filter(x=>clean(x['Nome']));
+  const teamAvg=teamsClean.length?teamsClean.reduce((a,x)=>a+num(x['Maturidade Geral']),0)/teamsClean.length:0;
+  document.getElementById('teamsAvg').textContent=Math.round(teamAvg)+'%';
+  const best=teamsClean.reduce((b,x)=>num(x['Maturidade Geral'])>num(b['Maturidade Geral'])?x:b, teamsClean[0]||{});
+  document.getElementById('bestTeam').textContent=clean(best['Time'])||'—';
+  document.getElementById('peopleCount').textContent=peopleClean.length;
+  const acc=document.getElementById('teamsAccordion'); acc.innerHTML='';
+  teamsClean.forEach((t,idx)=>{
+    const score=num(t['Maturidade Geral']), st=status(score);
+    const members=peopleClean.filter(p=>clean(p['ID Time'])===clean(t['ID Time']));
+    const el=document.createElement('div'); el.className='team-card';
+    el.innerHTML=`<div class="team-head">
+      <div><div class="dim-name">${clean(t['Time'])}</div><div class="team-meta">${clean(t['Responsável'])} · ${members.length} pessoa(s)</div>
+      <div class="progress"><div class="bar" style="width:${score}%;background:${COLORS[idx%COLORS.length]}"></div></div></div>
+      <div class="score-badge ${st.cls}">${score}% — ${clean(t['Estágio'])||st.label}</div><div>⌄</div></div>
+      <div class="team-body">
+        <div class="team-overview">
+          <div class="detail"><h3>Momento do time</h3><p>${clean(t['Descrição do Momento'])}</p></div>
+          <div class="detail"><h3>Próxima evolução</h3><p>${clean(t['Próxima Evolução Esperada'])}</p></div>
+          <div class="detail"><h3>Pontos fortes</h3><p>${clean(t['Pontos Fortes do Time'])}</p></div>
+          <div class="detail"><h3>Pontos de desenvolvimento</h3><p>${clean(t['Pontos de Desenvolvimento'])}</p></div>
+          <div class="detail full"><h3>Riscos do time</h3><p>${clean(t['Riscos do Time'])}</p></div>
+          <div class="detail full auto-suggestion"><h4>Recomendação</h4><p>${clean(t['Recomendação'])||'Preencha a avaliação do time para gerar a recomendação.'}</p></div>
+        </div>
+        <div class="person-grid">${members.map(p=>{
+          const ps=num(p['Maturidade']), pst=status(ps);
+          return `<div class="person-card">
+            <div class="person-top"><div><div class="person-name">${clean(p['Nome'])}</div><div class="person-role">${clean(p['Cargo/Papel'])} · ${clean(p['Senioridade'])}</div></div>
+            <div class="score-badge ${pst.cls}">${ps}%</div></div>
+            <h4>Perfil profissional</h4><p>${clean(p['Perfil Profissional'])}</p>
+            <h4>Estilo de trabalho</h4><p>${clean(p['Estilo de Trabalho'])}</p>
+            <h4>Comportamentos observados</h4><p>${clean(p['Comportamentos Observados'])}</p>
+            <h4>Pontos fortes</h4><p>${clean(p['Pontos Fortes'])}</p>
+            <h4>Pontos de desenvolvimento</h4><p>${clean(p['Pontos de Desenvolvimento'])}</p>
+            <!--<div class="motivation-box"> -->
+            <div>
+              <h4>Motivação e engajamento</h4>
+              <!-- <p><strong>Perfil:</strong> ${clean(p['Perfil Motivacional'])}</p> -->
+              <p><strong>Principal motivador:</strong> ${clean(p['Principal Motivador'])}</p>
+              <p><strong>Como engajar:</strong> ${clean(p['Como Engajar'])}</p>
+            </div>
+            <h4>Risco</h4><p>${clean(p['Risco de Pessoas'])}</p>
+            <h4>Ação e prazo</h4><p>${clean(p['Ação de Desenvolvimento'])} <strong>${clean(p['Prazo'])}</strong></p>
+            <div class="auto-suggestion"><h4>Recomendação do assessment</h4><p>${clean(p['Recomendação'])||'Preencha a avaliação individual para gerar a recomendação.'}</p></div>
+          </div>`;
+        }).join('')}</div>
+      </div>`;
+    el.querySelector('.team-head').onclick=()=>el.classList.toggle('open');
+    acc.appendChild(el);
+  });
+
+  const groups={'Força':[],'Fraqueza':[],'Oportunidade':[],'Ameaça':[]};
+  (swot||[]).forEach(x=>{ const q=clean(x['Quadrante']); if(groups[q]) groups[q].push(x); });
+  document.getElementById('swot').innerHTML=Object.entries(groups).map(([q,items])=>
+    `<div class="quad q-${q.toLowerCase()}"><h3>${q}</h3><ul>`+
+    items.map(x=>`<li><strong>${clean(x['Tema'])}</strong> — ${clean(x['Descrição'])}</li>`).join('')+
+    `</ul></div>`).join('');
+}
+function workbookToData(wb){
+  const dims=XLSX.utils.sheet_to_json(wb.Sheets['Dimensoes']||wb.Sheets[wb.SheetNames[0]],{defval:''});
+  const swotSheet=wb.Sheets['SWOT'];
+  const teamsSheet=wb.Sheets['Times'];
+  const peopleSheet=wb.Sheets['Pessoas'];
+  const plansSheet=wb.Sheets['Planos_Riscos'];
+  const swot=swotSheet?XLSX.utils.sheet_to_json(swotSheet,{defval:''}):FALLBACK_SWOT;
+  const teams=teamsSheet?XLSX.utils.sheet_to_json(teamsSheet,{defval:''}):FALLBACK_TIMES;
+  const people=peopleSheet?XLSX.utils.sheet_to_json(peopleSheet,{defval:''}):FALLBACK_PEOPLE;
+  const plans=plansSheet?XLSX.utils.sheet_to_json(plansSheet,{defval:''}):FALLBACK_PR;
+  render(dims,swot,teams,people,plans);
+}
+document.getElementById('fileInput').addEventListener('change', async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  try{ const data=await f.arrayBuffer(); workbookToData(XLSX.read(data,{type:'array'})); }
+  catch(err){ document.getElementById('notice').style.display='block';
+    document.getElementById('notice').textContent='Não foi possível ler o Excel: '+err.message; }
+});
+async function tryDefault(){
+  try{
+    const r=await fetch('diagnostico_lideranca_assessment_v6.xlsx');
+    if(!r.ok) throw new Error('arquivo local não acessível');
+    const ab=await r.arrayBuffer(); workbookToData(XLSX.read(ab,{type:'array'}));
+  }catch(e){
+    render(FALLBACK_DIMS,FALLBACK_SWOT,FALLBACK_TIMES,FALLBACK_PEOPLE,FALLBACK_PR);
+    const n=document.getElementById('notice'); n.style.display='block';
+    n.textContent='Exibindo dados de exemplo. Para refletir suas alterações, clique em “Carregar Excel” e selecione diagnostico_lideranca_assessment_v6.xlsx.';
+  }
+}
+tryDefault();
+</script>
+</body></html>
