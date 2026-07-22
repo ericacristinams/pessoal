@@ -1,0 +1,51 @@
+Estilo
+Características
+Melhor contexto
+Analítico
+Baseia decisões em dados, lógica e planejamento
+Arquitetura, investigação, qualidade
+Executor
+Faz acontecer rapidamente, orientado a entrega
+Projetos críticos, execução
+Estruturado
+Organiza processos, documentação e governança
+PMO, operação, compliance
+Estratégico
+Pensa no longo prazo e nas dependências
+Liderança, arquitetura, produto
+Colaborativo
+Facilita integração e trabalho em equipe
+Tríades, times multidisciplinares
+Comunicador
+Influencia pessoas e conecta áreas
+Stakeholders, liderança
+Investigativo
+Gosta de descobrir causas e resolver problemas complexos
+Incidentes, debugging
+Inovador
+Questiona o padrão e propõe novas soluções
+Discovery, inovação
+Pragmático
+Foca no que gera resultado rapidamente
+Operação, crises
+Cuidadoso
+Evita riscos e valida antes de agir
+Regulatório, financeiro
+Independente
+Trabalha com pouca supervisão
+Especialistas, seniors
+Mentor
+Desenvolve pessoas naturalmente
+Tech Leads, SMEs
+Facilitador
+Remove impedimentos e conecta pessoas
+Coordenação, Scrum, liderança
+Adaptável
+Aprende rápido e muda de contexto facilmente
+Times em transformação
+Orientado ao Cliente
+Prioriza valor entregue ao usuário
+Produto, negócio
+Orientado a Processo
+Valoriza padrões e previsibilidade
+Governança, operação
