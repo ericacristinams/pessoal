@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EffortLab — Avaliação de Esforço W / Z / A</title>
+<style>
+:root{
+  --bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#697386;--line:#e7eaf0;
+  --primary:#ff6b2c;--primary2:#ff8a50;--dark:#101828;--ok:#12b76a;
+  --warn:#f79009;--danger:#f04438;--blue:#4776e6;--shadow:0 12px 30px rgba(16,24,40,.08);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}
+.shell{max-width:1440px;margin:0 auto;padding:28px}
+.hero{background:linear-gradient(130deg,#141a24,#232c3b);color:#fff;border-radius:24px;padding:28px 30px;box-shadow:var(--shadow);display:flex;justify-content:space-between;gap:24px;align-items:center}
+.hero h1{margin:0 0 8px;font-size:30px}.hero p{margin:0;color:#cfd5df;max-width:880px;line-height:1.55}
+.badge{padding:8px 12px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff22;font-size:13px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(310px,.9fr);gap:18px;margin-top:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 4px 18px rgba(16,24,40,.04);padding:20px}
+.card h2,.card h3{margin-top:0}.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 0 14px}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.form-grid.cols3{grid-template-columns:repeat(3,1fr)}.full{grid-column:1/-1}
+label.field{display:block;font-size:12px;color:var(--muted);font-weight:700;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;border:1px solid #d9dee8;background:#fff;border-radius:10px;padding:10px 11px;outline:none;color:var(--text)}
+textarea{min-height:86px;resize:vertical} input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,107,44,.12)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}.tab{border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px;text-align:left;cursor:pointer}.tab.active{border-color:var(--primary);background:#fff7f2}.tab strong{display:block;font-size:16px}.tab span{font-size:12px;color:var(--muted)}
+.method{display:none}.method.active{display:block}.callout{border-left:4px solid var(--primary);background:#fff7f2;padding:12px 14px;border-radius:8px;margin-bottom:14px;color:#4f2d1d;line-height:1.45}
+.check-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.check{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);padding:10px;border-radius:10px;background:#fff;font-size:13px}.check input{width:auto;margin-top:2px}
+.btn{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}.btn.primary{background:var(--primary);color:#fff}.btn.secondary{background:#eef1f6;color:#344054}.btn.ghost{background:#fff;border:1px solid var(--line);color:#344054}.btn.sm{padding:7px 10px;font-size:12px}
+.row-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.pill{background:#f2f4f7;color:#475467;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700}.muted{color:var(--muted);font-size:13px;line-height:1.5}
+table{width:100%;border-collapse:collapse}th,td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:middle}th{font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.035em;white-space:nowrap}
+.table-wrap{overflow:auto}.effort-table{min-width:1180px}.effort-table input,.effort-table select{padding:8px;font-size:12px}.num{width:76px}.tiny{width:62px}
+.metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px}.metric small{color:var(--muted)}.metric strong{display:block;font-size:23px;margin-top:4px}
+.summary{position:sticky;top:16px}.bar{height:9px;background:#edf0f5;border-radius:999px;overflow:hidden;margin:8px 0 4px}.bar>div{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));width:0}
+.status{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700}.status.ok{background:#ecfdf3;color:#027a48}.status.warn{background:#fffaeb;color:#b54708}.status.bad{background:#fef3f2;color:#b42318}
+.weight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.weight-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fbfcfe}.weight-card h4{margin:0 0 4px}.weight-card .weight{font-size:12px;color:var(--primary);font-weight:800}.weight-card select{margin-top:10px}
+.scorebox{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.score{background:#101828;color:#fff;border-radius:14px;padding:15px}.score small{color:#cfd5df}.score strong{display:block;font-size:28px;margin-top:3px}
+.effort-ruler{min-width:860px}.ruler-row{display:grid;grid-template-columns:42px minmax(160px,1.4fr) minmax(260px,2fr) 90px 95px 95px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.ruler-row.header{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:800}.rank{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#101828;color:#fff;font-weight:800}.effbar{height:14px;border-radius:999px;background:linear-gradient(90deg,#8bcf7b 0%,#f4cc64 48%,#ef6a5b 100%);position:relative;box-shadow:inset 0 0 0 1px rgba(16,24,40,.06)}.marker{position:absolute;top:50%;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid #344054;transform:translate(-50%,-55%);filter:drop-shadow(0 1px 1px #fff)}
+.priority-chip{padding:5px 8px;border-radius:999px;background:#eef4ff;color:#3538cd;font-weight:800;font-size:12px;display:inline-block}
+.gantt-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}.gantt{min-width:900px}.gantt-head,.gantt-row{display:grid;grid-template-columns:220px 1fr;min-height:42px}.gantt-head{background:#f8fafc;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;color:var(--muted)}.gantt-name{padding:11px;border-right:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.timeline{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(62px,1fr);align-items:stretch}.sprint-cell{border-right:1px solid var(--line);display:flex;align-items:center;justify-content:center;padding:4px;text-align:center}.gantt-row{border-bottom:1px solid var(--line)}.gantt-row:last-child{border-bottom:0}.track{position:relative;background-image:linear-gradient(to right,transparent calc(100% - 1px),var(--line) 0);background-size:var(--colWidth,10%) 100%}.taskbar{position:absolute;top:8px;height:25px;border-radius:7px;background:linear-gradient(90deg,#ff8a50,#ff6b2c);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;padding:0 8px;overflow:hidden;white-space:nowrap;box-shadow:0 3px 8px rgba(255,107,44,.25)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}.legend span{font-size:12px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+footer{padding:20px 0;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:980px){.grid{grid-template-columns:1fr}.summary{position:static}.form-grid,.form-grid.cols3,.check-grid,.weight-grid{grid-template-columns:1fr}.hero{flex-direction:column;align-items:flex-start}}
+@media print{body{background:#fff}.shell{max-width:none;padding:0}.hero,.card{box-shadow:none}.btn,.row-actions{display:none!important}.grid{grid-template-columns:1fr}.summary{position:static}.card{break-inside:avoid}.hero{border-radius:0}}
+
+.dynamic-matrix{min-width:1700px}
+.dynamic-matrix th.group{background:#f2f4f7;text-align:center;font-size:12px;color:#344054;border-right:2px solid #d0d5dd}
+.dynamic-matrix th.criterion{height:150px;vertical-align:bottom;padding:8px 6px;min-width:72px;max-width:92px}
+.vertical-label{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;display:inline-block;font-weight:700;color:#475467}
+.weight-line{display:block;margin-top:8px;font-size:11px;color:var(--primary);font-weight:800}
+.dynamic-matrix td.eval-cell{min-width:82px}
+.dynamic-matrix td.eval-cell select{min-width:78px;padding:7px 5px;font-size:11px}
+.dynamic-matrix .frozen{position:sticky;left:0;background:#fff;z-index:3}
+.dynamic-matrix .frozen2{position:sticky;left:46px;background:#fff;z-index:3}
+.dynamic-matrix .frozen3{position:sticky;left:135px;background:#fff;z-index:3}
+.dynamic-matrix thead .frozen,.dynamic-matrix thead .frozen2,.dynamic-matrix thead .frozen3{z-index:5;background:#f8fafc}
+.matrix-score{font-weight:900;font-size:14px}
+.grade-low{background:#ecfdf3;color:#027a48;padding:5px 8px;border-radius:999px;font-weight:800}
+.grade-med{background:#fffaeb;color:#b54708;padding:5px 8px;border-radius:999px;font-weight:800}
+.grade-high{background:#fef3f2;color:#b42318;padding:5px 8px;border-radius:999px;font-weight:800}
+.sequence-chart{display:grid;gap:10px}
+.sequence-row{display:grid;grid-template-columns:42px 210px 1fr 82px 92px;gap:10px;align-items:center}
+.sequence-track{height:28px;border-radius:8px;background:linear-gradient(90deg,#d1fadf 0 33.33%,#fef0c7 33.33% 66.66%,#fee4e2 66.66% 100%);position:relative;overflow:visible;border:1px solid var(--line)}
+.sequence-marker{position:absolute;top:-4px;width:3px;height:34px;background:#344054;transform:translateX(-50%);border-radius:3px}
+.sequence-marker:after{content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #344054}
+.sequence-labels{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:11px;color:var(--muted);margin:2px 0 8px 262px}
+.sequence-labels span:nth-child(1){text-align:left}.sequence-labels span:nth-child(2){text-align:center}.sequence-labels span:nth-child(3){text-align:right}
+.matrix-legend{display:flex;gap:18px;flex-wrap:wrap;margin:8px 0 0}
+.matrix-legend span{font-size:12px;color:var(--muted)}
+
+
+.milestone-config{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.milestone-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfe}
+.milestone-card h4{margin:0 0 8px;font-size:13px}
+.milestone-line{position:absolute;top:0;bottom:0;width:2px;background:#111;z-index:8;pointer-events:none}
+.milestone-line .milestone-tag{position:absolute;top:2px;left:5px;background:#111;color:#fff;padding:3px 6px;border-radius:5px;font-size:10px;font-weight:800;white-space:nowrap}
+.golive-line{position:absolute;top:0;bottom:0;width:3px;background:#d92d20;z-index:9;pointer-events:none}
+.golive-flag{position:absolute;top:2px;left:4px;display:flex;align-items:center;gap:3px;color:#b42318;font-size:11px;font-weight:900;white-space:nowrap}
+.golive-flag:before{content:"⚑";font-size:18px;line-height:1;color:#d92d20}
+.failure-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.failure-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfe}
+.failure-item label{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:700}
+.failure-item input[type="checkbox"]{width:auto;margin-top:2px}
+.failure-item textarea{margin-top:8px;min-height:70px}
+.failure-callout{border-left:4px solid #d92d20;background:#fff6f5;padding:12px 14px;border-radius:8px;margin-bottom:14px;color:#7a271a;line-height:1.45}
+@media(max-width:980px){.milestone-config,.failure-grid{grid-template-columns:1fr}}
+
+
+.milestone-list{display:grid;gap:10px}
+.milestone-row{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:end;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfcfe}
+.milestone-row .remove-milestone{align-self:end}
+.ruler-row{grid-template-columns:42px minmax(160px,1.35fr) minmax(250px,2fr) 80px 90px 85px 95px}
+@media(max-width:980px){.milestone-row{grid-template-columns:1fr}}
+
+
+/* v7 refinements */
+.milestone-table{min-width:720px}
+.milestone-table td,.milestone-table th{vertical-align:middle}
+.milestone-table input,.milestone-table select{padding:8px}
+.weight-input{
+  width:58px!important;
+  min-width:58px;
+  padding:5px 4px!important;
+  text-align:center;
+  font-size:11px!important;
+  font-weight:800;
+  color:var(--primary);
+  border-radius:7px!important;
+}
+.gantt-head .timeline{position:relative}
+.gantt-head .milestone-line,
+.gantt-head .golive-line{top:0;bottom:0;z-index:12}
+.milestone-line .milestone-tag,
+.golive-line .golive-flag{
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+}
+.golive-line .golive-flag{
+  background:#fff;
+  padding:3px 6px;
+  border-radius:5px;
+}
+.golive-line .golive-flag:before{margin-right:2px}
+.gantt-row:last-child .track{min-height:48px}
+.gantt-row:last-child .milestone-tag,
+.gantt-row:last-child .golive-flag{
+  top:50%;
+}
+
+
+.gantt-top-scroll{overflow-x:auto;overflow-y:hidden;height:18px;margin:0 0 6px;border:1px solid var(--line);border-radius:8px;background:#f8fafc}
+.gantt-top-scroll-inner{height:1px}
+.import-status{font-size:12px;color:var(--muted);margin-top:8px;min-height:18px}
+.file-input-hidden{display:none}
+
+
+.ai-card{
+  margin-top:14px;
+  border:1px solid #d9e2f1;
+  border-radius:14px;
+  padding:14px;
+  background:#f8fbff;
+}
+.ai-card h4{margin:0 0 8px}
+.ai-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.ai-metric{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+.ai-metric small{display:block;color:var(--muted);font-size:11px}
+.ai-metric strong{display:block;font-size:19px;margin-top:3px}
+.ai-source{font-size:11px;color:var(--muted);line-height:1.45;margin-top:8px}
+
+
+/* v10 - alinhamento e sincronização */
+#effortTable{min-width:1260px}
+#effortTable th:first-child,#effortTable td:first-child{width:82px;text-align:center}
+#effortTable .itemPriority{width:66px;text-align:center;font-weight:800}
+#effortTable th:nth-child(2){min-width:180px}
+#effortTable th:nth-child(3){min-width:160px}
+#effortTable th:nth-child(10){min-width:100px}
+.sync-flash{animation:syncFlash .35s ease-out}
+@keyframes syncFlash{from{background:#fff3ec}to{background:transparent}}
+
+
+/* v11 - horas ref, dependências e proporção visual */
+#effortTable{min-width:1420px}
+#effortTable th:nth-child(10){min-width:170px}
+.scorebox{grid-template-columns:repeat(2,minmax(0,1fr))}
+.score{min-height:116px;display:flex;flex-direction:column;justify-content:center;padding:14px}
+.score small,.score span{line-height:1.35}
+.dependency-select{min-width:160px}
+.dep-badge{display:inline-block;margin-top:3px;font-size:10px;color:var(--muted)}
+.taskbar.dep-task{outline:2px solid rgba(16,24,40,.08)}
+
+/* v12 - progresso, risco, matriz esforço x impacto, impressão e downloads */
+.progress-input{width:78px!important}
+.date-done{min-width:135px}
+.done-check{width:auto!important}
+.progress-track{position:absolute;inset:0;border-radius:7px;overflow:hidden;pointer-events:none}
+.progress-fill{height:100%;background:rgba(16,24,40,.22);border-radius:7px 0 0 7px}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:#175cd3;z-index:10;pointer-events:none}
+.today-tag{position:absolute;top:2px;left:4px;background:#175cd3;color:#fff;padding:2px 5px;border-radius:4px;font-size:9px;font-weight:800;white-space:nowrap}
+.risk-card{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfcfe}
+.risk-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.risk-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px}
+.risk-kpi small{display:block;color:var(--muted);font-size:11px}.risk-kpi strong{font-size:18px}
+.impact-matrix{display:grid;grid-template-columns:68px repeat(3,1fr);grid-template-rows:42px repeat(3,92px);gap:6px;margin-top:14px;min-width:620px}
+.impact-axis,.impact-cell{border:1px solid var(--line);border-radius:10px;padding:8px}
+.impact-axis{display:flex;align-items:center;justify-content:center;background:#f8fafc;font-size:11px;font-weight:800;color:var(--muted);text-align:center}
+.impact-cell{background:#fff;overflow:auto}
+.impact-cell strong{font-size:12px}.impact-cell .chip{display:inline-block;margin:2px;padding:4px 6px;border-radius:999px;background:#f2f4f7;font-size:10px}
+.impact-cell.hot{background:#fff3f0}.impact-cell.good{background:#eefbf3}.impact-cell.mid{background:#fffbeb}
+.model-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.file-input-hidden{display:none}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:#fff!important}
+  .hero{background:linear-gradient(130deg,#141a24,#232c3b)!important;color:#fff!important}
+  .effbar{background:linear-gradient(90deg,#8bcf7b 0%,#f4cc64 48%,#ef6a5b 100%)!important}
+  .taskbar{background:linear-gradient(90deg,#ff8a50,#ff6b2c)!important;color:#fff!important}
+  .progress-fill{background:rgba(16,24,40,.28)!important}
+  .milestone-line{background:#111!important}.golive-line{background:#d92d20!important}.today-line{background:#175cd3!important}
+  .grade-low{background:#ecfdf3!important;color:#027a48!important}.grade-med{background:#fffaeb!important;color:#b54708!important}.grade-high{background:#fef3f2!important;color:#b42318!important}
+  .gantt-top-scroll{display:none!important}
+  #gantt{overflow:visible!important}
+  #gantt .gantt{zoom:.62}
+  .table-wrap{overflow:visible!important}
+  .impact-cell.good{background:#eefbf3!important}.impact-cell.mid{background:#fffbeb!important}.impact-cell.hot{background:#fff3f0!important}
+}
+
+
+/* v13 - associação de atividades e legenda do Gantt */
+.activity-link-select{min-width:210px;min-height:70px;padding:6px!important}
+.hours-breakdown{display:block;margin-top:3px;font-size:10px;color:var(--muted);line-height:1.25}
+.gantt-color-legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin:10px 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe}
+.gantt-color-legend .legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.legend-swatch{width:28px;height:10px;border-radius:5px;display:inline-block;border:1px solid rgba(16,24,40,.08)}
+.legend-swatch.task{background:linear-gradient(90deg,#ff8a50,#ff6b2c)}
+.legend-swatch.progress{background:linear-gradient(90deg,rgba(16,24,40,.28) 0 60%,#ff7c42 60% 100%)}
+.legend-vline{width:2px;height:22px;display:inline-block;background:#111}
+.legend-vline.golive{background:#d92d20;width:3px}
+.legend-vline.today{background:#175cd3;width:2px}
+#effortTable{min-width:1900px}
+
+.hero-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.hero .btn-newsletter{
+  border:1px solid rgba(255,255,255,.28);
+  background:#fff;
+  color:#172033;
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:800;
+  cursor:pointer;
+}
+.hero .btn-newsletter:hover{background:#f8fafc}
+@media(max-width:900px){.hero-actions{width:100%;justify-content:flex-start}}
+
+
+/* v15 - sistema: baseline, cenários, risk engine, realizado e decisões */
+.system-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.baseline-table,.decision-table{min-width:760px}
+.baseline-table td,.baseline-table th,.decision-table td,.decision-table th{vertical-align:middle}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.scenario-card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.scenario-card small{display:block;color:var(--muted);font-size:11px}
+.scenario-card strong{display:block;margin-top:3px;font-size:17px}
+.risk-engine{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.risk-engine-item{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}
+.risk-engine-item small{display:block;color:var(--muted);font-size:11px}
+.risk-pill{display:inline-block;margin-top:4px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}
+.risk-low{background:#ecfdf3;color:#027a48}.risk-medium{background:#fffaeb;color:#b54708}.risk-high{background:#fef3f2;color:#b42318}.risk-na{background:#f2f4f7;color:#667085}
+.realized-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.delta-pos{color:#b42318}.delta-neg{color:#027a48}.delta-zero{color:#667085}
+.decision-log-form{display:grid;grid-template-columns:150px 1fr 170px auto;gap:8px;align-items:end}
+.dep-type{min-width:145px}
+.ai-reduction-activity{width:82px!important}
+.baseline-badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef4ff;color:#3538cd;font-size:10px;font-weight:800}
+@media(max-width:980px){
+ .scenario-grid,.risk-engine,.realized-grid{grid-template-columns:1fr}
+ .decision-log-form{grid-template-columns:1fr}
+}
+
+
+/* v16 - critérios dinâmicos + composição hierárquica de atividades */
+.criteria-editor{min-width:760px}
+.criteria-editor input{padding:7px}
+.criteria-editor .crit-weight{width:82px}
+.criteria-empty{padding:16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);background:#fbfcfe}
+.item-parent-row td{vertical-align:middle}
+.item-activities-detail{display:none}
+.item-activities-detail.open{display:table-row}
+.item-activities-detail td{background:#fafbfc;padding:0!important}
+.item-activities-panel{padding:12px 18px 14px 54px;border-top:1px solid var(--line)}
+.item-activities-panel .subhead{display:grid;grid-template-columns:32px 100px 1fr 110px;gap:8px;padding:5px 8px;font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:800}
+.item-activity-line{display:grid;grid-template-columns:32px 100px 1fr 110px;gap:8px;align-items:center;padding:7px 8px;border-top:1px solid #eef0f4;font-size:12px}
+.item-activity-line input{width:auto!important}
+.item-activity-line .activity-hours{text-align:right;font-weight:800}
+.item-activity-summary{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tree-toggle{width:28px;height:28px;padding:0!important;border-radius:7px!important}
+.tree-toggle .arrow{display:inline-block;transition:transform .15s ease}
+.tree-toggle.open .arrow{transform:rotate(90deg)}
+.item-total{font-weight:900}
+.item-hours-detail{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.criteria-total{font-size:12px;color:var(--muted)}
+.criteria-total strong{color:var(--text)}
+@media print{.item-activities-detail{display:table-row!important}}
+
+/* v17 - acompanhamento por atividade dentro do item */
+.item-activities-panel .subhead{grid-template-columns:32px 95px minmax(190px,1fr) 90px 100px 90px 145px}
+.item-activity-line{grid-template-columns:32px 95px minmax(190px,1fr) 90px 100px 90px 145px}
+.item-activity-line .progress-input{width:82px!important}
+.item-progress-auto{font-weight:900}
+.item-status-auto{font-size:10px;color:var(--muted);display:block;margin-top:3px}
+.item-activity-line.is-disabled{opacity:.55}
+.item-activity-line input:disabled{background:#f2f4f7}
+
+/* v23 - associação simplificada de atividades */
+.item-activities-panel .activity-picker{display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.item-activities-panel .activity-picker.open{display:block}
+.activity-picker-list{display:grid;gap:6px;margin-top:8px;max-height:220px;overflow:auto}
+.activity-picker-option{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:7px 8px;border:1px solid #eef0f4;border-radius:8px}
+.activity-picker-option span{font-size:12px}
+.item-activity-line{grid-template-columns:95px minmax(190px,1fr) 90px 100px 90px 145px 38px!important}
+.item-activities-panel .subhead{grid-template-columns:95px minmax(190px,1fr) 90px 100px 90px 145px 38px!important}
+
+/* v25 - tooltips explicativos para cálculos */
+.calc-help{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:18px;
+  height:18px;
+  margin-left:5px;
+  border:1px solid #cfd4dc;
+  border-radius:50%;
+  background:#fff;
+  color:#475467;
+  font-size:11px;
+  font-weight:900;
+  line-height:1;
+  cursor:help;
+  vertical-align:middle;
+  user-select:none;
+  outline:none;
+}
+.calc-help:hover,
+.calc-help:focus{
+  border-color:#98a2b3;
+  color:#172033;
+}
+.calc-help::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  z-index:9999;
+  left:50%;
+  bottom:calc(100% + 9px);
+  transform:translateX(-50%);
+  width:min(330px,80vw);
+  padding:10px 12px;
+  border-radius:10px;
+  background:#101828;
+  color:#fff;
+  font-size:11px;
+  line-height:1.45;
+  font-weight:500;
+  white-space:normal;
+  text-align:left;
+  box-shadow:0 8px 24px rgba(16,24,40,.18);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .12s ease;
+}
+.calc-help::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 3px);
+  transform:translateX(-50%);
+  border:6px solid transparent;
+  border-top-color:#101828;
+  opacity:0;
+  visibility:hidden;
+}
+.calc-help:hover::after,
+.calc-help:focus::after,
+.calc-help:hover::before,
+.calc-help:focus::before{
+  opacity:1;
+  visibility:visible;
+}
+.calc-help.right::after{left:auto;right:0;transform:none}
+.calc-help.right::before{left:auto;right:7px;transform:none}
+.calc-label{display:inline-flex;align-items:center;gap:2px}
+@media(max-width:700px){
+  .calc-help::after{left:0;transform:none;width:min(300px,78vw)}
+  .calc-help::before{left:8px;transform:none}
+}
+@media print{
+  .calc-help{display:none!important}
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="hero">
+  <div>
+    <h1>Avaliação de Esforço — Grau W, Z e A</h1>
+    <p>Da avaliação qualitativa ao plano executável: calibre complexidade, estime itens, converta em horas/dias/sprints/releases, priorize e gere automaticamente a régua de esforço e o Gantt.</p>
+  </div>
+  <div class="hero-actions">
+    <button class="btn-newsletter" type="button" onclick="createBaseline()">Criar Baseline</button>
+    <button class="btn-newsletter" type="button" onclick="exportNewsletter()">Exportar Newsletter</button>
+    <div class="badge" id="sessionStamp">Sessão</div>
+  </div>
+</header>
+
+<div class="grid">
+<main>
+
+<section class="card">
+  <h2>1. Contexto da demanda</h2>
+  <div class="form-grid">
+    <div><label class="field">Funcionalidade / Projeto</label><input id="project" placeholder="Ex.: Novo portal Comercial / Crédito"></div>
+    <div><label class="field">Responsável</label><input id="owner" placeholder="Product / Tech / Sponsor"></div>
+    <div><label class="field">Time(s) envolvidos</label><input id="teams" placeholder="Ex.: Front, BFF, Crédito, Dados"></div>
+    <div><label class="field">Data alvo</label><input id="targetDate" type="date"></div>
+    <div class="full"><label class="field">Objetivo / resultado esperado</label><textarea id="goal" placeholder="Que problema será resolvido? Qual resultado de negócio/cliente esperamos?"></textarea></div>
+    <div class="full"><label class="field">Escopo conhecido</label><textarea id="scope" placeholder="O que entra nesta avaliação? O que explicitamente fica fora?"></textarea></div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title"><h2 style="margin:0">2. Grau da avaliação</h2><span class="pill" id="currentGrade">Grau W</span></div>
+  <div class="tabs">
+    <button class="tab active" data-grade="W"><strong>Grau W · Wide</strong><span>Ordem de grandeza</span></button>
+    <button class="tab" data-grade="Z"><strong>Grau Z · Zoom</strong><span>Refinamento técnico</span></button>
+    <button class="tab" data-grade="A"><strong>Grau A · Accountable</strong><span>Plano compromissado</span></button>
+  </div>
+  <div class="method active" id="method-W">
+    <div class="callout"><strong>Objetivo:</strong> criar uma visão comparável do esforço global. A avaliação considera não apenas quantidade de trabalho, mas complexidade técnica, riscos, dependências, impacto e maturidade da solução.</div>
+    <div class="check-grid">
+      <label class="check"><input type="checkbox" class="readiness"> Objetivo e valor de negócio compreendidos</label>
+      <label class="check"><input type="checkbox" class="readiness"> Principais sistemas/times identificados</label>
+      <label class="check"><input type="checkbox" class="readiness"> Dependências macro mapeadas</label>
+      <label class="check"><input type="checkbox" class="readiness"> Premissas e dúvidas registradas</label>
+    </div>
+  </div>
+  <div class="method" id="method-Z">
+    <div class="callout"><strong>Objetivo:</strong> dar zoom na solução: decompor requisitos, arquitetura, integrações, dados, segurança, riscos e NFRs para reduzir a incerteza.</div>
+    <div class="check-grid">
+      <label class="check"><input type="checkbox" class="readiness"> Requisitos funcionais refinados</label>
+      <label class="check"><input type="checkbox" class="readiness"> Fluxos/protótipos disponíveis</label>
+      <label class="check"><input type="checkbox" class="readiness"> Arquitetura e integrações avaliadas</label>
+      <label class="check"><input type="checkbox" class="readiness"> Riscos e dependências classificados</label>
+      <label class="check"><input type="checkbox" class="readiness"> NFRs / segurança / observabilidade analisados</label>
+      <label class="check"><input type="checkbox" class="readiness"> Spikes / POCs necessários definidos</label>
+    </div>
+  </div>
+  <div class="method" id="method-A">
+    <div class="callout"><strong>Objetivo:</strong> fechar uma estimativa executável, com backlog de entrega, capacidade, responsáveis, marcos e critérios claros para iniciar o desenvolvimento.</div>
+    <div class="check-grid">
+      <label class="check"><input type="checkbox" class="readiness"> Escopo e critérios de aceite aprovados</label>
+      <label class="check"><input type="checkbox" class="readiness"> Backlog de execução decomposto</label>
+      <label class="check"><input type="checkbox" class="readiness"> Responsáveis e capacidade confirmados</label>
+      <label class="check"><input type="checkbox" class="readiness"> Datas/marcos planejados</label>
+      <label class="check"><input type="checkbox" class="readiness"> Dependências com plano de ação</label>
+      <label class="check"><input type="checkbox" class="readiness"> Critérios de Go / No-Go alinhados</label>
+    </div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title"><h2 style="margin:0">3. Calibração qualitativa — referência do Grau W</h2><span class="pill">pesos editáveis no código</span></div>
+  <p class="muted">Inspirado no modelo já aplicado pelo time: a avaliação qualitativa calibra o esforço numérico. Baixo = 1, Médio = 2, Alto = 3. O índice final pondera Técnica em 62%, Risco/Escopo em 24% e Negócio/Contexto em 14%.</p>
+  <div class="weight-grid">
+    <div class="weight-card"><div class="weight">62% DO ÍNDICE</div><h4>Técnico</h4><div class="muted">Infra, dados, integrações, segurança, performance e maturidade técnica.</div><select id="qTech" onchange="recalc()"><option value="1">Baixo</option><option value="2" selected>Médio</option><option value="3">Alto</option></select></div>
+    <div class="weight-card"><div class="weight">24% DO ÍNDICE</div><h4>Risco, escopo e complexidade</h4><div class="muted">Incerteza, dependências, amplitude do escopo e criticidade da mudança.</div><select id="qRisk" onchange="recalc()"><option value="1">Baixo</option><option value="2" selected>Médio</option><option value="3">Alto</option></select></div>
+    <div class="weight-card"><div class="weight">14% DO ÍNDICE</div><h4>Negócio, usuário e contexto</h4><div class="muted">Impacto, abrangência de usuários, contexto operacional e mudança de processo.</div><select id="qContext" onchange="recalc()"><option value="1">Baixo</option><option value="2" selected>Médio</option><option value="3">Alto</option></select></div>
+  </div>
+  <div class="scorebox">
+    <div class="score"><small>Índice qualitativo</small><strong id="qualScore">2,00</strong><span id="qualLabel">MÉDIO</span></div>
+    <div class="score"><small>Fator de calibração</small><strong id="qualFactor">1,00×</strong><span>aplicado ao esforço base</span></div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title"><h2 style="margin:0">4. Capacidade e conversões</h2><span class="pill">Sprint = 2 semanas / 10 dias úteis</span></div>
+  <div class="form-grid cols3">
+    <div><label class="field">Pessoas na construção</label><input type="number" id="teamSize" value="" placeholder="Ex.: 4" min="1" oninput="recalc()"></div>
+    <div><label class="field">Horas por pessoa / dia</label><input type="number" id="hoursDay" value="" placeholder="Ex.: 8" min="1" step=".5" oninput="recalc()"></div>
+    <div><label class="field">Foco produtivo (%)</label><input type="number" id="focusPct" value="" placeholder="Ex.: 70" min="10" max="100" oninput="recalc()"></div>
+    <div><label class="field">Dias úteis por sprint</label><input type="number" id="sprintDays" value="" placeholder="10" min="1" oninput="recalc()"></div>
+    <div><label class="field">Sprints por release</label><input type="number" id="sprintsRelease" value="" placeholder="Ex.: 4" min="1" oninput="recalc()"></div>
+    <div><label class="field">Início planejado</label><input type="date" id="startDate" oninput="recalc()"></div>
+  </div>
+  <p class="muted">A duração de calendário considera a capacidade produtiva do time: pessoas × horas/dia × foco. O esforço continua sendo registrado em horas de trabalho; dias, sprints e releases são projeções de calendário.</p>
+</section>
+
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title">
+    <h2 style="margin:0">5. Catálogo de atividades comuns</h2>
+    <span class="pill">tempo de referência do time</span>
+  </div>
+  <div class="callout">
+    <strong>Como usar:</strong> estas são atividades recorrentes de engenharia com tempo já conhecido pelo time.
+    Marque apenas as que se aplicam ao projeto. Elas entram diretamente no esforço total e no Gantt, sem precisar
+    “pontuar” novamente a complexidade.
+  </div>
+  <div class="table-wrap">
+    <table id="activityTable" class="effort-table" style="min-width:900px">
+      <thead>
+        <tr>
+          <th>Código</th><th>Tema</th><th>Atividade</th>
+          <th>Tempo</th><th>Unidade</th><th>IA redução % <span class="calc-help" tabindex="0" data-tooltip="Percentual de redução aplicado somente às horas desta atividade quando ela estiver associada a uma funcionalidade. Ex.: 40h com 25% de redução passam a contribuir com 30h.">i</span></th><th>Observação</th><th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="row-actions">
+    <button class="btn secondary" onclick="addCustomActivity()">+ Nova atividade</button>
+    <button class="btn ghost" onclick="loadActivityModel()">Carregar atividades modelo</button>
+  </div>
+  <p class="muted">
+    Este bloco funciona como <strong>catálogo de atividades e tempos de referência</strong>. O campo <strong>IA redução %</strong> reduz o esforço da atividade sempre que ela estiver vinculada a um item do bloco 6. Ex.: 40h com IA 25% passa a contribuir com 30h. O progresso, conclusão e data real são registrados dentro de cada item do bloco 6.
+  </p>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title">
+    <h2 style="margin:0">6. Itens / funcionalidades a avaliar</h2>
+    <span class="pill">régua qualitativa Baixo → Alto</span>
+  </div>
+  <div class="callout">
+    <strong>Regra da dinâmica:</strong> o avaliador não informa notas numéricas.
+    Para esforço, valor, urgência e redução de risco, escolha somente <strong>Baixo, Médio ou Alto</strong>.
+    O cálculo numérico acontece por trás da tela apenas para converter a avaliação em horas, dias, sprints e releases.
+  </div>
+  <div class="table-wrap">
+    <table id="effortTable" class="effort-table">
+      <thead>
+        <tr>
+          <th>Prioridade</th><th>Item / Componente</th><th>Tema</th><th>Disciplina</th>
+          <th>Esforço</th><th>Impacto</th><th>Urgência</th>
+          <th>Horas planejadas <span class="calc-help" tabindex="0" data-tooltip="Horas planejadas = (esforço-base + horas efetivas das atividades associadas) × fator de complexidade da matriz W/Z/A. As atividades já consideram a redução de IA configurada no bloco 5.">i</span></th><th>Sprint eq. <span class="calc-help" tabindex="0" data-tooltip="Sprint equivalente = horas planejadas da funcionalidade ÷ capacidade efetiva do time por sprint. Ex.: 0,6 significa 60% da capacidade de uma sprint.">i</span></th><th>Prazo <span class="calc-help" tabindex="0" data-tooltip="Prazo calendário = sprint equivalente arredondada para cima. Ex.: 0,6 sprint equivalente ocupa 1 sprint calendário; 1,4 ocupa 2.">i</span></th><th>Lead time <span class="calc-help" tabindex="0" data-tooltip="Lead time indica em qual sprint a funcionalidade termina considerando sua duração e as dependências anteriores. Pode ser maior que o prazo próprio da funcionalidade.">i</span></th><th>Atividades</th><th>Tipo depend.</th><th>Depende de</th><th>Progresso % <span class="calc-help" tabindex="0" data-tooltip="Progresso geral do item = média ponderada do progresso das atividades associadas pelas respectivas horas efetivas. Atividades maiores pesam mais.">i</span></th><th>Concluído</th><th>Data conclusão</th><th>Classificação</th><th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="row-actions">
+    <button class="btn secondary" onclick="addRow()">+ Adicionar item</button>
+    <button class="btn ghost" onclick="addStackPreset()">Adicionar stack de exemplo</button>
+  </div>
+  <div class="section-title" style="margin-top:18px">
+    <div><strong>Matriz Esforço × Impacto</strong><div class="muted">Posicionamento automático com recomendação: Fazer já, Planejar, Fill-in/Se sobrar tempo, Adiar ou Descartar.</div></div>
+  </div>
+  <div class="table-wrap"><div id="impactMatrix" class="impact-matrix"></div></div>
+
+  <p class="muted">
+    O item funciona como uma <strong>linha-pai</strong>, semelhante ao MS Project. Expanda <strong>Atividades</strong> para selecionar as tarefas cadastradas no bloco 5.
+    As <strong>Horas totais</strong> são calculadas automaticamente como esforço-base + soma das atividades vinculadas.
+    A coluna <strong>Prioridade</strong> define a ordem do item e a <strong>Classificação</strong> vem da matriz W/Z/A quando todos os critérios estiverem preenchidos.
+  </p>
+</section>
+
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title">
+    <div>
+      <h2 style="margin:0">7. Visão da dinâmica — matriz W / Z / A</h2>
+      <div class="muted">A visão usada na sessão: prioridade, item, critérios do grau, peso, resultado ponderado, esforço e prazo.</div>
+    </div>
+    <span class="pill" id="matrixGrade">Grau W</span>
+  </div>
+  <div class="callout">
+    <strong>Preenchimento:</strong> cada critério é avaliado na régua <strong>Baixo / Médio / Alto</strong>.
+    Os valores internos são 1 / 2 / 3 e são multiplicados pelo peso do critério. O resultado final é normalizado em 0–100%.
+    A classificação de esforço é: <strong>Baixo &lt; 40%</strong>, <strong>Médio 40–64%</strong> e <strong>Alto ≥ 65%</strong>.
+  </div>
+  <div class="section-title" style="margin-top:14px">
+    <div>
+      <strong>Critérios do grau</strong>
+      <div class="muted">Não são fixos. Cadastre os pilares, critérios e pesos que fazem sentido para esta avaliação.</div>
+    </div>
+    <div class="row-actions" style="margin:0">
+      <button type="button" class="btn secondary sm" onclick="addCriterion()">+ Critério</button>
+      <button type="button" class="btn ghost sm" onclick="loadCriteriaExample()">Carregar exemplo</button>
+      <button type="button" class="btn ghost sm" onclick="clearCriteria()">Limpar critérios</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="criteria-editor">
+      <thead><tr><th>Pilar</th><th>Critério</th><th>Peso %</th><th>Sentido</th><th></th></tr></thead>
+      <tbody id="criteriaEditorBody"></tbody>
+    </table>
+  </div>
+  <div class="criteria-total" style="margin:8px 0 14px">Peso total <span class="calc-help" tabindex="0" data-tooltip="Soma simples dos pesos cadastrados para o grau atual. Alterar um peso não redistribui os demais. O sistema normaliza os pesos no cálculo ponderado.">i</span>: <strong id="criteriaWeightTotal">0%</strong> <span class="muted">· informativo; alterar um peso não redistribui os demais.</span></div>
+
+  <div class="table-wrap">
+    <table id="dynamicMatrix" class="dynamic-matrix">
+      <thead id="dynamicMatrixHead"></thead>
+      <tbody id="dynamicMatrixBody"></tbody>
+    </table>
+  </div>
+  <div class="matrix-legend">
+    <span><strong>Prioridade:</strong> ordem definida na própria dinâmica.</span>
+    <span><strong>Resultado:</strong> soma ponderada normalizada.</span>
+    <span><strong>Sprints:</strong> prazo sugerido a partir da escala de esforço e capacidade configurada.</span>
+  </div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <h2>8. Riscos, dependências e premissas</h2>
+  <div class="form-grid">
+    <div><label class="field">Riscos principais</label><textarea id="risks" placeholder="Integração legada, SLA externo, performance, dados incompletos..."></textarea></div>
+    <div><label class="field">Dependências</label><textarea id="dependencies" placeholder="Outro time, fornecedor, arquitetura, infra, aprovação..."></textarea></div>
+    <div><label class="field">Premissas</label><textarea id="assumptions" placeholder="O que estamos assumindo como verdade para estimar?"></textarea></div>
+    <div><label class="field">Fora de escopo</label><textarea id="outscope" placeholder="Itens explicitamente não contemplados."></textarea></div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title"><h2 style="margin:0">9. Régua de esforço, prioridade e prazo</h2><span class="pill">sumarização automática</span></div>
+  <div class="callout" style="margin-top:12px">
+    <strong>Cálculo revisado:</strong> cada funcionalidade parte do esforço-base + atividades vinculadas já com redução de IA.
+    A matriz aplica fator de complexidade <strong>0,90× / 1,00× / 1,15×</strong>. A capacidade efetiva por sprint é
+    <strong>pessoas × horas/dia × foco × dias úteis</strong>. <strong>Sprint equivalente</strong> = horas planejadas ÷ capacidade;
+    <strong>prazo calendário</strong> arredonda para a sprint de conclusão; <strong>lead time</strong> inclui espera por dependências.
+    No projeto, a calibração global e o buffer são aplicados ao esforço consolidado. A confiança não aumenta esforço: ela reduz incerteza.
+  </div>
+  <div class="table-wrap"><div id="ruler" class="effort-ruler"></div></div>
+  <p class="muted">A seta posiciona cada item na régua Baixo → Médio → Alto. A prioridade é definida pelo grupo. A régua mostra a complexidade calculada e o prazo derivado das horas e da capacidade informada.</p>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title"><h2 style="margin:0">10. Gantt por sprint</h2><span class="pill" id="ganttRange">planejamento</span></div>
+  
+  
+  <div class="section-title" style="margin-top:6px">
+    <div>
+      <strong>Marcos do projeto</strong>
+      <div class="muted">Cadastro e edição no mesmo formato da tabela de itens.</div>
+    </div>
+    <button class="btn secondary sm" type="button" onclick="addMilestone()">+ Adicionar milestone</button>
+  </div>
+  <div class="table-wrap">
+    <table class="milestone-table">
+      <thead>
+        <tr><th>Tipo</th><th>Nome</th><th>Após qual sprint?</th><th></th></tr>
+      </thead>
+      <tbody id="milestoneList"></tbody>
+    </table>
+  </div>
+  <div class="muted" style="margin:10px 0">
+    As linhas verticais atravessam o cabeçalho e todas as linhas do Gantt. Os <strong>rótulos</strong> aparecem somente na linha “Marcos do projeto”.
+  </div>
+    <div class="gantt-color-legend">
+    <div class="legend-item"><span class="legend-swatch task"></span> Planejado / duração do item</div>
+    <div class="legend-item"><span class="legend-swatch progress"></span> Parte já concluída</div>
+    <div class="legend-item"><span class="legend-vline"></span> Milestone</div>
+    <div class="legend-item"><span class="legend-vline golive"></span> Go Live</div>
+    <div class="legend-item"><span class="legend-vline today"></span> Hoje</div>
+  </div>
+  <div class="section-title" style="margin-top:16px"><div><strong>Capacidade por sprint</strong><span class="calc-help" tabindex="0" data-tooltip="Distribui as horas planejadas das funcionalidades pelas sprints onde elas aparecem no Gantt. Uso = carga da sprint ÷ capacidade efetiva da sprint. Acima de 100% significa que o planejamento não cabe na capacidade disponível.">i</span><div class="muted">Carga planejada ÷ capacidade efetiva. Acima de 100% indica sobrecarga.</div></div></div>
+  <div id="capacityBySprint" class="table-wrap"></div>
+<div id="ganttTopScroll" class="gantt-top-scroll" aria-label="Rolagem horizontal do roadmap"><div id="ganttTopScrollInner" class="gantt-top-scroll-inner"></div></div>
+  <div id="gantt" class="gantt-wrap"></div>
+  <div class="legend"><span><i class="dot" style="background:#ff6b2c"></i>Item planejado</span><span>Sequenciamento automático pela prioridade sugerida e capacidade informada.</span></div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title">
+    <h2 style="margin:0">11. Critérios de insucesso do projeto</h2>
+    <span class="pill">definição prévia</span>
+  </div>
+  <div class="failure-callout">
+    <strong>Objetivo:</strong> definir antes da execução quais condições fariam o projeto ser considerado malsucedido.
+    Isso evita que o sucesso seja reinterpretado depois da entrega e ajuda a orientar decisões de escopo, prazo, qualidade e adoção.
+  </div>
+  <div class="failure-grid">
+    <div class="failure-item">
+      <label><input type="checkbox" id="failDeadline"> Prazo / Go Live</label>
+      <textarea id="failDeadlineText" placeholder="Ex.: Go Live após a data regulatória ou atraso superior a 2 sprints."></textarea>
+    </div>
+    <div class="failure-item">
+      <label><input type="checkbox" id="failScope"> Escopo / Resultado esperado</label>
+      <textarea id="failScopeText" placeholder="Ex.: funcionalidades essenciais não entregues ou resultado de negócio não atingido."></textarea>
+    </div>
+    <div class="failure-item">
+      <label><input type="checkbox" id="failQuality"> Qualidade / Estabilidade</label>
+      <textarea id="failQualityText" placeholder="Ex.: incidentes críticos, regressões relevantes ou performance abaixo do mínimo acordado."></textarea>
+    </div>
+    <div class="failure-item">
+      <label><input type="checkbox" id="failAdoption"> Adoção / Usuário</label>
+      <textarea id="failAdoptionText" placeholder="Ex.: baixa adesão, abandono do fluxo ou necessidade de retorno ao processo anterior."></textarea>
+    </div>
+    <div class="failure-item">
+      <label><input type="checkbox" id="failRisk"> Risco / Compliance</label>
+      <textarea id="failRiskText" placeholder="Ex.: não atendimento a requisito regulatório, segurança ou controle obrigatório."></textarea>
+    </div>
+    <div class="failure-item">
+      <label><input type="checkbox" id="failCost"> Esforço / Capacidade</label>
+      <textarea id="failCostText" placeholder="Ex.: esforço real acima de X% da estimativa ou consumo de capacidade que inviabilize outras prioridades."></textarea>
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <label class="field">Definição executiva de insucesso</label>
+    <textarea id="failureDefinition" placeholder="Em uma frase: este projeto será considerado malsucedido se..."></textarea>
+  </div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <h2>12. Decisão da sessão</h2>
+  <div class="form-grid">
+    <div><label class="field">Confiança da estimativa <span class="calc-help" tabindex="0" data-tooltip="Confiança não multiplica as horas. Quanto maior a confiança, menor o risco de confiança e menor o intervalo de incerteza mostrado para a estimativa.">i</span></label><input type="range" min="10" max="100" value="" id="confidence" oninput="recalc()"><div class="muted">Quanto maior a confiança, menor o risco de confiança e mais estreito o intervalo da estimativa.</div></div>
+    <div><label class="field">Buffer de risco (%)</label><input type="number" min="0" max="100" value="" id="buffer" oninput="recalc()"></div>
+    <div><label class="field">Próximo passo</label><select id="decision"><option value="" selected>Selecione</option><option>Avançar para o próximo grau</option><option>Refinar antes de avançar</option><option>Executar spike / POC</option><option>Reavaliar escopo</option><option>Não seguir neste momento</option></select></div>
+    <div><label class="field">Data de revisão</label><input type="date" id="reviewDate"></div>
+    <div class="full"><label class="field">Registro da decisão</label><textarea id="notes" placeholder="Decisões, divergências, aprovações e pendências da sessão."></textarea></div>
+  </div>
+
+</section>
+
+<section class="card" style="margin-top:18px">
+  <div class="section-title">
+    <div>
+      <h2 style="margin:0">13. Baseline, decisões e aprendizado</h2>
+      <div class="muted">Fecha o ciclo: planejado → execução → realizado → calibração.</div>
+    </div>
+    <button class="btn secondary sm" type="button" onclick="createBaseline()">Criar baseline</button>
+  </div>
+
+  <div class="callout">
+    <strong>Baseline:</strong> congele uma fotografia do planejamento antes de iniciar ou sempre que houver um replanejamento relevante.
+    As versões anteriores ficam preservadas para comparação.
+  </div>
+
+  <div class="table-wrap">
+    <table class="baseline-table">
+      <thead><tr><th>Versão</th><th>Data</th><th>Esforço <span class="calc-help" tabindex="0" data-tooltip="Fotografia das horas planejadas no momento da criação do baseline.">i</span></th><th>Sprints <span class="calc-help" tabindex="0" data-tooltip="Fotografia da quantidade de sprints equivalente no momento da criação do baseline.">i</span></th><th>Go Live</th><th>Itens</th><th></th></tr></thead>
+      <tbody id="baselineBody"><tr><td colspan="7" class="muted">Nenhum baseline criado.</td></tr></tbody>
+    </table>
+  </div>
+
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+
+  <strong>Registro de decisões</strong>
+  <div class="decision-log-form" style="margin-top:10px">
+    <div><label class="field">Data</label><input type="date" id="decisionLogDate"></div>
+    <div><label class="field">Decisão / mudança</label><input id="decisionLogText" placeholder="Ex.: Migração histórica ficou fora do escopo."></div>
+    <div><label class="field">Responsável</label><input id="decisionLogOwner" placeholder="Nome / papel"></div>
+    <button type="button" class="btn secondary" onclick="addDecisionLog()">Adicionar</button>
+  </div>
+  <div class="table-wrap" style="margin-top:10px">
+    <table class="decision-table">
+      <thead><tr><th>Data</th><th>Decisão</th><th>Responsável</th><th></th></tr></thead>
+      <tbody id="decisionLogBody"><tr><td colspan="4" class="muted">Nenhuma decisão registrada.</td></tr></tbody>
+    </table>
+  </div>
+
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+
+  <strong>Realizado × previsto</strong>
+  <div class="realized-grid" style="margin-top:10px">
+    <div><label class="field">Esforço realizado (h)</label><input type="number" id="actualHours" min="0" oninput="renderActualVsPlanned()"></div>
+    <div><label class="field">Sprints realizadas</label><input type="number" id="actualSprints" min="0" step=".1" oninput="renderActualVsPlanned()"></div>
+    <div><label class="field">Data real de conclusão</label><input type="date" id="actualEndDate" oninput="renderActualVsPlanned()"></div>
+  </div>
+  <div class="scenario-grid" style="margin-top:10px">
+    <div class="scenario-card"><small>Desvio de esforço</small><strong id="actualHoursDelta">—</strong></div>
+    <div class="scenario-card"><small>Desvio de prazo</small><strong id="actualSprintsDelta">—</strong></div>
+    <div class="scenario-card"><small>Precisão da estimativa</small><strong id="estimateAccuracy">—</strong></div>
+  </div>
+  <div style="margin-top:10px"><label class="field">Aprendizados / calibração</label><textarea id="lessonsLearned" placeholder="O que deve mudar nos pesos, tempos de referência ou premissas para a próxima estimativa?"></textarea></div>
+</section>
+
+</main>
+
+<aside>
+<section class="card summary">
+  <h3>Resumo executivo</h3>
+  <div class="metric-grid">
+    <div class="metric"><small>Esforço calibrado <span class="calc-help" tabindex="0" data-tooltip="Soma das horas planejadas das funcionalidades após aplicar o fator de calibração global do projeto.">i</span></small><strong><span id="baseHours">0</span>h</strong></div>
+    <div class="metric"><small>Com buffer <span class="calc-help" tabindex="0" data-tooltip="Horas calibradas × (1 + buffer%). O buffer representa margem para variação e incertezas residuais.">i</span></small><strong><span id="riskHours">0</span>h</strong></div>
+    <div class="metric"><small>Dias úteis <span class="calc-help" tabindex="0" data-tooltip="Horas finais ÷ capacidade efetiva diária do time. A capacidade diária considera pessoas × horas/dia × foco%.">i</span></small><strong id="daysMetric">0</strong></div>
+    <div class="metric"><small>Sprints <span class="calc-help" tabindex="0" data-tooltip="Esforço consolidado do projeto ÷ capacidade efetiva por sprint. Este é o equivalente de capacidade; o prazo calendário pode ser maior por dependências e sobrecarga.">i</span></small><strong id="sprintsMetric">0</strong></div>
+      <div class="metric"><small>Capacidade / sprint <span class="calc-help" tabindex="0" data-tooltip="Capacidade por sprint = pessoas × horas por dia × foco produtivo × dias úteis da sprint.">i</span></small><strong id="sprintCapacityMetric">0h</strong></div>
+      <div class="metric"><small>Prazo calendário <span class="calc-help" tabindex="0" data-tooltip="Prazo macro arredondado para a sprint de conclusão. O Gantt pode ampliar esse prazo quando existem dependências ou sobrecarga de capacidade.">i</span></small><strong id="calendarProjectMetric">0 sprint</strong></div>
+    <div class="metric"><small>Releases</small><strong id="releasesMetric">0</strong></div>
+    <div class="metric"><small>Porte</small><strong id="size">—</strong></div>
+  </div>
+
+
+  <div class="ai-card">
+    <h4>Estimativa com IA · Claude Code / agentes como Devin</h4>
+    <div class="form-grid">
+      <div>
+        <label class="field">Redução de desenvolvimento (%)</label>
+        <input type="number" id="aiReductionPct" min="0" max="70" step="1" value="20" oninput="recalc()">
+      </div>
+      <div>
+        <label class="field">Cenário</label>
+        <select id="aiScenario" onchange="applyAIScenario(this.value)">
+          <option value="" selected>Selecione</option>
+          <option value="10">Conservador · 10%</option>
+          <option value="20">Referência · 20%</option>
+          <option value="33">Agressivo · 33%</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+    </div>
+    <div class="ai-metrics">
+      <div class="ai-metric"><small>Esforço estimado com IA</small><strong id="aiHoursMetric">0h</strong></div>
+      <div class="ai-metric"><small>Prazo estimado com IA</small><strong id="aiSprintsMetric">0 sprints</strong></div>
+      <div class="ai-metric"><small>Dias úteis com IA</small><strong id="aiDaysMetric">0</strong></div>
+      <div class="ai-metric"><small>Horas potencialmente reduzidas</small><strong id="aiSavedHoursMetric">0h</strong></div>
+    </div>
+    <div class="ai-source">
+      Referência de mercado 2026: usar como hipótese de planejamento, não garantia. Estudos públicos apontam grande variação conforme maturidade do time, tipo de tarefa, contexto disponível para o agente e nível de revisão humana.
+    </div>
+  </div>
+
+
+
+  <div class="ai-card">
+    <h4>Cenários de planejamento <span class="calc-help" tabindex="0" data-tooltip="O cenário provável usa o esforço atual. O agressivo reduz a projeção em 10%; o conservador adiciona 20%. Servem para comparação executiva, não substituem o baseline.">i</span></h4>
+    <div class="scenario-grid">
+      <div class="scenario-card"><small>Agressivo</small><strong id="scenarioAggressive">—</strong><span class="muted">menor margem</span></div>
+      <div class="scenario-card"><small>Provável</small><strong id="scenarioProbable">—</strong><span class="muted">planejamento atual</span></div>
+      <div class="scenario-card"><small>Conservador</small><strong id="scenarioConservative">—</strong><span class="muted">maior proteção</span></div>
+    </div>
+  </div>
+
+  <div class="risk-card">
+    <strong>Risk Engine</strong><span class="calc-help" tabindex="0" data-tooltip="Consolida risco de prazo, dependências, escopo/complexidade e confiança. O risco geral assume o pior nível entre as dimensões.">i</span>
+    <div style="margin-top:7px"><span id="overallRisk" class="risk-pill risk-na">Sem dados</span></div>
+    <div class="risk-engine">
+      <div class="risk-engine-item"><small>Prazo / progresso</small><span id="riskSchedule" class="risk-pill risk-na">—</span></div>
+      <div class="risk-engine-item"><small>Dependências</small><span id="riskDependencies" class="risk-pill risk-na">—</span></div>
+      <div class="risk-engine-item"><small>Escopo / complexidade</small><span id="riskScope" class="risk-pill risk-na">—</span></div>
+      <div class="risk-engine-item"><small>Confiança</small><span id="riskConfidence" class="risk-pill risk-na">—</span></div>
+    </div>
+  </div>
+
+  <div class="risk-card">
+    <strong>Progresso × conclusão</strong><span class="calc-help" tabindex="0" data-tooltip="O progresso real é ponderado pelas horas das atividades associadas. O esperado é calculado pela posição da data de hoje dentro do período planejado. A diferença alimenta o risco de prazo.">i</span>
+    <div style="margin-top:7px"><span id="progressRisk" class="status warn">Sem dados</span></div>
+    <div class="risk-kpis">
+      <div class="risk-kpi"><small>Progresso real</small><strong id="actualProgressMetric">0%</strong></div>
+      <div class="risk-kpi"><small>Progresso esperado</small><strong id="expectedProgressMetric">0%</strong></div>
+      <div class="risk-kpi"><small>Concluídos</small><strong id="completedMetric">0/0</strong></div>
+      <div class="risk-kpi"><small>Desvio</small><strong id="progressGapMetric">0 p.p.</strong></div>
+    </div>
+  </div>
+
+  <div style="margin-top:18px"><strong>Prontidão do grau</strong><div class="bar"><div id="readyBar"></div></div><div class="muted" id="readyText">0% dos critérios marcados</div></div>
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+
+  <div class="muted">Faixa recomendada da sessão</div>
+  <h2 style="margin:4px 0 8px" id="range">0h – 0h</h2>
+  <div id="status" class="status warn">Estimativa preliminar</div>
+
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+  <div class="muted">Capacidade efetiva por sprint</div><h3 style="margin:4px 0" id="capacitySprint">0h</h3>
+  <div class="muted">Confiança: <strong><span id="confValue">55</span>%</strong></div>
+
+  <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+  <h3 style="margin-bottom:8px">Heurística por grau</h3><div class="muted" id="gradeHelp"><strong>W:</strong> amplitude maior e foco em comparabilidade, premissas e incertezas.</div>
+
+  <div class="row-actions" style="margin-top:18px">
+    <button class="btn primary" onclick="window.print()">Imprimir / PDF</button>
+    <button type="button" class="btn secondary" onclick="exportExcel()">Exportar Excel (.xls)</button>
+    <button class="btn secondary" onclick="document.getElementById('excelImportInput').click()">Importar Excel</button>
+    <button type="button" class="btn ghost" onclick="exportJson()">Exportar JSON</button>
+    <button class="btn ghost" onclick="document.getElementById('jsonImportInput').click()">Importar JSON</button>
+    <button class="btn ghost" onclick="resetSession()">Limpar</button>
+    <input id="excelImportInput" class="file-input-hidden" type="file" accept=".xml,.xls" onchange="importExcelFile(event)">
+    <input id="jsonImportInput" class="file-input-hidden" type="file" accept=".json,application/json" onchange="importJsonFile(event)">
+    <div class="model-actions">
+      <button type="button" class="btn ghost sm" onclick="downloadJsonModel()">Baixar modelo JSON</button>
+      <button type="button" class="btn ghost sm" onclick="downloadExcelModel()">Baixar modelo Excel</button>
+    </div>
+    <div id="importStatus" class="import-status"></div>
+  </div>
+</section>
+</aside>
+</div>
+<footer>Template de apoio à facilitação. Pesos, faixas e parâmetros são calibráveis ao histórico real de entrega do time.</footer>
+</div>
+
+<script>
+function calcHelp(text,position=''){
+ return `<span class="calc-help ${position}" tabindex="0" aria-label="Explicação do cálculo" data-tooltip="${esc(text)}">i</span>`;
+}
+
+let grade='W';
+let baselines=[];
+let decisionLog=[];
+const qs=s=>document.querySelector(s);
+const qsa=s=>[...document.querySelectorAll(s)];
+
+const LEVELS={Baixo:1,Médio:2,Alto:3};
+const LEVEL_HOURS={Baixo:16,Médio:40,Alto:80};
+
+const CRITERIA_EXAMPLES={
+ W:{
+   groups:[
+    {name:'Técnicos',criteria:[
+      {key:'infra',label:'Infraestrutura',weight:10},
+      {key:'scope',label:'Tamanho e Escopo',weight:10},
+      {key:'integr',label:'Integrações e Dependências',weight:10},
+      {key:'api',label:'API ou Mesh',weight:5},
+      {key:'req',label:'Requisitos Técnicos',weight:4},
+      {key:'perf',label:'Performance e Escalabilidade',weight:6},
+      {key:'sec',label:'Segurança',weight:5},
+      {key:'maint',label:'Manutenibilidade',weight:5}
+    ]},
+    {name:'Riscos',criteria:[
+      {key:'uncert',label:'Riscos e Incertezas',weight:10},
+      {key:'compliance',label:'Conformidade e Regulamentação',weight:5},
+      {key:'feedback',label:'Feedback e Testes de Usuário',weight:4}
+    ]},
+    {name:'Negócio',criteria:[
+      {key:'impact',label:'Impacto no Usuário',weight:6},
+      {key:'confidence',label:'Confiança',weight:8},
+      {key:'businessEffort',label:'Esforço de Negócio',weight:8},
+      {key:'scenario',label:'Cenário',weight:1}
+    ]}
+   ]
+ },
+ Z:{
+   groups:[
+    {name:'Solução',criteria:[
+      {key:'arch',label:'Arquitetura',weight:10},
+      {key:'integration',label:'Integrações',weight:10},
+      {key:'data',label:'Dados e Persistência',weight:8},
+      {key:'frontend',label:'Experiência / Frontend',weight:7},
+      {key:'backend',label:'Serviços / Backend',weight:10},
+      {key:'nfr',label:'NFRs',weight:7},
+      {key:'security',label:'Segurança',weight:8}
+    ]},
+    {name:'Incerteza',criteria:[
+      {key:'dependency',label:'Dependências',weight:8},
+      {key:'unknowns',label:'Unknowns / Spikes',weight:8},
+      {key:'test',label:'Estratégia de Testes',weight:7},
+      {key:'migration',label:'Migração / Compatibilidade',weight:5}
+    ]},
+    {name:'Entrega',criteria:[
+      {key:'scopeReady',label:'Escopo Refinado',weight:5},
+      {key:'acceptance',label:'Critérios de Aceite',weight:4},
+      {key:'ops',label:'Operação / Observabilidade',weight:3}
+    ]}
+   ]
+ },
+ A:{
+   groups:[
+    {name:'Execução',criteria:[
+      {key:'backlog',label:'Backlog Decomposto',weight:10},
+      {key:'capacity',label:'Capacidade',weight:10},
+      {key:'ownership',label:'Responsáveis',weight:8},
+      {key:'dependenciesA',label:'Dependências Resolvidas',weight:10},
+      {key:'env',label:'Ambientes / Infra',weight:8}
+    ]},
+    {name:'Qualidade',criteria:[
+      {key:'testsA',label:'Testes / Automação',weight:10},
+      {key:'securityA',label:'Segurança / Compliance',weight:8},
+      {key:'obsA',label:'Observabilidade',weight:6},
+      {key:'rollback',label:'Rollback / Contingência',weight:5}
+    ]},
+    {name:'Compromisso',criteria:[
+      {key:'milestones',label:'Marcos / Datas',weight:8},
+      {key:'acceptanceA',label:'Aceite / Go-NoGo',weight:7},
+      {key:'confidenceA',label:'Confiança da Execução',weight:10}
+    ]}
+   ]
+ }
+};
+const GRADE_MODELS={W:{groups:[]},Z:{groups:[]},A:{groups:[]}};
+Object.values(CRITERIA_EXAMPLES).forEach(m=>m.groups.forEach(g=>g.criteria.forEach(c=>{
+ if(/confian/i.test(c.label||''))c.direction='inverse';
+ else if(!c.direction)c.direction='direct';
+})));
+
+const ACTIVITY_CATALOG=[
+ {code:'SUB-00',theme:'Início',name:'Revisar Configuração do Ambiente',time:3,unit:'dias',obs:''},
+ {code:'SUB-01',theme:'Início',name:'Revisar Desenho de Solução',time:5,unit:'dias',obs:''},
+ {code:'SUB-02',theme:'Início',name:'Refinar Detalhamento da História',time:5,unit:'dias',obs:''},
+ {code:'SUB-03',theme:'Início',name:'Analisar Detalhamento da História',time:1,unit:'dia',obs:''},
+ {code:'SUB-04',theme:'Início',name:'Criar SN/ST/SA da Aplicação',time:1,unit:'dia',obs:''},
+ {code:'SUB-05',theme:'Início',name:'Aguardar Sincronismo de Serviços da Aplicação',time:0,unit:'dia',obs:'Considerar SLA quando aplicável'},
+ {code:'SUB-06',theme:'Infraestrutura',name:'Criar Sigla App',time:1,unit:'dia',obs:''},
+ {code:'SUB-07',theme:'Infraestrutura',name:'Cadastrar Defect Dojo',time:1,unit:'dia',obs:''},
+ {code:'SUB-08',theme:'Infraestrutura',name:'Cadastrar SD Elements',time:1,unit:'dia',obs:''},
+ {code:'SUB-09',theme:'Infraestrutura',name:'Criar Credentials STS',time:1,unit:'dia',obs:''},
+ {code:'SUB-10',theme:'Infraestrutura',name:'Criar/Associar Scopes',time:1,unit:'dia',obs:''},
+ {code:'SUB-11',theme:'Infraestrutura',name:'Criar Infraestrutura Banco de Dados',time:2,unit:'dias',obs:''},
+ {code:'SUB-12',theme:'Infraestrutura',name:'Criar Infraestrutura Scripts Banco de Dados',time:2,unit:'dias',obs:''},
+ {code:'SUB-13',theme:'Infraestrutura',name:'Criar Infraestrutura ECS',time:3,unit:'dias',obs:''},
+ {code:'SUB-14',theme:'Infraestrutura',name:'Criar Infraestrutura Custom Domain',time:1,unit:'dia',obs:''},
+ {code:'SUB-15',theme:'Infraestrutura',name:'Criar Infraestrutura Network Load Balancer',time:1,unit:'dia',obs:''},
+ {code:'SUB-16',theme:'Infraestrutura',name:'Criar Infraestrutura IAM/Roles',time:1,unit:'dia',obs:''}
+];
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function fmt(n,d=1){return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function selectOptions(list,selected){return list.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}
+function levelSelect(cls,selected='Médio',attrs=''){return `<select class="${cls}" ${attrs}>${selectOptions(['Baixo','Médio','Alto'],selected)}</select>`}
+function effortClass(v){return v==='Baixo'?'grade-low':v==='Médio'?'grade-med':'grade-high'}
+
+function activityRowTemplate(a={}){
+ return `<tr class="activity-row">
+  <td><input class="actCode" value="${esc(a.code||'')}"></td>
+  <td><input class="actTheme" value="${esc(a.theme||'')}"></td>
+  <td><input class="actName" value="${esc(a.name||'')}"></td>
+  <td><input type="number" class="actTime num" min="0" step=".5" value="${a.time??''}" oninput="recalc()"></td>
+  <td><select class="actUnit" onchange="recalc()"><option value="">Selecione</option>${selectOptions(['horas','dia','dias'],a.unit||'')}</select></td>
+  <td><input type="number" class="actAIReduction ai-reduction-activity" min="0" max="80" value="${a.aiReduction??''}" placeholder="0" oninput="recalc()"></td>
+  <td><input class="actObs" value="${esc(a.obs||'')}"></td>
+  <td><button type="button" class="btn ghost sm" onclick="removeActivityRow(this)">×</button></td>
+ </tr>`;
+}
+function renderActivities(list=[]){
+ const tbody=qs('#activityTable tbody');if(!tbody)return;
+ tbody.innerHTML='';
+ list.forEach(a=>tbody.insertAdjacentHTML('beforeend',activityRowTemplate(a)));
+}
+function loadActivityModel(){
+ renderActivities(ACTIVITY_CATALOG.map(a=>({...a,selected:false})));
+ syncActivityLinkOptions();
+ recalc();
+}
+function addCustomActivity(){
+ qs('#activityTable tbody').insertAdjacentHTML('beforeend',activityRowTemplate({}));
+ syncActivityLinkOptions();
+ recalc();
+}
+
+function selectAllActivities(flag){qsa('.actUse').forEach(x=>x.checked=flag);recalc()}
+function removeActivityRow(btn){btn.closest('tr')?.remove();syncActivityLinkOptions();recalc()}
+function activitiesData(){
+ const hpd=+qs('#hoursDay').value||8;
+ return qsa('.activity-row').map((tr,i)=>{
+  const time=+tr.querySelector('.actTime').value||0,unit=tr.querySelector('.actUnit').value;
+  return{i,selected:false,code:tr.querySelector('.actCode').value,theme:tr.querySelector('.actTheme').value,
+   name:tr.querySelector('.actName').value||`Atividade ${i+1}`,time,unit,hours:unit==='horas'?time:time*hpd,
+   aiReduction:Math.max(0,Math.min(80,+tr.querySelector('.actAIReduction')?.value||0)),
+   obs:tr.querySelector('.actObs').value};
+ });
+}
+
+function rowTemplate(name='',theme='Construção',discipline='Frontend',effort='',value='',urg='',priority=''){
+ const idx=qsa('#effortTable tbody tr.item-row').length;
+ return `<tr class="item-row item-parent-row">
+  <td><input class="itemPriority tiny" type="number" min="1" value="${priority||idx+1}" oninput="recalc()"></td>
+  <td><input class="itemName" value="${esc(name)}" placeholder="Ex.: Visão Geral"></td>
+  <td><input class="theme" value="${esc(theme||'')}" placeholder="Ex.: Riscos e Monitoramento"></td>
+  <td><select class="discipline"><option value="">Selecione</option>${selectOptions(['Frontend','Backend','Dados','QA','DevOps','Arquitetura','UX/Produto','Segurança','Outro'],discipline||'')}</select></td>
+  <td>${levelSelect('effortLevel',effort,'onchange="recalc()"')}</td>
+  <td>${levelSelect('valueLevel',value,'onchange="recalc()"')}</td>
+  <td>${levelSelect('urgencyLevel',urg,'onchange="recalc()"')}</td>
+  <td><strong class="est item-total">0h</strong><span class="hours-breakdown item-hours-detail"></span></td>
+  <td><strong class="itemSprintEq">0,0</strong></td>
+  <td><strong class="itemSprintCalendar">0 sprint</strong></td>
+  <td><strong class="itemLeadTime">0 sprint</strong></td>
+  <td>
+    <div class="item-activity-summary">
+      <button type="button" class="btn ghost sm tree-toggle" onclick="toggleItemActivityAccordion(this)" title="Expandir atividades"><span class="arrow">▶</span></button>
+      <span class="activity-count muted">0 atividades</span>
+      <select class="activity-link-select" multiple style="display:none"></select>
+    </div>
+  </td>
+  <td><select class="dep-type" onchange="recalc()">
+    <option value="">Sem</option><option value="FS">Termina → começa</option><option value="SS">Começa junto</option><option value="FF">Termina junto</option><option value="EXT">Externa</option>
+  </select></td>
+  <td><select class="dependency-select" onchange="recalc()"><option value="">Sem dependência</option></select></td>
+  <td><span class="itemProgress item-progress-auto">0%</span><span class="item-status-auto">calculado pelas atividades</span></td>
+  <td style="text-align:center"><input type="checkbox" class="itemDone done-check" disabled></td>
+  <td><input type="date" class="itemDoneDate date-done" value="" disabled></td>
+  <td><span class="priority-chip prio">—</span></td>
+  <td><button class="btn ghost sm" onclick="removeEffortRow(this)">×</button><input type="hidden" class="item-activity-state" value="{}"></td>
+ </tr>
+ <tr class="item-activities-detail"><td colspan="20"><div class="item-activities-panel"></div></td></tr>`;
+}
+function addRow(...args){
+ const state=captureMatrixState();
+ qs('#effortTable tbody').insertAdjacentHTML('beforeend',rowTemplate(...args));
+ renderDynamicMatrix(state);
+ syncDependencyOptions();
+ syncActivityLinkOptions();
+ recalc();
+}
+function removeEffortRow(btn){
+ const rows=qsa('#effortTable tbody tr.item-row');
+ const tr=btn.closest('tr.item-row'),idx=rows.indexOf(tr),detail=tr?.nextElementSibling;
+ const state=captureMatrixState();
+ if(detail?.classList.contains('item-activities-detail'))detail.remove();
+ tr?.remove();
+ if(idx>=0)state.splice(idx,1);
+ renderDynamicMatrix(state);syncDependencyOptions();syncActivityLinkOptions();recalc();
+}
+
+
+
+
+function addStackPreset(){
+ const rows=[
+ ['Visão Geral','Visão Geral','Frontend','Alto','Alto','Alto','Médio',1],
+ ['Resumo LTC','Comportamento de Crédito','Frontend','Médio','Alto','Alto','Médio',1],
+ ['Rating','Riscos e Monitoramento','Frontend','Médio','Alto','Alto','Alto',2],
+ ['Garantias','Riscos e Monitoramento','Frontend','Baixo','Alto','Médio','Alto',3],
+ ['Atrasos e Apontamentos','Riscos e Monitoramento','Frontend','Médio','Alto','Alto','Alto',4],
+ ['Rotativos','Comportamento de Crédito','Frontend','Baixo','Médio','Médio','Médio',5],
+ ['Conglomerado','Negócios e Estrutura','Frontend','Médio','Médio','Médio','Médio',6],
+ ['Organograma','Negócios e Estrutura','Frontend','Médio','Médio','Baixo','Médio',6],
+ ['Proposta','Comportamento de Crédito','Frontend','Baixo','Alto','Alto','Médio',7],
+ ['Patrimônio','Negócios e Estrutura','Frontend','Médio','Médio','Médio','Médio',8]
+ ];
+ rows.forEach(x=>addRow(...x));
+}
+function getQual(){const score=(+qs('#qTech').value*.62)+(+qs('#qRisk').value*.24)+(+qs('#qContext').value*.14);let factor=1,label='MÉDIO';if(score<1.67){factor=.90;label='BAIXO'}else if(score>=2.34){factor=1.18;label='ALTO'}return{score,factor,label}}
+function sizeLabel(h){if(h<=80)return'PP';if(h<=400)return'P';if(h<=1200)return'M';if(h<=3000)return'G';return'GG'}
+
+function rowsData(){
+ return qsa('#effortTable tbody tr.item-row').map((tr,i)=>{
+  const effort=tr.querySelector('.effortLevel').value,value=tr.querySelector('.valueLevel').value,urgency=tr.querySelector('.urgencyLevel').value;
+  const hours=LEVEL_HOURS[effort]||40;
+  const activityIds=selectedActivityIds(tr),activityHours=associatedActivityHours(tr),activityOriginalHours=associatedActivityOriginalHours(tr),activitySavings=associatedActivitySavings(tr),activityNames=associatedActivityNames(tr);
+  const tracking=updateItemTrackingFromActivities(tr)||{progress:0,done:false,doneDate:''};
+  return{i,tr,priority:+tr.querySelector('.itemPriority').value||i+1,name:tr.querySelector('.itemName').value||`Item ${i+1}`,theme:tr.querySelector('.theme').value,discipline:tr.querySelector('.discipline').value,effort,value,urgency,hours,activityIds,activityHours,activityOriginalHours,activitySavings,activityNames,activityTracking:getItemActivityState(tr),referenceHours:hours+activityHours,dependencyType:tr.querySelector('.dep-type')?.value||'',dependency:tr.querySelector('.dependency-select')?.value||'',progress:tracking.progress,done:tracking.done,doneDate:tracking.doneDate};
+ });
+}
+
+
+
+
+function toggleItemActivityAccordion(btn){
+ const row=btn.closest('tr.item-row'),detail=row?.nextElementSibling;
+ if(!detail?.classList.contains('item-activities-detail'))return;
+ const open=detail.classList.toggle('open');btn.classList.toggle('open',open);
+}
+
+function getItemActivityState(tr){const el=tr?.querySelector('.item-activity-state');if(!el)return{};try{return JSON.parse(el.value||'{}')}catch(e){return{}}}
+function setItemActivityState(tr,state){const el=tr?.querySelector('.item-activity-state');if(el)el.value=JSON.stringify(state||{})}
+function updateItemTrackingFromActivities(tr){
+ const defs=currentActivityDefs(),ids=selectedActivityIds(tr),st=getItemActivityState(tr);
+ let total=0,weighted=0,allDone=ids.length>0,dates=[];
+ ids.forEach(id=>{const d=defs.find(x=>x.id===id),s=st[id]||{};const h=Math.max(d?.effectiveHours||d?.hours||0,.01),p=s.done?100:Math.max(0,Math.min(100,+s.progress||0));total+=h;weighted+=p*h;if(!s.done&&p<100)allDone=false;if(s.doneDate)dates.push(s.doneDate)});
+ const progress=ids.length&&total?weighted/total:0;
+ const pEl=tr.querySelector('.itemProgress'),doneEl=tr.querySelector('.itemDone'),dateEl=tr.querySelector('.itemDoneDate');
+ if(pEl)pEl.textContent=Math.round(progress)+'%';if(doneEl)doneEl.checked=allDone;if(dateEl)dateEl.value=allDone&&dates.length?dates.sort().slice(-1)[0]:'';
+ return{progress,done:allDone,doneDate:dateEl?.value||''};
+}
+function updateItemActivityTracking(control,activityId,field){
+ const tr=control.closest('tr.item-activities-detail')?.previousElementSibling;if(!tr)return;
+ const st=getItemActivityState(tr),id=String(activityId);if(!st[id])st[id]={progress:0,done:false,doneDate:''};
+ if(field==='progress'){st[id].progress=Math.max(0,Math.min(100,+control.value||0));st[id].done=st[id].progress>=100;if(st[id].done&&!st[id].doneDate)st[id].doneDate=new Date().toISOString().slice(0,10)}
+ if(field==='done'){st[id].done=control.checked;if(control.checked){st[id].progress=100;if(!st[id].doneDate)st[id].doneDate=new Date().toISOString().slice(0,10)}}
+ if(field==='doneDate')st[id].doneDate=control.value||'';
+ setItemActivityState(tr,st);renderItemActivityAccordion(tr);recalc();
+}
+function renderItemActivityAccordion(tr){
+ const panel=tr?.nextElementSibling?.querySelector('.item-activities-panel');if(!panel)return;
+ const defs=currentActivityDefs(),selected=selectedActivityIds(tr),st=getItemActivityState(tr);
+ const linkedDefs=defs.filter(d=>selected.includes(d.id));
+ let content='';
+ if(!linkedDefs.length){
+   content='<div class="muted">Nenhuma atividade associada a este item.</div>';
+ }else{
+   content=`<div class="subhead"><span>Código</span><span>Atividade</span><span style="text-align:right">Esforço</span><span>Progresso %</span><span>Concluída</span><span>Data conclusão</span><span></span></div>`+
+   linkedDefs.map(d=>{const s=st[d.id]||{};return `<div class="item-activity-line">
+    <span>${esc(d.code||'—')}</span>
+    <span>${esc(d.name)}${d.aiReduction?` <span class="muted">· IA -${d.aiReduction}%</span>`:''}</span>
+    <span class="activity-hours">${d.aiReduction?`${fmt(d.hours,1)}h → ${fmt(d.effectiveHours,1)}h`:fmt(d.hours,1)+'h'}</span>
+    <input type="number" class="progress-input" min="0" max="100" value="${s.done?100:(s.progress??0)}" onchange="updateItemActivityTracking(this,'${d.id}','progress')">
+    <input type="checkbox" class="done-check" ${s.done?'checked':''} onchange="updateItemActivityTracking(this,'${d.id}','done')">
+    <input type="date" class="date-done" value="${s.doneDate||''}" onchange="updateItemActivityTracking(this,'${d.id}','doneDate')">
+    <button type="button" class="btn ghost sm" onclick="removeItemActivity(this,'${d.id}')">×</button>
+   </div>`}).join('');
+ }
+ const available=defs.filter(d=>!selected.includes(d.id));
+ content+=`<div style="margin-top:10px"><button type="button" class="btn secondary sm" onclick="toggleActivityPicker(this)">+ Adicionar atividade</button></div>
+ <div class="activity-picker">
+   <strong>Adicionar atividade do catálogo</strong>
+   <div class="activity-picker-list">
+     ${available.length?available.map(d=>`<div class="activity-picker-option"><span>${esc(d.code||'—')} · ${esc(d.name)} · ${fmt(d.effectiveHours,1)}h</span><button type="button" class="btn ghost sm" onclick="addItemActivity(this,'${d.id}')">Adicionar</button></div>`).join(''):'<div class="muted">Todas as atividades já estão associadas.</div>'}
+   </div>
+ </div>`;
+ panel.innerHTML=content;
+ updateItemActivitySummary(tr);updateItemTrackingFromActivities(tr);
+}
+
+
+function toggleActivityPicker(btn){
+ const picker=btn.closest('.item-activities-panel')?.querySelector('.activity-picker');
+ if(picker)picker.classList.toggle('open');
+}
+function addItemActivity(btn,activityId){
+ const detail=btn.closest('tr.item-activities-detail'),tr=detail?.previousElementSibling;
+ if(!tr?.classList.contains('item-row'))return;
+ const sel=tr.querySelector('.activity-link-select'),opt=[...sel.options].find(o=>o.value===String(activityId));
+ if(opt)opt.selected=true;
+ const st=getItemActivityState(tr),id=String(activityId);
+ if(!st[id])st[id]={progress:0,done:false,doneDate:''};
+ setItemActivityState(tr,st);
+ renderItemActivityAccordion(tr);recalc();
+}
+function removeItemActivity(btn,activityId){
+ const detail=btn.closest('tr.item-activities-detail'),tr=detail?.previousElementSibling;
+ if(!tr?.classList.contains('item-row'))return;
+ const sel=tr.querySelector('.activity-link-select'),opt=[...sel.options].find(o=>o.value===String(activityId));
+ if(opt)opt.selected=false;
+ const st=getItemActivityState(tr);delete st[String(activityId)];
+ setItemActivityState(tr,st);
+ renderItemActivityAccordion(tr);recalc();
+}
+function updateItemActivitySummary(tr){
+ const ids=selectedActivityIds(tr),hours=associatedActivityHours(tr),original=associatedActivityOriginalHours(tr),saved=associatedActivitySavings(tr);
+ const count=tr.querySelector('.activity-count');
+ if(count)count.textContent=`${ids.length} ${ids.length===1?'atividade':'atividades'} · ${fmt(hours,1)}h${saved>0?` · IA economiza ${fmt(saved,1)}h`:''}`;
+}
+function currentActivityDefs(){
+ return qsa('.activity-row').map((tr,i)=>{
+   const time=+tr.querySelector('.actTime')?.value||0;
+   const unit=tr.querySelector('.actUnit')?.value||'';
+   const hpd=+qs('#hoursDay').value||8;
+   const hours=unit==='horas'?time:time*hpd;
+   const aiReduction=Math.max(0,Math.min(80,+tr.querySelector('.actAIReduction')?.value||0));
+   const effectiveHours=hours*(1-aiReduction/100);
+   return{id:String(i),code:tr.querySelector('.actCode')?.value||'',name:tr.querySelector('.actName')?.value||`Atividade ${i+1}`,hours,aiReduction,effectiveHours,savedHours:hours-effectiveHours};
+ });
+}
+function selectedActivityIds(tr){return [...(tr.querySelector('.activity-link-select')?.selectedOptions||[])].map(o=>o.value)}
+function syncActivityLinkOptions(){
+ const defs=currentActivityDefs();
+ qsa('#effortTable tbody tr.item-row').forEach(tr=>{
+   const sel=tr.querySelector('.activity-link-select');if(!sel)return;
+   const current=selectedActivityIds(tr);
+   sel.innerHTML=defs.map(d=>`<option value="${d.id}" ${current.includes(d.id)?'selected':''}>${esc(d.name)} · ${fmt(d.effectiveHours,1)}h${d.aiReduction?` (IA -${d.aiReduction}%)`:''}</option>`).join('');
+   renderItemActivityAccordion(tr);
+ });
+}
+function associatedActivityHours(tr){
+ const defs=currentActivityDefs(),ids=selectedActivityIds(tr);
+ return ids.reduce((sum,id)=>sum+(defs.find(d=>d.id===id)?.effectiveHours||0),0);
+}
+function associatedActivityOriginalHours(tr){
+ const defs=currentActivityDefs(),ids=selectedActivityIds(tr);
+ return ids.reduce((sum,id)=>sum+(defs.find(d=>d.id===id)?.hours||0),0);
+}
+function associatedActivitySavings(tr){
+ return Math.max(0,associatedActivityOriginalHours(tr)-associatedActivityHours(tr));
+}
+function associatedActivityNames(tr){
+ const defs=currentActivityDefs(),ids=selectedActivityIds(tr);
+ return ids.map(id=>defs.find(d=>d.id===id)?.name).filter(Boolean);
+}
+function syncDependencyOptions(){
+ const rows=qsa('#effortTable tbody tr.item-row');
+ const defs=rows.map((tr,i)=>({id:String(i),name:tr.querySelector('.itemName')?.value||`Item ${i+1}`}));
+ rows.forEach((tr,i)=>{
+   const sel=tr.querySelector('.dependency-select');
+   if(!sel)return;
+   const current=sel.value;
+   sel.innerHTML='<option value="">Sem dependência</option>'+
+     defs.filter(d=>d.id!==String(i)).map(d=>`<option value="${d.id}" ${current===d.id?'selected':''}>${esc(d.name)}</option>`).join('');
+   if(current && (!defs.some(d=>d.id===current) || current===String(i))) sel.value='';
+ });
+}
+function syncEffortRowToDependents(sourceEl){
+ const tr=sourceEl?.closest?.('#effortTable tbody tr.item-row');
+ if(!tr)return;
+ const rows=qsa('#effortTable tbody tr.item-row');
+ const idx=rows.indexOf(tr);
+ if(idx<0)return;
+ const matrixRow=qs(`#dynamicMatrixBody tr[data-row="${idx}"]`);
+ if(matrixRow){
+   const p=tr.querySelector('.itemPriority')?.value||idx+1;
+   const name=tr.querySelector('.itemName')?.value||`Item ${idx+1}`;
+   const theme=tr.querySelector('.theme')?.value||'';
+   const mp=matrixRow.querySelector('.matrix-priority');
+   const mn=matrixRow.querySelector('.matrix-name');
+   const mt=matrixRow.querySelector('.matrix-theme');
+   if(mp)mp.textContent=p;
+   if(mn)mn.textContent=name;
+   if(mt)mt.textContent=theme;
+   matrixRow.classList.remove('sync-flash');
+   void matrixRow.offsetWidth;
+   matrixRow.classList.add('sync-flash');
+ }
+ if(sourceEl.classList?.contains('itemName')) syncDependencyOptions();
+}
+
+
+
+let nextCriterionId=1;
+function uniqueCriterionKey(){
+ return `crit_${grade}_${Date.now().toString(36)}_${nextCriterionId++}`;
+}
+function renderCriteriaEditor(){
+ const body=qs('#criteriaEditorBody');if(!body)return;
+ const model=GRADE_MODELS[grade];
+ const rows=[];
+ model.groups.forEach((g,gi)=>g.criteria.forEach((c,ci)=>rows.push({g,gi,c,ci})));
+ if(!rows.length){
+   body.innerHTML='<tr><td colspan="5"><div class="criteria-empty">Nenhum critério cadastrado para este grau. Use “+ Critério” ou carregue um exemplo.</div></td></tr>';
+ }else{
+   body.innerHTML=rows.map(x=>`<tr>
+    <td><input value="${esc(x.g.name)}" oninput="editCriterion(${x.gi},${x.ci},'group',this.value)"></td>
+    <td><input value="${esc(x.c.label)}" oninput="editCriterion(${x.gi},${x.ci},'label',this.value)"></td>
+    <td><input class="crit-weight" type="number" min="0" max="100" step="1" value="${x.c.weight??0}" oninput="editCriterion(${x.gi},${x.ci},'weight',this.value)"></td>
+    <td><select onchange="editCriterion(${x.gi},${x.ci},'direction',this.value)">
+      <option value="direct" ${(x.c.direction||'direct')==='direct'?'selected':''}>Alto = + esforço</option>
+      <option value="inverse" ${x.c.direction==='inverse'?'selected':''}>Alto = − esforço</option>
+    </select></td>
+    <td><button type="button" class="btn ghost sm" onclick="removeCriterion('${x.c.key}')">×</button></td>
+   </tr>`).join('');
+ }
+ updateCriteriaWeightTotal();
+}
+function addCriterion(){
+ const state=captureMatrixState();
+ let g=GRADE_MODELS[grade].groups[0];
+ if(!g){g={name:'Pilar 1',criteria:[]};GRADE_MODELS[grade].groups.push(g)}
+ g.criteria.push({key:uniqueCriterionKey(),label:'',weight:0,direction:'direct'});
+ renderCriteriaEditor();renderDynamicMatrix(state);recalc();
+}
+function removeCriterion(key){
+ const state=captureMatrixState();
+ GRADE_MODELS[grade].groups.forEach(g=>g.criteria=g.criteria.filter(c=>c.key!==key));
+ GRADE_MODELS[grade].groups=GRADE_MODELS[grade].groups.filter(g=>g.criteria.length);
+ renderCriteriaEditor();renderDynamicMatrix(state);recalc();
+}
+function editCriterion(gi,ci,field,value){
+ const state=captureMatrixState(),groups=GRADE_MODELS[grade].groups,g=groups[gi],c=g?.criteria[ci];
+ if(!c)return;
+ if(field==='label')c.label=value;
+ else if(field==='weight')c.weight=Math.max(0,+value||0);
+ else if(field==='direction')c.direction=value==='inverse'?'inverse':'direct';
+ else if(field==='group'){
+   const targetName=value.trim()||'Sem pilar';
+   if(targetName!==g.name){
+     g.criteria.splice(ci,1);
+     let target=groups.find(x=>x.name===targetName);
+     if(!target){target={name:targetName,criteria:[]};groups.push(target)}
+     target.criteria.push(c);
+     GRADE_MODELS[grade].groups=groups.filter(x=>x.criteria.length);
+     renderCriteriaEditor();
+   }else g.name=targetName;
+ }
+ renderDynamicMatrix(state);recalc();
+}
+function clearCriteria(){
+ if(!confirm('Limpar todos os critérios deste grau?'))return;
+ GRADE_MODELS[grade].groups=[];renderCriteriaEditor();renderDynamicMatrix();recalc();
+}
+function loadCriteriaExample(){
+ const state=captureMatrixState();
+ const src=CRITERIA_EXAMPLES[grade];
+ GRADE_MODELS[grade].groups=src.groups.map(g=>({name:g.name,criteria:g.criteria.map(c=>({...c,key:`${c.key}_${grade}_${nextCriterionId++}`}))}));
+ renderCriteriaEditor();renderDynamicMatrix(state);recalc();
+}
+function currentCriteria(){return GRADE_MODELS[grade].groups.flatMap(g=>g.criteria)}
+function updateCriteriaWeightTotal(){
+ const total=currentCriteria().reduce((s,c)=>s+(+c.weight||0),0);
+ const el=qs('#criteriaWeightTotal');
+ if(el){el.textContent=(Math.round(total*100)/100)+'%';el.style.color=Math.abs(total-100)<0.001?'#027a48':'#b54708'}
+ return total;
+}
+function updateCriterionWeight(key,value){
+ const c=currentCriteria().find(x=>x.key===key);if(!c)return;
+ c.weight=Math.max(0,+value||0);
+ updateCriteriaWeightTotal();
+ qsa(`[data-weight-key="${key}"]`).forEach(el=>{if(el!==document.activeElement)el.value=c.weight});
+ recalc();
+}
+function normalizedWeightedScore(values){
+ const criteria=currentCriteria();
+ if(!criteria.length || criteria.some(c=>!values[c.key]))return null;
+ const totalWeight=criteria.reduce((s,c)=>s+(+c.weight||0),0);
+ if(totalWeight<=0)return null;
+ const raw=criteria.reduce((s,c)=>{
+   let level=LEVELS[values[c.key]]||0;
+   if(c.direction==='inverse')level=4-level;
+   return s+level*(+c.weight||0);
+ },0);
+ return ((raw-totalWeight)/(2*totalWeight))*100;
+}
+function scoreToEffort(score){if(score===null||score===undefined||Number.isNaN(score))return '—';return score<40?'Baixo':score<65?'Médio':'Alto'}
+function complexityFactor(score){
+ if(score===null||score===undefined||Number.isNaN(score))return 1;
+ if(score<40)return .90;
+ if(score<65)return 1.00;
+ return 1.15;
+}
+function sprintCapacity(){
+ const team=+qs('#teamSize').value||1,hpd=+qs('#hoursDay').value||8,focus=(+qs('#focusPct').value||100)/100,sd=+qs('#sprintDays').value||10;
+ return team*hpd*focus*sd;
+}
+function plannedItemHours(item,score){
+ if(score===null||score===undefined||Number.isNaN(score))return 0;
+ const base=(item.hours||0)+(item.activityHours||0);
+ return Math.max(0,base*complexityFactor(score));
+}
+function itemEquivalentSprints(item,score){return plannedItemHours(item,score)/Math.max(sprintCapacity(),.1)}
+function itemCalendarSprints(item,score){const eq=itemEquivalentSprints(item,score);return eq>0?Math.ceil(eq):0}
+function scoreToSprints(score){return score===null||score===undefined?0:complexityFactor(score)}
+function matrixValuesForRow(rowIndex){
+ const out={}; currentCriteria().forEach(c=>{
+  const el=qs(`[data-matrix-row="${rowIndex}"][data-key="${c.key}"]`);
+  out[c.key]=el?el.value:'';
+ }); return out;
+}
+
+function matrixLevelSelect(selected='',attrs=''){
+ return `<select class="matrixLevel" ${attrs}>
+   <option value="" ${!selected?'selected':''}>Selecione</option>
+   <option value="Baixo" ${selected==='Baixo'?'selected':''}>Baixo</option>
+   <option value="Médio" ${selected==='Médio'?'selected':''}>Médio</option>
+   <option value="Alto" ${selected==='Alto'?'selected':''}>Alto</option>
+ </select>`;
+}
+function captureMatrixState(){
+ const state=[];
+ qsa('#dynamicMatrixBody tr').forEach((tr,idx)=>{
+   const row={};
+   tr.querySelectorAll('.matrixLevel').forEach(sel=>row[sel.dataset.key]=sel.value);
+   state[idx]=row;
+ });
+ return state;
+}
+
+function renderDynamicMatrix(preservedState=null){
+ const items=rowsData(),model=GRADE_MODELS[grade],criteria=currentCriteria();
+ qs('#matrixGrade').textContent='Grau '+grade;
+ if(!criteria.length){
+   qs('#dynamicMatrixHead').innerHTML='<tr><th>Prior.</th><th>Item</th><th>Componente</th><th>Avaliação</th></tr>';
+   qs('#dynamicMatrixBody').innerHTML=items.length?items.map((item,idx)=>`<tr data-row="${idx}"><td>${item.priority}</td><td>${esc(item.theme)}</td><td>${esc(item.name)}</td><td class="muted">Cadastre critérios acima.</td></tr>`).join(''):'<tr><td colspan="4" class="muted">Cadastre itens no bloco 6 e critérios acima para iniciar a avaliação.</td></tr>';
+   return;
+ }
+ let head1='<tr><th class="frozen" rowspan="3">Prior.</th><th class="frozen2" rowspan="3">Tela / Item</th><th class="frozen3" rowspan="3">Componente</th>';
+ model.groups.forEach(g=>head1+=`<th class="group" colspan="${g.criteria.length}">${esc(g.name)}</th>`);
+ head1+='<th rowspan="3">Resultado<br>Ponderado</th><th rowspan="3">Grau<br>Final</th><th rowspan="3">Prazo<br>Sprints</th></tr>';
+ let head2='<tr>';
+ model.groups.forEach(g=>g.criteria.forEach(c=>head2+=`<th class="criterion"><span class="vertical-label">${esc(c.label||'Sem nome')}</span></th>`));
+ head2+='</tr>';
+ let head3='<tr>';
+ model.groups.forEach(g=>g.criteria.forEach(c=>head3+=`<th><input class="weight-input" type="number" min="0" max="100" step="1" value="${c.weight||0}" data-weight-key="${c.key}" onchange="updateCriterionWeight('${c.key}',this.value)">%</th>`));
+ head3+='</tr>';qs('#dynamicMatrixHead').innerHTML=head1+head2+head3;
+ let body='';
+ items.forEach((item,idx)=>{
+   body+=`<tr data-row="${idx}"><td class="frozen"><strong class="matrix-priority">${item.priority}</strong></td><td class="frozen2"><strong class="matrix-theme">${esc(item.theme)}</strong></td><td class="frozen3"><span class="matrix-name">${esc(item.name)}</span></td>`;
+   model.groups.forEach(g=>g.criteria.forEach(c=>{
+     const selected=(preservedState&&preservedState[idx]&&preservedState[idx][c.key])||'';
+     body+=`<td class="eval-cell">${matrixLevelSelect(selected,`data-matrix-row="${idx}" data-key="${c.key}" onchange="recalc()"`)}</td>`;
+   }));
+   body+=`<td><span class="matrix-score" id="matrixScore-${idx}">—</span></td><td><span id="matrixGrade-${idx}" class="grade-med">—</span></td><td><strong id="matrixSprint-${idx}">—</strong></td></tr>`;
+ });
+ qs('#dynamicMatrixBody').innerHTML=body;
+}
+
+function updateMatrixCalculations(){
+ const items=rowsData();
+ items.forEach((item,idx)=>{
+   const values=matrixValuesForRow(idx),score=normalizedWeightedScore(values),eff=scoreToEffort(score),eq=itemEquivalentSprints(item,score),cal=itemCalendarSprints(item,score);
+   const sc=qs(`#matrixScore-${idx}`),gr=qs(`#matrixGrade-${idx}`),sr=qs(`#matrixSprint-${idx}`);
+   if(sc)sc.textContent=score===null?'—':Math.round(score)+'%';
+   if(gr){gr.textContent=eff;gr.className=eff==='Baixo'?'grade-low':eff==='Médio'?'grade-med':eff==='Alto'?'grade-high':'muted'}
+   if(sr)sr.textContent=score===null?'0 sprint':`${fmt(eq,1)} eq. · ${cal} cal.`;
+ });
+}
+
+
+
+function impactAction(effort,impact){
+ const key=`${effort}|${impact}`;
+ return{
+  'Baixo|Alto':['Quick Win','Fazer já','good'],
+  'Médio|Alto':['Prioridade alta','Planejar agora','good'],
+  'Alto|Alto':['Big Bet','Planejar','mid'],
+  'Baixo|Médio':['Quick Win secundário','Fazer já se houver capacidade','good'],
+  'Médio|Médio':['Planejado','Planejar','mid'],
+  'Alto|Médio':['Custo alto','Adiar','hot'],
+  'Baixo|Baixo':['Fill-in','Se sobrar tempo','mid'],
+  'Médio|Baixo':['Baixo retorno','Adiar','hot'],
+  'Alto|Baixo':['Thankless Task','Descartar','hot']
+ }[key]||['Avaliar','Planejar','mid'];
+}
+function renderImpactMatrix(items){
+ const levels=['Alto','Médio','Baixo'];
+ let h='<div></div><div class="impact-axis">Impacto Baixo</div><div class="impact-axis">Impacto Médio</div><div class="impact-axis">Impacto Alto</div>';
+ levels.forEach(eff=>{
+  h+=`<div class="impact-axis">Esforço ${eff}</div>`;
+  ['Baixo','Médio','Alto'].forEach(impact=>{
+   const matches=items.filter(x=>x.effort===eff&&x.value===impact),[label,action,cls]=impactAction(eff,impact);
+   h+=`<div class="impact-cell ${cls}"><strong>${label}</strong><div class="muted" style="margin:3px 0 6px">${action}</div>${matches.length?matches.map(x=>`<span class="chip">${esc(x.name)}</span>`).join(''):'<span class="muted">—</span>'}</div>`;
+  });
+ });
+ const el=qs('#impactMatrix');if(el)el.innerHTML=h;
+}
+function addBusinessDays(date,days){let d=new Date(date),added=0;while(added<days){d.setDate(d.getDate()+1);if(d.getDay()!=0&&d.getDay()!=6)added++}return d}
+function dateLabel(d){return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+
+function buildRuler(data,factor,buffer){
+ const mapped=data.map((x,idx)=>{
+   const score=normalizedWeightedScore(matrixValuesForRow(idx));
+   return{...x,score,matrixEff:scoreToEffort(score),sprints:itemEquivalentSprints(x,score),calendarSprints:itemCalendarSprints(x,score)};
+ }).sort((a,b)=>a.priority-b.priority);
+
+ let html=`<div class="ruler-row header"><div>#</div><div>Item</div><div>Régua de esforço</div><div>Resultado</div><div>Esforço</div><div>Sprints</div><div>Disciplina</div></div>`;
+ mapped.forEach((x,idx)=>{
+   html+=`<div class="ruler-row">
+    <div class="rank">${idx+1}</div>
+    <div><strong>${esc(x.name)}</strong><div class="muted">${esc(x.theme)}</div></div>
+    <div class="effbar">${x.score===null?'':`<span class="marker" style="left:${Math.max(2,Math.min(98,x.score))}%"></span>`}</div>
+    <div><strong>${x.score===null?'—':Math.round(x.score)+'%'}</strong></div>
+    <div><span class="${effortClass(x.matrixEff)}">${x.matrixEff}</span></div>
+    <div><strong>${x.score===null?'0':(x.referenceHours>0?fmt(x.sprints,1):'0')}</strong></div>
+    <div class="muted">${esc(x.discipline)}</div>
+   </div>`;
+ });
+ qs('#ruler').innerHTML=html||'<div class="muted">Adicione itens para gerar a régua.</div>';
+}
+
+
+let milestones=[
+ {id:1,sprint:1,name:'MVP / 1º Marco'},
+ {id:2,sprint:2,name:'Piloto / Marco'}
+];
+let nextMilestoneId=3;
+
+function renderMilestones(){
+ const host=qs('#milestoneList');
+ if(!host)return;
+ const goLiveSprint=((qs('#goLiveSprint')||{}).value)||'';
+ const goLiveName=((qs('#goLiveName')||{}).value)||'';
+
+ host.innerHTML=
+   milestones.map(m=>`<tr data-ms-id="${m.id}">
+     <td><span class="pill">Milestone</span></td>
+     <td><input value="${esc(m.name)}" oninput="updateMilestone(${m.id},'name',this.value)"></td>
+     <td><input type="number" min="1" value="${m.sprint}" oninput="updateMilestone(${m.id},'sprint',this.value)"></td>
+     <td><button type="button" class="btn ghost sm" onclick="removeMilestone(${m.id})">×</button></td>
+   </tr>`).join('')
+   + `<tr>
+     <td><span class="pill" style="color:#b42318;background:#fef3f2">Go Live</span></td>
+     <td><input id="goLiveName" value="${esc(goLiveName)}" placeholder="Ex.: GO LIVE" oninput="recalc()"></td>
+     <td><input type="number" id="goLiveSprint" min="1" value="${goLiveSprint}" placeholder="Ex.: 4" oninput="recalc()"></td>
+     <td></td>
+   </tr>`;
+}
+function addMilestone(){
+ const maxSprint=Math.max(1,...milestones.map(m=>+m.sprint||1));
+ milestones.push({id:nextMilestoneId++,sprint:maxSprint+1,name:`Milestone ${milestones.length+1}`});
+ renderMilestones();recalc();
+}
+function removeMilestone(id){
+ milestones=milestones.filter(m=>m.id!==id);
+ renderMilestones();recalc();
+}
+function updateMilestone(id,field,value){
+ const m=milestones.find(x=>x.id===id); if(!m)return;
+ m[field]=field==='sprint'?Math.max(1,+value||1):value;
+ recalc();
+}
+
+function calcProgressRisk(plan){
+ const now=new Date();
+ let weightedActual=0,weightedExpected=0,totalWeight=0,completed=0,total=0;
+ plan.forEach(t=>{
+   const weight=Math.max(t.hours||1,1),actual=t.done?100:(t.progress||0);
+   let expected=0;
+   if(t.startDateObj && t.endDateObj){
+     if(now>=t.endDateObj)expected=100;
+     else if(now<=t.startDateObj)expected=0;
+     else expected=Math.max(0,Math.min(100,((now-t.startDateObj)/(t.endDateObj-t.startDateObj))*100));
+   }
+   weightedActual+=actual*weight;weightedExpected+=expected*weight;totalWeight+=weight;
+   if(t.done||actual>=100)completed++;total++;
+ });
+ const actual=totalWeight?weightedActual/totalWeight:0,expected=totalWeight?weightedExpected/totalWeight:0,gap=expected-actual;
+ let level='Baixo';
+ if(total===0)level='Sem dados';
+ else if(gap>25)level='Alto';
+ else if(gap>10)level='Médio';
+ const el=qs('#progressRisk');
+ if(el){el.textContent=level==='Sem dados'?'Sem dados':`Risco ${level}`;el.className='status '+(level==='Alto'?'bad':level==='Médio'?'warn':level==='Baixo'?'ok':'warn')}
+ if(qs('#actualProgressMetric'))qs('#actualProgressMetric').textContent=Math.round(actual)+'%';
+ if(qs('#expectedProgressMetric'))qs('#expectedProgressMetric').textContent=Math.round(expected)+'%';
+ if(qs('#completedMetric'))qs('#completedMetric').textContent=`${completed}/${total}`;
+ if(qs('#progressGapMetric'))qs('#progressGapMetric').textContent=`${Math.round(gap)} p.p.`;
+ return{actual,expected,gap,level,completed,total};
+}
+function renderCapacityBySprint(plan,cols,sd,dailyCap){
+ const capPerSprint=Math.max(dailyCap*sd,.1),loads=Array.from({length:cols},()=>0);
+ plan.filter(x=>x.kind==='Item').forEach(x=>{
+   const total=Math.max(x.end-x.start,.01);
+   for(let s=0;s<cols;s++){
+     const s0=s*sd,s1=(s+1)*sd,overlap=Math.max(0,Math.min(x.end,s1)-Math.max(x.start,s0));
+     if(overlap>0)loads[s]+=x.hours*(overlap/total);
+   }
+ });
+ const rows=loads.map((h,i)=>{const pct=h/capPerSprint*100,status=pct>100?'Sobrecarga':pct>85?'Atenção':'OK';return `<tr><td>Sprint ${i+1}</td><td>${Math.round(h)}h</td><td>${Math.round(capPerSprint)}h</td><td><strong>${Math.round(pct)}%</strong></td><td>${status}</td></tr>`}).join('');
+ const el=qs('#capacityBySprint');if(el)el.innerHTML=`<table class="effort-table"><thead><tr><th>Sprint</th><th>Carga</th><th>Capacidade</th><th>Uso</th><th>Status</th></tr></thead><tbody>${rows||'<tr><td colspan="5">Sem planejamento.</td></tr>'}</tbody></table>`;
+}
+function buildGantt(items,activities,factor,buffer){
+ const selectedActs=[];
+ const team=+qs('#teamSize').value||1,hpd=+qs('#hoursDay').value||8,focus=(+qs('#focusPct').value||100)/100,sd=+qs('#sprintDays').value||10;
+ const dailyCap=team*hpd*focus;
+
+ let baseline=0;
+ const plannedActs=[];
+
+ const itemDefs=items.map((x,idx)=>{
+   const score=normalizedWeightedScore(matrixValuesForRow(idx));
+   const hours=plannedItemHours(x,score);
+   const days=hours/Math.max(dailyCap,.1);
+   return{id:String(idx),name:x.name,theme:x.theme,hours,days,priority:x.priority,kind:'Item',dependency:x.dependency,dependencyType:x.dependencyType,progress:x.done?100:x.progress,done:x.done,doneDate:x.doneDate,activityNames:x.activityNames};
+ }).sort((a,b)=>a.priority-b.priority);
+
+ const plannedById={},unresolved=[...itemDefs];let guard=0;
+ while(unresolved.length&&guard<itemDefs.length*4){
+  guard++;let progressed=false;
+  for(let i=unresolved.length-1;i>=0;i--){
+   const x=unresolved[i];let depEnd=baseline,depStart=baseline,depName='';
+   if(x.dependency){const dep=plannedById[x.dependency];if(!dep)continue;depEnd=dep.end;depStart=dep.start;depName=dep.name}
+   let start=baseline,end=baseline+x.days;
+   if(x.dependencyType==='SS' && x.dependency){start=Math.max(baseline,depStart);end=start+x.days}
+   else if(x.dependencyType==='FF' && x.dependency){end=Math.max(baseline+x.days,depEnd);start=Math.max(baseline,end-x.days)}
+   else if(x.dependencyType==='EXT'){start=baseline;end=start+x.days;depName=depName||'Dependência externa'}
+   else if(x.dependency){start=Math.max(baseline,depEnd);end=start+x.days}
+   else {start=baseline;end=start+x.days}
+   plannedById[x.id]={...x,start,end,dependencyName:depName};unresolved.splice(i,1);progressed=true;
+  }
+  if(!progressed)break;
+ }
+ unresolved.forEach(x=>{const start=baseline,end=start+x.days;plannedById[x.id]={...x,start,end,dependencyName:'Dependência inválida/cíclica'}});
+ const plan=[...plannedActs,...Object.values(plannedById).sort((a,b)=>a.priority-b.priority)];
+ const itemRows=qsa('#effortTable tbody tr.item-row');
+ Object.values(plannedById).forEach(p=>{
+   const tr=itemRows[+p.id],el=tr?.querySelector('.itemLeadTime');
+   const leadSprint=p.end>0?Math.ceil(p.end/Math.max(sd,1)):0;
+   if(el)el.textContent=leadSprint===1?'1 sprint':`${leadSprint} sprints`;
+ });
+
+ const goLive=Math.max(0,+((qs('#goLiveSprint')||{}).value||0));
+ const milestoneSprints=milestones.map(m=>Math.max(1,+m.sprint||1));
+ const latestEnd=Math.max(baseline,...plan.map(x=>x.end||0),1),computedSprints=Math.max(1,Math.ceil(latestEnd/sd));
+ const sprints=Math.max(computedSprints,goLive||0,...milestoneSprints,1),cols=Math.min(Math.max(sprints,1),24);
+ const startDate=qs('#startDate').value?new Date(qs('#startDate').value+'T12:00:00'):new Date();
+ plan.forEach(x=>{x.startDateObj=addBusinessDays(startDate,Math.floor(x.start));x.endDateObj=addBusinessDays(startDate,Math.ceil(x.end))});
+
+ const today=new Date();today.setHours(12,0,0,0);
+ const horizonDays=cols*sd;
+ let todayPct=((businessDaysBetween(startDate,today))/horizonDays)*100;
+ const showToday=todayPct>=0&&todayPct<=100;
+
+ const lineMarkers=()=>{
+  let marks='';
+  milestones.forEach(ms=>{const sp=Math.max(1,+ms.sprint||1);if(sp<=cols)marks+=`<div class="milestone-line" style="left:${(sp/cols)*100}%"></div>`});
+  if(goLive&&goLive<=cols)marks+=`<div class="golive-line" style="left:${(goLive/cols)*100}%"></div>`;
+  if(showToday)marks+=`<div class="today-line" style="left:${todayPct}%"></div>`;
+  return marks;
+ };
+ const labeledMarkers=()=>{
+  let marks='';
+  milestones.forEach(ms=>{const sp=Math.max(1,+ms.sprint||1);if(sp<=cols)marks+=`<div class="milestone-line" style="left:${(sp/cols)*100}%"><span class="milestone-tag">${esc(ms.name||'Milestone')}</span></div>`});
+  const glName=(qs('#goLiveName')?qs('#goLiveName').value:'')||'GO LIVE';
+  if(goLive&&goLive<=cols)marks+=`<div class="golive-line" style="left:${(goLive/cols)*100}%"><span class="golive-flag">${esc(glName)}</span></div>`;
+  if(showToday)marks+=`<div class="today-line" style="left:${todayPct}%"><span class="today-tag">HOJE</span></div>`;
+  return marks;
+ };
+
+ renderCapacityBySprint(plan,cols,sd,dailyCap);
+ const ganttWidth=Math.max(900,220+(cols*96));
+ let head=`<div class="gantt" style="min-width:${ganttWidth}px"><div class="gantt-head"><div class="gantt-name">Atividade / item</div><div class="timeline">${lineMarkers()}`;
+ for(let s=0;s<cols;s++){const sDate=addBusinessDays(startDate,s*sd);head+=`<div class="sprint-cell">Sprint ${s+1}<br>${dateLabel(sDate)}</div>`}
+ head+=`</div></div>`;
+
+ const colWidth=100/cols;let body='';
+ plan.forEach(x=>{
+  const left=Math.min(100,(x.start/(cols*sd))*100),width=Math.max(1.5,Math.min(100-left,(x.days/(cols*sd))*100)),prog=Math.max(0,Math.min(100,x.progress||0));
+  const dep=x.dependencyName?`<br><span class="dep-badge">↳ depende de: ${esc(x.dependencyName)}</span>`:'';
+  const linked=(x.activityNames&&x.activityNames.length)?`<br><span class="dep-badge">＋ atividades: ${esc(x.activityNames.join(', '))}</span>`:'';
+  const done=x.doneDate?`<br><span class="dep-badge">✓ concluída em ${esc(x.doneDate)}</span>`:'';
+  body+=`<div class="gantt-row"><div class="gantt-name"><strong>${esc(x.name)}</strong><br><span class="muted">${esc(x.kind)} · ${fmt(x.days,1)} d úteis · ${Math.round(prog)}%</span>${dep}${linked}${done}</div>
+   <div class="track" style="--colWidth:${colWidth}%">${lineMarkers()}<div class="taskbar ${x.dependencyName?'dep-task':''}" style="left:${left}%;width:${width}%"><span style="position:relative;z-index:2">${Math.round(x.hours)}h</span><div class="progress-track"><div class="progress-fill" style="width:${prog}%"></div></div></div></div></div>`;
+ });
+ body+=`<div class="gantt-row"><div class="gantt-name"><strong>Marcos do projeto</strong><br><span class="muted">Milestones, Go Live e Hoje</span></div><div class="track" style="--colWidth:${colWidth}%">${labeledMarkers()}</div></div>`;
+ qs('#gantt').innerHTML=head+body+'</div>';
+
+ const topScroll=qs('#ganttTopScroll'),topInner=qs('#ganttTopScrollInner'),ganttWrap=qs('#gantt');
+ if(topScroll&&topInner&&ganttWrap){topInner.style.width=ganttWidth+'px';if(!topScroll.dataset.synced){let syncing=false;topScroll.addEventListener('scroll',()=>{if(syncing)return;syncing=true;ganttWrap.scrollLeft=topScroll.scrollLeft;syncing=false});ganttWrap.addEventListener('scroll',()=>{if(syncing)return;syncing=true;topScroll.scrollLeft=ganttWrap.scrollLeft;syncing=false});topScroll.dataset.synced='1'}topScroll.scrollLeft=ganttWrap.scrollLeft}
+ const furthestMarker=Math.max(goLive||0,...milestoneSprints,1),totalDays=Math.max(latestEnd,furthestMarker*sd),endDate=addBusinessDays(startDate,Math.ceil(totalDays));
+ qs('#ganttRange').textContent=`${dateLabel(startDate)} → ${dateLabel(endDate)} · ${sprints} sprint(s)`;
+ const progressInfo=calcProgressRisk(plan);
+ computeRiskEngine(items,progressInfo);
+}
+function businessDaysBetween(start,end){
+ let a=new Date(start),b=new Date(end);a.setHours(12,0,0,0);b.setHours(12,0,0,0);
+ if(b<=a)return 0;let n=0,d=new Date(a);
+ while(d<b){d.setDate(d.getDate()+1);if(d.getDay()!=0&&d.getDay()!=6)n++}
+ return n;
+}
+
+
+function applyAIScenario(value){
+ if(value==='custom')return;
+ const input=qs('#aiReductionPct');
+ if(input){input.value=value;recalc();}
+}
+
+function recalc(){
+ const qual=getQual(),buffer=+qs('#buffer').value||0,conf=+qs('#confidence').value||0;
+ qs('#qualScore').textContent=fmt(qual.score,2);qs('#qualLabel').textContent=qual.label;qs('#qualFactor').textContent=fmt(qual.factor,2)+'×';
+ const items=rowsData(),activities=activitiesData();
+
+ updateMatrixCalculations();
+
+ let weightedItemHours=0;
+ items.forEach((x,idx)=>{
+   const score=normalizedWeightedScore(matrixValuesForRow(idx));
+   const matrixHours=plannedItemHours(x,score);
+   const eqSprints=itemEquivalentSprints(x,score),calSprints=itemCalendarSprints(x,score);
+   weightedItemHours+=matrixHours;
+   x.plannedHours=matrixHours;x.equivalentSprints=eqSprints;x.calendarSprints=calSprints;
+   x.tr.querySelector('.est').textContent=Math.round(matrixHours)+'h';
+   const eqEl=x.tr.querySelector('.itemSprintEq'),calEl=x.tr.querySelector('.itemSprintCalendar');
+   if(eqEl)eqEl.textContent=score===null?'0,0':fmt(eqSprints,1);
+   if(calEl)calEl.textContent=calSprints===1?'1 sprint':`${calSprints} sprints`;
+   const breakdown=x.tr.querySelector('.hours-breakdown');
+   if(breakdown){
+     const base=(x.hours||0)+(x.activityHours||0);
+     breakdown.textContent=x.activityOriginalHours>0
+       ? `Base ${fmt(base,1)}h = ${fmt(x.hours,1)}h esforço + ${fmt(x.activityHours,1)}h atividades${x.activitySavings>0?` (IA -${fmt(x.activitySavings,1)}h)`:''}`
+       : `Base ${fmt(base,1)}h`;
+   }
+   x.tr.querySelector('.prio').textContent=scoreToEffort(score);
+ });
+ // Bloco 5 é catálogo: só atividades vinculadas aos itens entram no esforço.
+ const calibrated=weightedItemHours*qual.factor;
+ const risk=calibrated*(1+buffer/100);
+ const team=+qs('#teamSize').value||1,hpd=+qs('#hoursDay').value||8,focus=(+qs('#focusPct').value||100)/100,sd=+qs('#sprintDays').value||10,spr=+qs('#sprintsRelease').value||4;
+ const dailyCap=team*hpd*focus,sprintCap=dailyCap*sd,days=risk/Math.max(dailyCap,.1),sprints=risk/Math.max(sprintCap,.1),releases=sprints/Math.max(spr,1);
+ qs('#baseHours').textContent=Math.round(calibrated);qs('#riskHours').textContent=Math.round(risk);qs('#daysMetric').textContent=fmt(days,1);qs('#sprintsMetric').textContent=fmt(sprints,1);qs('#releasesMetric').textContent=fmt(releases,1);
+ if(qs('#sprintCapacityMetric'))qs('#sprintCapacityMetric').textContent=Math.round(sprintCap)+'h';
+ const calendarProject=sprints>0?Math.ceil(sprints):0;
+ if(qs('#calendarProjectMetric'))qs('#calendarProjectMetric').textContent=calendarProject===1?'1 sprint':`${calendarProject} sprints`;qs('#capacitySprint').textContent=Math.round(sprintCap)+'h';qs('#size').textContent=calibrated?sizeLabel(risk):'—';qs('#confValue').textContent=conf;
+
+ const globalAIReduction=Math.max(0,Math.min(70,+((qs('#aiReductionPct')||{}).value||0)));
+ const linkedActivitySaved=items.reduce((s,x)=>s+(x.activitySavings||0),0);
+ const itemWork=Math.max(0,weightedItemHours);
+ // O percentual global atua sobre o trabalho-base dos itens.
+ // Reduções específicas do bloco 5 atuam somente nas atividades vinculadas, evitando depender do checkbox "Usar".
+ const itemSaved=itemWork*(globalAIReduction/100);
+ const aiSaved=Math.min(risk,linkedActivitySaved+itemSaved);
+ const aiHours=Math.max(0,risk-aiSaved);
+ const aiDays=aiHours/Math.max(dailyCap,.1);
+ const aiSprints=aiHours/Math.max(sprintCap,.1);
+ const effectiveAIReduction=risk?aiSaved/risk*100:0;
+ if(qs('#aiReductionPct') && !qs('#aiReductionPct').value && linkedActivitySaved>0){
+   qs('#aiReductionPct').placeholder=`Efetivo: ${Math.round(effectiveAIReduction)}%`;
+ }
+ if(qs('#aiHoursMetric'))qs('#aiHoursMetric').textContent=Math.round(aiHours)+'h';
+ if(qs('#aiDaysMetric'))qs('#aiDaysMetric').textContent=fmt(aiDays,1);
+ if(qs('#aiSprintsMetric'))qs('#aiSprintsMetric').textContent=fmt(aiSprints,1)+' sprints';
+ if(qs('#aiSavedHoursMetric'))qs('#aiSavedHoursMetric').textContent=Math.round(aiSaved)+'h';
+ renderPlanningScenarios(risk,sprintCap);
+ renderActualVsPlanned();
+ const baseSpread=grade==='W'?.35:grade==='Z'?.20:.10;
+ const confidenceFactor=1+((100-conf)/100);
+ const spread=baseSpread*confidenceFactor;
+ qs('#range').textContent=`${Math.max(0,Math.round(risk*(1-spread)))}h – ${Math.round(risk*(1+spread))}h`;
+ const visible=qsa(`#method-${grade} .readiness`),checked=visible.filter(x=>x.checked).length,pct=visible.length?Math.round(checked/visible.length*100):0;qs('#readyBar').style.width=pct+'%';qs('#readyText').textContent=`${pct}% dos critérios marcados`;
+ const st=qs('#status');st.className='status '+(pct>=80&&conf>=70?'ok':pct>=50?'warn':'bad');st.textContent=pct>=80&&conf>=70?'Pronto para decisão':pct>=50?'Refinamento recomendado':'Alta incerteza';
+ renderImpactMatrix(items);buildRuler(items,qual.factor,buffer);buildGantt(items,activities,qual.factor,buffer);
+}
+
+qsa('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+ grade=btn.dataset.grade;qsa('.tab').forEach(x=>x.classList.toggle('active',x===btn));qsa('.method').forEach(x=>x.classList.remove('active'));qs('#method-'+grade).classList.add('active');qs('#currentGrade').textContent='Grau '+grade;
+ const helps={W:'<strong>W:</strong> visão macro comparável, com critérios técnicos, riscos e negócio.',Z:'<strong>Z:</strong> zoom na solução, incertezas e condições de entrega.',A:'<strong>A:</strong> compromisso de execução, qualidade e readiness operacional.'};qs('#gradeHelp').innerHTML=helps[grade];
+ renderCriteriaEditor();renderDynamicMatrix();recalc();
+}));
+qsa('.readiness').forEach(x=>x.addEventListener('change',recalc));
+
+function getData(){
+ const items=rowsData(),activities=activitiesData();
+ const criteriaState={};
+ Object.keys(GRADE_MODELS).forEach(g=>{
+   criteriaState[g]=GRADE_MODELS[g].groups.map(group=>({name:group.name,criteria:group.criteria.map(c=>({key:c.key,label:c.label,weight:c.weight,direction:c.direction||'direct'}))}));
+ });
+ const matrix={};
+ qsa('#dynamicMatrixBody tr').forEach((tr,idx)=>{
+   matrix[idx]={};
+   tr.querySelectorAll('.matrixLevel').forEach(sel=>matrix[idx][sel.dataset.key]=sel.value);
+ });
+ return{
+  versao:'WZA-v25',grau:grade,
+  contexto:{projeto:qs('#project').value,responsavel:qs('#owner').value,times:qs('#teams').value,dataAlvo:qs('#targetDate').value,objetivo:qs('#goal').value,escopo:qs('#scope').value},
+  calibracao:{tecnico:qs('#qTech').value,risco:qs('#qRisk').value,contexto:qs('#qContext').value},
+  capacidade:{pessoas:+qs('#teamSize').value,horasPessoaDia:+qs('#hoursDay').value,focoPct:+qs('#focusPct').value,diasSprint:+qs('#sprintDays').value,sprintsRelease:+qs('#sprintsRelease').value,inicio:qs('#startDate').value},
+  atividades:activities,
+  itens:items.map((x,idx)=>{const vals=matrixValuesForRow(idx),score=normalizedWeightedScore(vals);return{prioridade:x.priority,item:x.name,tema:x.theme,disciplina:x.discipline,esforco:x.effort,valor:x.value,urgencia:x.urgency,atividadesAssociadas:x.activityIds,horasAtividadesOriginais:x.activityOriginalHours,horasAtividades:x.activityHours,economiaIAAtividades:x.activitySavings,acompanhamentoAtividades:x.activityTracking,tipoDependencia:x.dependencyType,dependencia:x.dependency,progresso:x.progress,concluido:x.done,dataConclusao:x.doneDate,avaliacao:vals,resultadoPonderado:score,grauFinal:scoreToEffort(score),sprintEquivalente:itemEquivalentSprints(x,score),prazoSprints:itemCalendarSprints(x,score),horasPlanejadas:plannedItemHours(x,score)}}),
+  modelos:criteriaState,matrix,
+  riscos:{riscos:qs('#risks').value,dependencias:qs('#dependencies').value,premissas:qs('#assumptions').value,foraEscopo:qs('#outscope').value},
+  milestones:{itens:milestones.map(m=>({id:m.id,sprint:+m.sprint||1,nome:m.name})),goLive:{sprint:+((qs('#goLiveSprint')||{}).value||0),nome:((qs('#goLiveName')||{}).value||'')}},
+  insucesso:{definicao:qs('#failureDefinition').value,prazo:{ativo:qs('#failDeadline').checked,criterio:qs('#failDeadlineText').value},escopo:{ativo:qs('#failScope').checked,criterio:qs('#failScopeText').value},qualidade:{ativo:qs('#failQuality').checked,criterio:qs('#failQualityText').value},adocao:{ativo:qs('#failAdoption').checked,criterio:qs('#failAdoptionText').value},riscoCompliance:{ativo:qs('#failRisk').checked,criterio:qs('#failRiskText').value},esforcoCapacidade:{ativo:qs('#failCost').checked,criterio:qs('#failCostText').value}},
+  ia:{
+    reducaoPct:+((qs('#aiReductionPct')||{}).value||20),
+    cenario:(qs('#aiScenario')||{}).value||'20',
+    referencia:'Planejamento baseado em evidências públicas 2026; calibrar com dados reais do time.'
+  },
+  decisao:{confianca:+qs('#confidence').value,buffer:+qs('#buffer').value,decisao:qs('#decision').value,revisao:qs('#reviewDate').value,notas:qs('#notes').value},
+  governanca:{baselines:baselines.map(b=>({version:b.version,createdAt:b.createdAt,hours:b.hours,sprints:b.sprints,goLive:b.goLive,items:b.items})),decisoes:decisionLog},
+  realizado:{horas:+qs('#actualHours').value||0,sprints:+qs('#actualSprints').value||0,dataConclusao:qs('#actualEndDate').value,aprendizados:qs('#lessonsLearned').value},
+  readiness:qsa('.readiness').map((x,i)=>({i,checked:x.checked}))
+ };
+}
+
+
+function currentPlanningMetrics(){
+ return{
+  hours:+(qs('#riskHours')?.textContent||0),
+  sprints:+(qs('#sprintsMetric')?.textContent||0),
+  goLive:+((qs('#goLiveSprint')||{}).value||0),
+  items:rowsData().length
+ };
+}
+function createBaseline(){
+ const d=getData(),m=currentPlanningMetrics();
+ const item={
+   version:baselines.length+1,
+   createdAt:new Date().toISOString(),
+   hours:m.hours,sprints:m.sprints,goLive:m.goLive,items:m.items,
+   snapshot:d
+ };
+ baselines.push(item);renderBaselines();renderActualVsPlanned();
+ setImportStatus(`Baseline v${item.version} criado.`,'ok');
+ const stamp=qs('#sessionStamp');if(stamp)stamp.textContent=`Baseline v${item.version}`;
+}
+function renderBaselines(){
+ const body=qs('#baselineBody');if(!body)return;
+ if(!baselines.length){body.innerHTML='<tr><td colspan="7" class="muted">Nenhum baseline criado.</td></tr>';return}
+ body.innerHTML=baselines.map((b,i)=>`<tr>
+  <td><span class="baseline-badge">v${b.version}</span></td>
+  <td>${new Date(b.createdAt).toLocaleString('pt-BR')}</td>
+  <td>${Math.round(b.hours||0)}h</td><td>${fmt(b.sprints||0,1)}</td>
+  <td>${b.goLive?`Sprint ${b.goLive}`:'—'}</td><td>${b.items||0}</td>
+  <td>
+    <button type="button" class="btn ghost sm" onclick="restoreBaseline(${i})">Restaurar</button>
+    <button type="button" class="btn ghost sm" onclick="removeBaseline(${i})">×</button>
+  </td>
+ </tr>`).join('');
+}
+
+function removeBaseline(index){
+ if(index<0||index>=baselines.length)return;
+ baselines.splice(index,1);
+ baselines.forEach((b,i)=>b.version=i+1);
+ renderBaselines();
+ renderActualVsPlanned();
+ setImportStatus('Baseline removido.','ok');
+}
+function restoreBaseline(index){
+ const b=baselines[index];if(!b)return;
+ applyImportedState(JSON.parse(JSON.stringify(b.snapshot)));
+ setImportStatus(`Baseline v${b.version} restaurado para edição.`,'ok');
+}
+function addDecisionLog(){
+ const date=qs('#decisionLogDate').value||new Date().toISOString().slice(0,10);
+ const textValue=qs('#decisionLogText').value.trim();
+ if(!textValue){setImportStatus('Informe a decisão antes de adicionar.','error');return}
+ decisionLog.push({date,text:textValue,owner:qs('#decisionLogOwner').value.trim()});
+ qs('#decisionLogText').value='';qs('#decisionLogOwner').value='';
+ renderDecisionLog();
+}
+function removeDecisionLog(i){decisionLog.splice(i,1);renderDecisionLog()}
+function renderDecisionLog(){
+ const body=qs('#decisionLogBody');if(!body)return;
+ if(!decisionLog.length){body.innerHTML='<tr><td colspan="4" class="muted">Nenhuma decisão registrada.</td></tr>';return}
+ body.innerHTML=decisionLog.map((d,i)=>`<tr><td>${esc(d.date)}</td><td>${esc(d.text)}</td><td>${esc(d.owner||'—')}</td><td><button type="button" class="btn ghost sm" onclick="removeDecisionLog(${i})">×</button></td></tr>`).join('');
+}
+function renderActualVsPlanned(){
+ const base=baselines.length?baselines[baselines.length-1]:null;
+ const plannedHours=base?.hours||(+qs('#riskHours').textContent||0);
+ const plannedSprints=base?.sprints||(+qs('#sprintsMetric').textContent||0);
+ const ah=+qs('#actualHours').value||0,as=+qs('#actualSprints').value||0;
+ const hDelta=plannedHours&&ah?((ah-plannedHours)/plannedHours*100):null;
+ const sDelta=plannedSprints&&as?((as-plannedSprints)/plannedSprints*100):null;
+ const acc=hDelta===null?'—':`${Math.max(0,Math.round(100-Math.abs(hDelta)))}%`;
+ const hEl=qs('#actualHoursDelta'),sEl=qs('#actualSprintsDelta'),aEl=qs('#estimateAccuracy');
+ if(hEl){hEl.textContent=hDelta===null?'—':`${hDelta>=0?'+':''}${Math.round(hDelta)}%`;hEl.className=hDelta>0?'delta-pos':hDelta<0?'delta-neg':'delta-zero'}
+ if(sEl){sEl.textContent=sDelta===null?'—':`${sDelta>=0?'+':''}${Math.round(sDelta)}%`;sEl.className=sDelta>0?'delta-pos':sDelta<0?'delta-neg':'delta-zero'}
+ if(aEl)aEl.textContent=acc;
+}
+function riskLevelElement(id,level){
+ const el=qs(id);if(!el)return;
+ el.textContent=level;
+ el.className='risk-pill '+(level==='Alto'?'risk-high':level==='Médio'?'risk-medium':level==='Baixo'?'risk-low':'risk-na');
+}
+function computeRiskEngine(items,progressInfo){
+ const gap=progressInfo?.gap||0;
+ const schedule=gap>25?'Alto':gap>10?'Médio':items.length?'Baixo':'—';
+
+ const depItems=items.filter(x=>x.dependencyType||x.dependency);
+ let blocked=0;
+ depItems.forEach(x=>{
+   if(x.dependencyType==='EXT' && !x.done) blocked++;
+   else if(x.dependency){
+     const dep=items[+x.dependency];
+     if(dep && !dep.done && dep.progress<100)blocked++;
+   }
+ });
+ const depRatio=depItems.length?blocked/depItems.length:0;
+ const dependencies=!depItems.length?'Baixo':depRatio>.5?'Alto':depRatio>0?'Médio':'Baixo';
+
+ const highComplex=items.filter(x=>x.effort==='Alto').length;
+ const scopeRatio=items.length?highComplex/items.length:0;
+ const scope=scopeRatio>.5?'Alto':scopeRatio>.25?'Médio':items.length?'Baixo':'—';
+
+ const conf=+qs('#confidence').value||0;
+ const confidence=!items.length?'—':conf<50?'Alto':conf<70?'Médio':'Baixo';
+
+ const rank={ '—':0,'Baixo':1,'Médio':2,'Alto':3 };
+ const all=[schedule,dependencies,scope,confidence];
+ const max=Math.max(...all.map(x=>rank[x]));
+ const overall=Object.keys(rank).find(k=>rank[k]===max)||'—';
+ riskLevelElement('#riskSchedule',schedule);riskLevelElement('#riskDependencies',dependencies);riskLevelElement('#riskScope',scope);riskLevelElement('#riskConfidence',confidence);riskLevelElement('#overallRisk',overall);
+ return{schedule,dependencies,scope,confidence,overall};
+}
+function renderPlanningScenarios(riskHours,sprintCap){
+ const aggressive=riskHours*.90,probable=riskHours,conservative=riskHours*1.20;
+ const fmtScenario=h=>`${fmt(h/Math.max(sprintCap,.1),1)} sprints · ${Math.round(h)}h`;
+ if(qs('#scenarioAggressive'))qs('#scenarioAggressive').textContent=fmtScenario(aggressive);
+ if(qs('#scenarioProbable'))qs('#scenarioProbable').textContent=fmtScenario(probable);
+ if(qs('#scenarioConservative'))qs('#scenarioConservative').textContent=fmtScenario(conservative);
+}
+function newsletterRiskText(){
+ const el=qs('#progressRisk');
+ return el?.textContent?.trim()||'Sem dados';
+}
+function nlValue(v,fallback='—'){
+ return (v===undefined||v===null||String(v).trim()==='')?fallback:String(v);
+}
+function exportNewsletter(){
+ try{
+   const d=getData();
+   const items=(d.itens||[]).slice().sort((a,b)=>(a.prioridade||999)-(b.prioridade||999));
+   const milestones=(d.milestones?.itens||[]);
+   const goLive=d.milestones?.goLive||{};
+   const risk=newsletterRiskText();
+   const overallRisk=qs('#overallRisk')?.textContent||'—';
+   const lastBaseline=baselines.length?baselines[baselines.length-1]:null;
+   const actual=qs('#actualProgressMetric')?.textContent||'0%';
+   const expected=qs('#expectedProgressMetric')?.textContent||'0%';
+   const completed=qs('#completedMetric')?.textContent||'0/0';
+   const baseHours=qs('#baseHours')?.textContent||'0';
+   const riskHours=qs('#riskHours')?.textContent||'0';
+   const days=qs('#daysMetric')?.textContent||'0';
+   const sprints=qs('#sprintsMetric')?.textContent||'0';
+   const releases=qs('#releasesMetric')?.textContent||'0';
+   const aiHours=qs('#aiHoursMetric')?.textContent||'0h';
+   const aiSprints=qs('#aiSprintsMetric')?.textContent||'0 sprints';
+   const aiReduction=nlValue(d.ia?.reducaoPct,'0');
+   const grade=d.grau||'—';
+   const project=nlValue(d.contexto?.projeto,'Projeto sem nome');
+   const date=new Date().toLocaleDateString('pt-BR');
+
+   const topItems=items.slice(0,8).map(i=>`
+     <tr>
+       <td>${esc(i.prioridade??'—')}</td>
+       <td><strong>${esc(i.item||'')}</strong><br><span>${esc(i.tema||'')}</span></td>
+       <td>${esc(i.grauFinal||'—')}</td>
+       <td>${esc(i.prazoSprints??'—')}</td>
+       <td>${esc(i.progresso??0)}%</td>
+     </tr>`).join('');
+
+   const msHtml=milestones.length
+      ? milestones.map(m=>`<span class="tag">${esc(m.nome||'Milestone')} · Sprint ${esc(m.sprint||'—')}</span>`).join('')
+      : '<span class="muted">Nenhum milestone cadastrado</span>';
+
+   const failure=d.insucesso?.definicao
+      ? `<div class="alert"><strong>Critério de insucesso</strong><br>${esc(d.insucesso.definicao)}</div>`
+      : '';
+
+   const newsletter=`<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Newsletter Executivo - ${esc(project)}</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#172033}
+  .wrap{max-width:900px;margin:0 auto;padding:28px}
+  .hero{background:linear-gradient(135deg,#141a24,#232c3b);color:#fff;border-radius:20px;padding:28px}
+  .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#cfd5df;font-weight:700}
+  h1{margin:6px 0 8px;font-size:30px} .subtitle{color:#d0d5dd;line-height:1.5}
+  .section{background:#fff;border:1px solid #e7eaf0;border-radius:16px;padding:20px;margin-top:16px}
+  .section h2{font-size:18px;margin:0 0 14px}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .metric{background:#f8fafc;border:1px solid #e7eaf0;border-radius:12px;padding:12px}
+  .metric small{display:block;color:#697386;font-size:11px}.metric strong{display:block;font-size:20px;margin-top:4px}
+  .risk-low{color:#027a48}.risk-medium{color:#b54708}.risk-high{color:#b42318}
+  .tags{display:flex;gap:8px;flex-wrap:wrap}.tag{background:#f2f4f7;border-radius:999px;padding:7px 10px;font-size:12px}
+  .muted{color:#697386;font-size:12px}
+  table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1px solid #e7eaf0;text-align:left;font-size:13px}
+  th{font-size:11px;text-transform:uppercase;color:#697386}
+  td span{color:#697386;font-size:11px}
+  .alert{background:#fff6f5;border-left:4px solid #d92d20;padding:12px 14px;border-radius:8px;margin-top:12px;color:#7a271a}
+  .footer{padding:20px;text-align:center;color:#697386;font-size:11px}
+  @media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}.wrap{padding:14px}}
+  @media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{background:#fff}.wrap{padding:0}.section,.hero{break-inside:avoid}}
+
+/* v15 - sistema: baseline, cenários, risk engine, realizado e decisões */
+.system-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.baseline-table,.decision-table{min-width:760px}
+.baseline-table td,.baseline-table th,.decision-table td,.decision-table th{vertical-align:middle}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.scenario-card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+.scenario-card small{display:block;color:var(--muted);font-size:11px}
+.scenario-card strong{display:block;margin-top:3px;font-size:17px}
+.risk-engine{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.risk-engine-item{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}
+.risk-engine-item small{display:block;color:var(--muted);font-size:11px}
+.risk-pill{display:inline-block;margin-top:4px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}
+.risk-low{background:#ecfdf3;color:#027a48}.risk-medium{background:#fffaeb;color:#b54708}.risk-high{background:#fef3f2;color:#b42318}.risk-na{background:#f2f4f7;color:#667085}
+.realized-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.delta-pos{color:#b42318}.delta-neg{color:#027a48}.delta-zero{color:#667085}
+.decision-log-form{display:grid;grid-template-columns:150px 1fr 170px auto;gap:8px;align-items:end}
+.dep-type{min-width:145px}
+.ai-reduction-activity{width:82px!important}
+.baseline-badge{display:inline-block;padding:3px 7px;border-radius:999px;background:#eef4ff;color:#3538cd;font-size:10px;font-weight:800}
+@media(max-width:980px){
+ .scenario-grid,.risk-engine,.realized-grid{grid-template-columns:1fr}
+ .decision-log-form{grid-template-columns:1fr}
+}
+
+
+/* v16 - critérios dinâmicos + composição hierárquica de atividades */
+.criteria-editor{min-width:760px}
+.criteria-editor input{padding:7px}
+.criteria-editor .crit-weight{width:82px}
+.criteria-empty{padding:16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);background:#fbfcfe}
+.item-parent-row td{vertical-align:middle}
+.item-activities-detail{display:none}
+.item-activities-detail.open{display:table-row}
+.item-activities-detail td{background:#fafbfc;padding:0!important}
+.item-activities-panel{padding:12px 18px 14px 54px;border-top:1px solid var(--line)}
+.item-activities-panel .subhead{display:grid;grid-template-columns:32px 100px 1fr 110px;gap:8px;padding:5px 8px;font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:800}
+.item-activity-line{display:grid;grid-template-columns:32px 100px 1fr 110px;gap:8px;align-items:center;padding:7px 8px;border-top:1px solid #eef0f4;font-size:12px}
+.item-activity-line input{width:auto!important}
+.item-activity-line .activity-hours{text-align:right;font-weight:800}
+.item-activity-summary{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tree-toggle{width:28px;height:28px;padding:0!important;border-radius:7px!important}
+.tree-toggle .arrow{display:inline-block;transition:transform .15s ease}
+.tree-toggle.open .arrow{transform:rotate(90deg)}
+.item-total{font-weight:900}
+.item-hours-detail{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.criteria-total{font-size:12px;color:var(--muted)}
+.criteria-total strong{color:var(--text)}
+@media print{.item-activities-detail{display:table-row!important}}
+
+/* v17 - acompanhamento por atividade dentro do item */
+.item-activities-panel .subhead{grid-template-columns:32px 95px minmax(190px,1fr) 90px 100px 90px 145px}
+.item-activity-line{grid-template-columns:32px 95px minmax(190px,1fr) 90px 100px 90px 145px}
+.item-activity-line .progress-input{width:82px!important}
+.item-progress-auto{font-weight:900}
+.item-status-auto{font-size:10px;color:var(--muted);display:block;margin-top:3px}
+.item-activity-line.is-disabled{opacity:.55}
+.item-activity-line input:disabled{background:#f2f4f7}
+
+/* v23 - associação simplificada de atividades */
+.item-activities-panel .activity-picker{display:none;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.item-activities-panel .activity-picker.open{display:block}
+.activity-picker-list{display:grid;gap:6px;margin-top:8px;max-height:220px;overflow:auto}
+.activity-picker-option{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:7px 8px;border:1px solid #eef0f4;border-radius:8px}
+.activity-picker-option span{font-size:12px}
+.item-activity-line{grid-template-columns:95px minmax(190px,1fr) 90px 100px 90px 145px 38px!important}
+.item-activities-panel .subhead{grid-template-columns:95px minmax(190px,1fr) 90px 100px 90px 145px 38px!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Newsletter Executivo · Grau ${esc(grade)} · ${date}</div>
+    <h1>${esc(project)}</h1>
+    <div class="subtitle">${esc(nlValue(d.contexto?.objetivo,'Sem objetivo informado'))}</div>
+  </div>
+
+  <div class="section">
+    <h2>Status executivo</h2>
+    <div class="metrics">
+      <div class="metric"><small>Progresso real</small><strong>${esc(actual)}</strong></div>
+      <div class="metric"><small>Progresso esperado</small><strong>${esc(expected)}</strong></div>
+      <div class="metric"><small>Concluídos</small><strong>${esc(completed)}</strong></div>
+      <div class="metric"><small>Risco progresso</small><strong>${esc(risk)}</strong></div>
+      <div class="metric"><small>Risk Engine</small><strong>${esc(overallRisk)}</strong></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Esforço e prazo</h2>
+    <div class="metrics">
+      <div class="metric"><small>Esforço calibrado <span class="calc-help" tabindex="0" data-tooltip="Soma das horas planejadas das funcionalidades após aplicar o fator de calibração global do projeto.">i</span></small><strong>${esc(baseHours)}h</strong></div>
+      <div class="metric"><small>Com buffer <span class="calc-help" tabindex="0" data-tooltip="Horas calibradas × (1 + buffer%). O buffer representa margem para variação e incertezas residuais.">i</span></small><strong>${esc(riskHours)}h</strong></div>
+      <div class="metric"><small>Dias úteis <span class="calc-help" tabindex="0" data-tooltip="Horas finais ÷ capacidade efetiva diária do time. A capacidade diária considera pessoas × horas/dia × foco%.">i</span></small><strong>${esc(days)}</strong></div>
+      <div class="metric"><small>Sprints <span class="calc-help" tabindex="0" data-tooltip="Esforço consolidado do projeto ÷ capacidade efetiva por sprint. Este é o equivalente de capacidade; o prazo calendário pode ser maior por dependências e sobrecarga.">i</span></small><strong>${esc(sprints)}</strong></div>
+    </div>
+    <div class="metrics" style="margin-top:10px">
+      <div class="metric"><small>Releases</small><strong>${esc(releases)}</strong></div>
+      <div class="metric"><small>Redução IA <span class="calc-help" tabindex="0" data-tooltip="Combina a redução específica das atividades associadas com a redução global informada para o trabalho-base do item, sem aplicar a mesma redução duas vezes na mesma parcela.">i</span></small><strong>${esc(aiReduction)}%</strong></div>
+      <div class="metric"><small>Esforço com IA <span class="calc-help" tabindex="0" data-tooltip="Esforço consolidado após subtrair as horas economizadas pelas reduções de IA aplicáveis.">i</span></small><strong>${esc(aiHours)}</strong></div>
+      <div class="metric"><small>Prazo com IA <span class="calc-help" tabindex="0" data-tooltip="Horas estimadas após IA ÷ capacidade efetiva por sprint. É uma projeção e não altera automaticamente o baseline.">i</span></small><strong>${esc(aiSprints)}</strong></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Baseline</h2>
+    <p>${lastBaseline?`Baseline v${lastBaseline.version} · ${Math.round(lastBaseline.hours)}h · ${fmt(lastBaseline.sprints,1)} sprints`:'Nenhum baseline criado.'}</p>
+  </div>
+
+  <div class="section">
+    <h2>Roadmap e marcos</h2>
+    <div class="tags">${msHtml}
+      ${goLive?.sprint?`<span class="tag" style="background:#fef3f2;color:#b42318"><strong>${esc(goLive.nome||'GO LIVE')}</strong> · Sprint ${esc(goLive.sprint)}</span>`:''}
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Principais itens</h2>
+    <table>
+      <thead><tr><th>Prior.</th><th>Item</th><th>Esforço</th><th>Sprints</th><th>Progresso</th></tr></thead>
+      <tbody>${topItems||'<tr><td colspan="5">Nenhum item cadastrado.</td></tr>'}</tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Riscos e decisões</h2>
+    <p><strong>Riscos:</strong> ${esc(nlValue(d.riscos?.riscos))}</p>
+    <p><strong>Dependências:</strong> ${esc(nlValue(d.riscos?.dependencias))}</p>
+    <p><strong>Próximo passo:</strong> ${esc(nlValue(d.decisao?.decisao))}</p>
+    ${failure}
+  </div>
+
+  <div class="footer">Gerado pelo EffortLab · Avaliação W / Z / A</div>
+</div>
+</body>
+</html>`;
+
+   const filename=`newsletter-${project.replace(/[^a-z0-9_-]+/gi,'-').replace(/^-+|-+$/g,'')||'projeto'}.html`;
+   triggerDownload(newsletter,filename,'text/html');
+   setImportStatus('Newsletter executivo exportado.','ok');
+ }catch(e){
+   setImportStatus('Não foi possível exportar o newsletter: '+e.message,'error');
+ }
+}
+function triggerDownload(content,filename,mime='application/octet-stream'){
+ const blob=content instanceof Blob?content:new Blob([content],{type:mime});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=filename;a.rel='noopener';a.style.display='none';
+ document.body.appendChild(a);a.click();
+ setTimeout(()=>{try{a.remove();URL.revokeObjectURL(url)}catch(e){}},1200);
+}
+function downloadBlob(blob,filename){triggerDownload(blob,filename,blob.type||'application/octet-stream')}
+function exportJson(){
+ try{triggerDownload(JSON.stringify(getData(),null,2),'avaliacao-esforco-WZA.json','application/json');setImportStatus('JSON exportado.','ok')}
+ catch(e){setImportStatus('Não foi possível exportar o JSON: '+e.message,'error')}
+}
+function importJsonFile(event){
+ const file=event.target.files?.[0];if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{try{applyImportedState(JSON.parse(String(reader.result||'')));setImportStatus('JSON importado e visão restaurada.','ok')}catch(e){setImportStatus('Falha ao importar JSON: '+e.message,'error')}finally{event.target.value=''}};
+ reader.readAsText(file,'utf-8');
+}
+function sampleState(){
+ return{
+  versao:'WZA-v12-modelo',grau:'W',
+  contexto:{projeto:'Portal de Crédito - Exemplo',responsavel:'Time Engenharia',times:'Front / BFF / Backend',dataAlvo:'',objetivo:'Disponibilizar nova jornada de análise.',escopo:'Visão geral, rating, garantias e apontamentos.'},
+  calibracao:{tecnico:'2',risco:'2',contexto:'2'},
+  capacidade:{pessoas:4,horasPessoaDia:8,focoPct:70,diasSprint:10,sprintsRelease:4,inicio:new Date().toISOString().slice(0,10)},
+  atividades:[
+   {selected:true,code:'SUB-01',theme:'Início',name:'Revisar Desenho de Solução',time:3,unit:'dias',hours:24,aiReduction:20,progress:100,done:true,doneDate:new Date().toISOString().slice(0,10),obs:''},
+   {selected:true,code:'SUB-13',theme:'Infraestrutura',name:'Criar Infraestrutura ECS',time:3,unit:'dias',hours:24,aiReduction:30,progress:50,done:false,doneDate:'',obs:''}
+  ],
+  itens:[
+   {prioridade:1,item:'Visão Geral',tema:'Visão Geral',disciplina:'Frontend',esforco:'Médio',valor:'Alto',urgencia:'Alto',tipoDependencia:'',dependencia:'',progresso:70,concluido:false,dataConclusao:'',avaliacao:{},resultadoPonderado:50,grauFinal:'Médio',prazoSprints:3},
+   {prioridade:2,item:'Rating',tema:'Riscos e Monitoramento',disciplina:'Frontend',esforco:'Alto',valor:'Alto',urgencia:'Alto',tipoDependencia:'FS',dependencia:'0',progresso:20,concluido:false,dataConclusao:'',avaliacao:{},resultadoPonderado:70,grauFinal:'Alto',prazoSprints:5}
+  ],
+  modelos:Object.fromEntries(Object.entries(CRITERIA_EXAMPLES).map(([g,m])=>[g,m.groups.map(gr=>({name:gr.name,criteria:gr.criteria.map(c=>({...c}))}))])),
+  matrix:{0:Object.fromEntries(CRITERIA_EXAMPLES.W.groups.flatMap(g=>g.criteria).map(c=>[c.key,'Médio'])),1:Object.fromEntries(CRITERIA_EXAMPLES.W.groups.flatMap(g=>g.criteria).map(c=>[c.key,c.key==='impact'?'Alto':'Médio']))},
+  riscos:{riscos:'Dependência de integrações externas.',dependencias:'API de dados cadastrais.',premissas:'Ambiente disponível.',foraEscopo:'Migração de histórico.'},
+  milestones:{itens:[{id:1,sprint:2,nome:'MVP'}],goLive:{sprint:5,nome:'GO LIVE'}},
+  insucesso:{definicao:'A iniciativa será considerada malsucedida se o Go Live atrasar mais de 2 sprints ou houver incidente crítico.',prazo:{ativo:true,criterio:'Atraso > 2 sprints.'},escopo:{ativo:false,criterio:''},qualidade:{ativo:true,criterio:'Incidente crítico em produção.'},adocao:{ativo:false,criterio:''},riscoCompliance:{ativo:false,criterio:''},esforcoCapacidade:{ativo:false,criterio:''}},
+  ia:{reducaoPct:20,cenario:'20',referencia:'Hipótese de planejamento.'},
+  decisao:{confianca:70,buffer:20,decisao:'Avançar para o próximo grau',revisao:'',notas:''},readiness:[]
+ };
+}
+function downloadJsonModel(){try{triggerDownload(JSON.stringify(sampleState(),null,2),'modelo-avaliacao-esforco-WZA.json','application/json');setImportStatus('Modelo JSON baixado.','ok')}catch(e){setImportStatus('Falha ao baixar modelo JSON: '+e.message,'error')}}
+
+function xmlEscape(v){
+ return String(v??'')
+   .replace(/&/g,'&amp;')
+   .replace(/</g,'&lt;')
+   .replace(/>/g,'&gt;')
+   .replace(/"/g,'&quot;')
+   .replace(/'/g,'&apos;');
+}
+function xmlCell(v,type='String'){
+ const value=v===null||v===undefined?'':v;
+ return `<Cell><Data ss:Type="${type}">${xmlEscape(value)}</Data></Cell>`;
+}
+function xmlRow(values){return '<Row>'+values.map(v=>xmlCell(v,typeof v==='number'?'Number':'String')).join('')+'</Row>'}
+function xmlSheet(name,rows){
+ return `<Worksheet ss:Name="${xmlEscape(name.slice(0,31))}"><Table>${rows.map(xmlRow).join('')}</Table></Worksheet>`;
+}
+function chunkText(s,size=28000){const a=[];for(let i=0;i<s.length;i+=size)a.push(s.slice(i,i+size));return a}
+function exportExcel(){
+ try{
+   const d=getData();
+   const sheets=[];
+   sheets.push(xmlSheet('Geral',[
+     ['Campo','Valor'],['Grau',d.grau],['Projeto',d.contexto.projeto],['Responsável',d.contexto.responsavel],['Times',d.contexto.times],['Data alvo',d.contexto.dataAlvo],['Objetivo',d.contexto.objetivo],['Escopo',d.contexto.escopo],
+     ['Pessoas',d.capacidade.pessoas],['Horas pessoa/dia',d.capacidade.horasPessoaDia],['Foco %',d.capacidade.focoPct],['Dias por sprint',d.capacidade.diasSprint],['Sprints por release',d.capacidade.sprintsRelease],['Início',d.capacidade.inicio],
+     ['Redução estimada com IA %',d.ia?.reducaoPct??20],['Cenário IA',d.ia?.cenario??'20'],
+     ['Riscos',d.riscos.riscos],['Dependências',d.riscos.dependencias],['Premissas',d.riscos.premissas],['Fora de escopo',d.riscos.foraEscopo]
+   ]));
+   sheets.push(xmlSheet('Atividades',[['Código','Tema','Atividade','Tempo','Unidade','Horas','IA redução %','Observação'],...d.atividades.map(a=>[a.code,a.theme,a.name,a.time,a.unit,a.hours,a.aiReduction||0,a.obs])]));
+   sheets.push(xmlSheet('Itens',[['Prioridade','Item','Tema','Disciplina','Esforço','Impacto','Urgência','Atividades associadas','Horas atividades originais','Horas atividades c/ IA','Economia IA','Tipo dependência','Dependência','Progresso %','Concluído','Data conclusão','Resultado %','Grau Final','Sprints'],...d.itens.map(i=>[i.prioridade,i.item,i.tema,i.disciplina,i.esforco,i.valor,i.urgencia,(i.atividadesAssociadas||[]).join('|'),i.horasAtividadesOriginais||i.horasAtividades||0,i.horasAtividades||0,i.economiaIAAtividades||0,i.tipoDependencia||'',i.dependencia||'',i.progresso||0,i.concluido?'Sim':'Não',i.dataConclusao||'',i.resultadoPonderado==null?'':i.resultadoPonderado==null?'':Math.round(i.resultadoPonderado),i.grauFinal||'',i.prazoSprints||0])]));
+   const critRows=[['Grau','Pilar','Chave','Critério','Peso %','Sentido']];
+   Object.entries(d.modelos).forEach(([g,groups])=>groups.forEach(gr=>gr.criteria.forEach(c=>critRows.push([g,gr.name,c.key,c.label,c.weight,c.direction||'direct']))));
+   sheets.push(xmlSheet('Pesos',critRows));
+   const matrixKeys=currentCriteria().map(c=>c.key);
+   sheets.push(xmlSheet('Matriz', [['Prioridade','Item',...matrixKeys,'Resultado %','Grau','Sprints'],...d.itens.map((i,idx)=>[i.prioridade,i.item,...matrixKeys.map(k=>(d.matrix[idx]||{})[k]||''),i.resultadoPonderado==null?'':Math.round(i.resultadoPonderado),i.grauFinal,i.prazoSprints])]));
+   sheets.push(xmlSheet('Milestones',[['Tipo','Nome','Sprint'],...d.milestones.itens.map(m=>['Milestone',m.nome,m.sprint]),['Go Live',d.milestones.goLive.nome,d.milestones.goLive.sprint]]));
+   sheets.push(xmlSheet('Insucesso',[['Categoria','Ativo','Critério'],['Definição executiva','',d.insucesso.definicao],['Prazo / Go Live',d.insucesso.prazo.ativo?'Sim':'Não',d.insucesso.prazo.criterio],['Escopo',d.insucesso.escopo.ativo?'Sim':'Não',d.insucesso.escopo.criterio],['Qualidade',d.insucesso.qualidade.ativo?'Sim':'Não',d.insucesso.qualidade.criterio],['Adoção',d.insucesso.adocao.ativo?'Sim':'Não',d.insucesso.adocao.criterio],['Risco / Compliance',d.insucesso.riscoCompliance.ativo?'Sim':'Não',d.insucesso.riscoCompliance.criterio],['Esforço / Capacidade',d.insucesso.esforcoCapacidade.ativo?'Sim':'Não',d.insucesso.esforcoCapacidade.criterio]]));
+   sheets.push(xmlSheet('Decisão',[['Campo','Valor'],['Confiança',d.decisao.confianca],['Buffer %',d.decisao.buffer],['Decisão',d.decisao.decisao],['Revisão',d.decisao.revisao],['Notas',d.decisao.notas]]));
+   // Technical round-trip sheet: exact state split into safe-sized chunks.
+   const state=JSON.stringify(d);
+   sheets.push(xmlSheet('_STATE',[['WZA_STATE_V1'],...chunkText(state).map((c,i)=>[i,c])]));
+   const workbook=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>`+
+   `<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join('')}</Workbook>`;
+   triggerDownload(workbook,`avaliacao-esforco-${(d.contexto.projeto||'projeto').replace(/[^a-z0-9_-]+/gi,'-')}.xls`,'application/vnd.ms-excel');
+   setImportStatus('Excel exportado com todas as informações.','ok');
+ }catch(e){setImportStatus('Não foi possível exportar o Excel: '+e.message,'error')}
+}
+
+function excelWorkbookFromState(d){
+ const sheets=[];
+ sheets.push(xmlSheet('Geral',[['Campo','Valor'],['Grau',d.grau],['Projeto',d.contexto.projeto],['Responsável',d.contexto.responsavel],['Times',d.contexto.times],['Data alvo',d.contexto.dataAlvo],['Objetivo',d.contexto.objetivo],['Escopo',d.contexto.escopo],['Pessoas',d.capacidade.pessoas],['Horas pessoa/dia',d.capacidade.horasPessoaDia],['Foco %',d.capacidade.focoPct],['Dias por sprint',d.capacidade.diasSprint],['Sprints por release',d.capacidade.sprintsRelease],['Início',d.capacidade.inicio]]));
+ sheets.push(xmlSheet('Atividades',[['Código','Tema','Atividade','Tempo','Unidade','Horas','IA redução %','Observação'],...(d.atividades||[]).map(a=>[a.code,a.theme,a.name,a.time,a.unit,a.hours,a.aiReduction||0,a.obs||''])]));
+ sheets.push(xmlSheet('Itens',[['Prioridade','Item','Tema','Disciplina','Esforço','Impacto','Urgência','Atividades associadas','Horas atividades originais','Horas atividades c/ IA','Economia IA','Tipo dependência','Dependência','Progresso %','Concluído','Data conclusão','Resultado %','Grau Final','Sprints'],...(d.itens||[]).map(i=>[i.prioridade,i.item,i.tema,i.disciplina,i.esforco,i.valor,i.urgencia,(i.atividadesAssociadas||[]).join('|'),i.horasAtividadesOriginais||i.horasAtividades||0,i.horasAtividades||0,i.economiaIAAtividades||0,i.tipoDependencia||'',i.dependencia||'',i.progresso||0,i.concluido?'Sim':'Não',i.dataConclusao||'',i.resultadoPonderado==null?'':i.resultadoPonderado==null?'':Math.round(i.resultadoPonderado),i.grauFinal||'',i.prazoSprints||0])]));
+ const critRows=[['Grau','Pilar','Chave','Critério','Peso %','Sentido']];Object.entries(d.modelos||{}).forEach(([g,groups])=>groups.forEach(gr=>gr.criteria.forEach(c=>critRows.push([g,gr.name,c.key,c.label,c.weight,c.direction||'direct']))));sheets.push(xmlSheet('Pesos',critRows));
+ sheets.push(xmlSheet('Milestones',[['Tipo','Nome','Sprint'],...(d.milestones?.itens||[]).map(m=>['Milestone',m.nome,m.sprint]),['Go Live',d.milestones?.goLive?.nome||'',d.milestones?.goLive?.sprint||'']]));
+ const state=JSON.stringify(d);sheets.push(xmlSheet('_STATE',[['WZA_STATE_V2'],...chunkText(state).map((c,i)=>[i,c])]));
+ return `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join('')}</Workbook>`;
+}
+function downloadExcelModel(){try{triggerDownload(excelWorkbookFromState(sampleState()),'modelo-avaliacao-esforco-WZA.xls','application/vnd.ms-excel');setImportStatus('Modelo Excel baixado.','ok')}catch(e){setImportStatus('Falha ao baixar modelo Excel: '+e.message,'error')}}
+function setImportStatus(msg,type=''){
+ const el=qs('#importStatus');if(!el)return;el.textContent=msg;el.style.color=type==='error'?'#b42318':type==='ok'?'#027a48':'var(--muted)';
+}
+function textContentNS(node){return node?node.textContent||'':''}
+function importExcelFile(event){
+ const file=event.target.files&&event.target.files[0]; if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+   try{
+     const xml=String(reader.result||'');
+     const doc=new DOMParser().parseFromString(xml,'application/xml');
+     if(doc.querySelector('parsererror'))throw new Error('arquivo Excel/XML inválido');
+     const worksheets=[...doc.getElementsByTagNameNS('*','Worksheet')];
+     const stateSheet=worksheets.find(w=>(w.getAttribute('ss:Name')||w.getAttributeNS('urn:schemas-microsoft-com:office:spreadsheet','Name')||'')==='_STATE');
+     if(!stateSheet)throw new Error('arquivo não foi exportado por este template ou não contém a aba _STATE');
+     const rows=[...stateSheet.getElementsByTagNameNS('*','Row')];
+     const chunks=rows.slice(1).map(r=>{const cells=[...r.getElementsByTagNameNS('*','Cell')];return cells[1]?textContentNS(cells[1].getElementsByTagNameNS('*','Data')[0]):''}).join('');
+     const state=JSON.parse(chunks);
+     applyImportedState(state);
+     setImportStatus('Excel importado. Todos os campos e cálculos foram restaurados.','ok');
+   }catch(e){setImportStatus('Falha ao importar: '+e.message,'error')}
+   finally{event.target.value=''}
+ };
+ reader.onerror=()=>setImportStatus('Não foi possível ler o arquivo.','error');
+ reader.readAsText(file,'utf-8');
+}
+function applyImportedState(d){
+ if(!d||!d.contexto)throw new Error('estado incompleto');
+ // Grade and models/weights first.
+ grade=d.grau||'W';
+ if(d.modelos){
+   Object.keys(GRADE_MODELS).forEach(g=>{GRADE_MODELS[g].groups=[]});
+   Object.keys(d.modelos).forEach(g=>{if(!GRADE_MODELS[g])return;GRADE_MODELS[g].groups=(d.modelos[g]||[]).map(gr=>({name:gr.name||'Sem pilar',criteria:(gr.criteria||[]).map(ic=>({key:ic.key||uniqueCriterionKey(),label:ic.label||'',weight:+ic.weight||0,direction:ic.direction==='inverse'?'inverse':'direct'}))}))});
+ }
+ qsa('.tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.grade===grade));
+ qsa('.method').forEach(x=>x.classList.remove('active')); const meth=qs('#method-'+grade);if(meth)meth.classList.add('active');qs('#currentGrade').textContent='Grau '+grade;
+ renderCriteriaEditor();
+ // Context
+ qs('#project').value=d.contexto.projeto||'';qs('#owner').value=d.contexto.responsavel||'';qs('#teams').value=d.contexto.times||'';qs('#targetDate').value=d.contexto.dataAlvo||'';qs('#goal').value=d.contexto.objetivo||'';qs('#scope').value=d.contexto.escopo||'';
+ if(d.calibracao){qs('#qTech').value=d.calibracao.tecnico||'2';qs('#qRisk').value=d.calibracao.risco||'2';qs('#qContext').value=d.calibracao.contexto||'2'}
+ if(d.capacidade){qs('#teamSize').value=d.capacidade.pessoas??4;qs('#hoursDay').value=d.capacidade.horasPessoaDia??8;qs('#focusPct').value=d.capacidade.focoPct??70;qs('#sprintDays').value=d.capacidade.diasSprint??10;qs('#sprintsRelease').value=d.capacidade.sprintsRelease??4;qs('#startDate').value=d.capacidade.inicio||''}
+ // Activities
+ const atBody=qs('#activityTable tbody');atBody.innerHTML='';(d.atividades||[]).forEach(a=>atBody.insertAdjacentHTML('beforeend',activityRowTemplate(a)));
+ // Items
+ const itemBody=qs('#effortTable tbody');itemBody.innerHTML='';
+ (d.itens||[]).forEach(i=>itemBody.insertAdjacentHTML('beforeend',rowTemplate(i.item||'',i.tema||'',i.disciplina||'Frontend',i.esforco||'',i.valor||'',i.urgencia||'',i.prioridade||1)));
+ syncDependencyOptions();
+ (d.itens||[]).forEach((i,idx)=>{
+   const row=qsa('#effortTable tbody tr.item-row')[idx];
+   const sel=row?.querySelector('.dependency-select');
+   const typ=row?.querySelector('.dep-type');
+   if(sel)sel.value=i.dependencia||'';
+   if(typ)typ.value=i.tipoDependencia||'';
+ });
+ syncActivityLinkOptions();
+ (d.itens||[]).forEach((i,idx)=>{
+   const tr=qsa('#effortTable tbody tr.item-row')[idx];if(!tr)return;
+   const sel=tr.querySelector('.activity-link-select');
+   const wanted=(i.atividadesAssociadas||[]).map(String);
+   if(sel)[...sel.options].forEach(o=>o.selected=wanted.includes(o.value));
+ });
+ (d.itens||[]).forEach((i,idx)=>{
+   const tr=qsa('#effortTable tbody tr.item-row')[idx];if(!tr)return;
+   setItemActivityState(tr,i.acompanhamentoAtividades||{});
+   renderItemActivityAccordion(tr);updateItemTrackingFromActivities(tr);
+ });
+
+
+ renderDynamicMatrix();
+ // restore matrix evaluation values after rows exist
+ if(d.matrix){Object.entries(d.matrix).forEach(([idx,vals])=>Object.entries(vals||{}).forEach(([k,v])=>{const el=qs(`[data-matrix-row="${idx}"][data-key="${k}"]`);if(el)el.value=v}))}
+ // Risks
+ const r=d.riscos||{};qs('#risks').value=r.riscos||'';qs('#dependencies').value=r.dependencias||'';qs('#assumptions').value=r.premissas||'';qs('#outscope').value=r.foraEscopo||'';
+ // milestones + go live
+ milestones=(d.milestones?.itens||[]).map((m,i)=>({id:m.id||i+1,sprint:+m.sprint||1,name:m.nome||`Milestone ${i+1}`}));nextMilestoneId=Math.max(0,...milestones.map(m=>m.id))+1;renderMilestones();
+ if(d.milestones?.goLive){qs('#goLiveSprint').value=d.milestones.goLive.sprint||4;qs('#goLiveName').value=d.milestones.goLive.nome||'GO LIVE'}
+ // Failure
+ const f=d.insucesso||{};qs('#failureDefinition').value=f.definicao||'';
+ [['Deadline','prazo'],['Scope','escopo'],['Quality','qualidade'],['Adoption','adocao'],['Risk','riscoCompliance'],['Cost','esforcoCapacidade']].forEach(([id,key])=>{const x=f[key]||{};qs('#fail'+id).checked=!!x.ativo;qs('#fail'+id+'Text').value=x.criterio||''});
+ // AI estimate
+ if(d.ia){
+   if(qs('#aiReductionPct'))qs('#aiReductionPct').value=d.ia.reducaoPct??'';
+   if(qs('#aiScenario'))qs('#aiScenario').value=d.ia.cenario??'';
+ }
+ // Governance / realized
+ decisionLog=(d.governanca?.decisoes||[]).map(x=>({...x}));
+ renderDecisionLog();
+ if(d.realizado){
+   if(qs('#actualHours'))qs('#actualHours').value=d.realizado.horas||'';
+   if(qs('#actualSprints'))qs('#actualSprints').value=d.realizado.sprints||'';
+   if(qs('#actualEndDate'))qs('#actualEndDate').value=d.realizado.dataConclusao||'';
+   if(qs('#lessonsLearned'))qs('#lessonsLearned').value=d.realizado.aprendizados||'';
+ }
+ renderActualVsPlanned();
+ // Decision
+ const dec=d.decisao||{};qs('#confidence').value=dec.confianca??70;qs('#buffer').value=dec.buffer??20;qs('#decision').value=dec.decisao||qs('#decision').value;qs('#reviewDate').value=dec.revisao||'';qs('#notes').value=dec.notas||'';
+ if(d.readiness){qsa('.readiness').forEach((x,i)=>{const v=d.readiness.find(r=>r.i===i);if(v)x.checked=!!v.checked})}
+ recalc();
+}
+
+function resetSession(){if(confirm('Limpar todos os dados da sessão?'))location.reload()}
+
+
+function propagateInputChange(el){
+ if(!el || !el.matches('input,select,textarea'))return;
+
+ // Block 6 source fields: update labels in the W/Z/A matrix immediately.
+ if(el.closest('#effortTable')){
+   syncEffortRowToDependents(el);
+ }
+ if(el.closest('#activityTable')){
+   syncActivityLinkOptions();
+ }
+
+ // Matrix criteria already contain the source values; calculations consume them directly.
+ // Weight inputs update the model in updateCriterionWeight().
+ // Activities, capacity, AI, milestones, Go Live, risks and decisions are read directly
+ // by their dependent calculations / export state.
+ recalc();
+}
+
+document.addEventListener('input',e=>propagateInputChange(e.target));
+document.addEventListener('change',e=>propagateInputChange(e.target));
+
+if(qs('#decisionLogDate'))qs('#decisionLogDate').value=new Date().toISOString().slice(0,10);
+renderBaselines();renderDecisionLog();
+qs('#sessionStamp').textContent='Sessão · '+new Date().toLocaleDateString('pt-BR');
+
+renderActivities([]);
+milestones=[];renderMilestones();
+qs('#milestoneList').innerHTML='';
+renderCriteriaEditor();renderDynamicMatrix();syncDependencyOptions();syncActivityLinkOptions();recalc();
+</script>
+</body>
+</html>
