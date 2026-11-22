@@ -543,6 +543,39 @@ body.layout-rail .top{border-bottom:0;padding-bottom:0;margin-bottom:20px}
 @media (prefers-reduced-motion:reduce){.rail-pill{transition:none!important}}
 body.skin-glass .pop{background:linear-gradient(180deg,#14295c,#0d1d45)}
 body.skin-glass .look.on{border-color:#7d9dff;box-shadow:0 0 0 2px rgba(91,132,255,.45),0 0 24px rgba(63,108,245,.35)}
+/* ===== Meritocracia ===== */
+.lockbox{max-width:420px;margin:30px auto;padding:28px}
+.lockic{width:56px;height:56px;margin:0 auto;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.merdist{display:flex;height:34px;border-radius:6px;overflow:hidden;font-size:12.5px;font-weight:600}
+.merdist span{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;padding:0 8px;color:#fff}
+.md-destaca{background:#1b7a4e}.md-alinhado{background:#1f4b99}.md-abaixo{background:#b4342d}
+.mcard{display:grid;grid-template-columns:34px minmax(0,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.mtarja{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.mtarja span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
+.r-destaca .mtarja{background:linear-gradient(180deg,#1f9d63,#1b7a4e)}
+.r-alinhado .mtarja{background:linear-gradient(180deg,#2d63c4,#1f4b99)}
+.r-abaixo .mtarja{background:linear-gradient(180deg,#d1493f,#b4342d)}
+.mbody{padding:14px 16px}
+.mhead{display:flex;align-items:center;gap:12px}
+.mrank{font-family:var(--display);font-size:28px;font-weight:600;min-width:34px;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+.mname{font-weight:600;font-size:15.5px}
+.maction{display:flex;gap:10px;align-items:baseline;margin-top:10px;flex-wrap:wrap}
+.maction .pill{font-size:12px}
+.r-destaca .maction .pill{background:var(--ok-soft);color:var(--ok)}
+.r-abaixo .maction .pill{background:var(--bad-soft);color:var(--bad)}
+.mchecks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.mchecks .check{padding:6px 8px;font-size:13px}
+body.skin-glass .mcard{background:linear-gradient(180deg,rgba(28,50,104,.55),rgba(14,28,62,.5));border-color:var(--line)}
+body.skin-glass .r-destaca .mtarja{box-shadow:0 0 18px rgba(52,211,153,.35)}
+@media (max-width:600px){.mhead{flex-wrap:wrap}.mchecks{grid-template-columns:1fr}}
+.attl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.attl li{display:flex;gap:8px;align-items:flex-start;padding:8px 0 8px 18px;border-bottom:1px solid var(--line);position:relative;font-size:14px}
+.attl li:last-child{border-bottom:0}
+.attl li::before{content:"";position:absolute;left:3px;top:15px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.attl .grow{flex:1;min-width:0}
+.attb{display:flex;flex:none;opacity:.55}
+.attl li:hover .attb,.attb:focus-within{opacity:1}
+.attb .btn{padding:2px 6px}
 </style>
 </head>
 <body>
@@ -588,7 +621,7 @@ var TST = {todo:"A fazer",doing:"Fazendo",blocked:"Bloqueada",done:"Concluída"}
 var TORDER = ["todo","doing","blocked","done"];
 var PRIO = {alta:"Alta",media:"Média",baixa:"Baixa"};
 var KINDS = ["1:1","Projeto","Cobrança","Reunião de time","Cliente","Outro"];
-var NAV = [["painel","Painel"],["projetos","Projetos"],["tarefas","Tarefas"],["followups","Follow-ups"],["indicadores","Indicadores"],["lideranca","Liderança"],["osa","Princípios OSA"],["equipes","Equipes"],["pessoas","Pessoas"],["modelos","Modelos W/Z/A"],["config","Configurações"]];
+var NAV = [["painel","Painel"],["projetos","Projetos"],["tarefas","Tarefas"],["followups","Follow-ups"],["indicadores","Indicadores"],["lideranca","Liderança"],["osa","Princípios OSA"],["equipes","Equipes"],["pessoas","Pessoas"],["modelos","Modelos W/Z/A"],["meritocracia","Meritocracia"],["config","Configurações"]];
 var LH = {"Baixo":16,"Médio":40,"Alto":80}, LV = {"Baixo":1,"Médio":2,"Alto":3}, LVS = ["Baixo","Médio","Alto"];
 var DISC = ["Frontend","Backend","Dados","QA","DevOps","Arquitetura","UX/Produto","Segurança","Outro"];
 var DEPT = [["","Sem"],["FS","Termina → começa"],["SS","Começa junto"],["FF","Termina junto"],["EXT","Externa"]];
@@ -963,6 +996,7 @@ function field(f,v){
   var h='<div class="'+cls+'"><label for="'+id+'">'+esc(f.l)+req+'</label>';
   if(f.t==="textarea") h+='<textarea id="'+id+'" name="'+f.k+'">'+esc(v)+'</textarea>';
   else if(f.t==="select") h+='<select id="'+id+'" name="'+f.k+'">'+f.o(v)+'</select>';
+  else if(f.t==="multi"){ var sel=Array.isArray(v)?v:[]; h+='<div class="mchecks" id="'+id+'">'+f.o().map(function(o){ return '<label class="check"><input type="checkbox" data-multi="'+f.k+'" value="'+esc(o[0])+'"'+(sel.indexOf(o[0])>=0?" checked":"")+'> '+esc(o[1])+'</label>'; }).join("")+'</div>'; }
   else h+='<input id="'+id+'" name="'+f.k+'" type="'+(f.t||"text")+'"'+(f.t==="number"?' step="any"':'')+' value="'+esc(v)+'">';
   return h+'</div>';
 }
@@ -983,7 +1017,7 @@ function confirmBox(msg,yes,label){
 modal.addEventListener("submit",function(e){
   e.preventDefault(); if(!formCtx||!formCtx.fields) return;
   var vals={}; var bad=null;
-  formCtx.fields.forEach(function(f){ if(f.t==="sec") return; var el=document.getElementById("f_"+f.k); var x=el?el.value.trim():""; if(f.t==="number") x = x===""?"":num(x); if(f.req && x==="") bad=f.l; vals[f.k]=x; });
+  formCtx.fields.forEach(function(f){ if(f.t==="sec") return; if(f.t==="multi"){ vals[f.k]=Array.prototype.map.call(modal.querySelectorAll('[data-multi="'+f.k+'"]:checked'),function(x){ return x.value; }); return; } var el=document.getElementById("f_"+f.k); var x=el?el.value.trim():""; if(f.t==="number") x = x===""?"":num(x); if(f.req && x==="") bad=f.l; vals[f.k]=x; });
   if(bad){ document.getElementById("dlgerr").textContent="Preencha o campo “"+bad+"”."; return; }
   var cb=formCtx.onSave; closeModal(); cb(vals); commit();
 });
@@ -2030,6 +2064,9 @@ var ICON={
   equipes:'<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c.6-3 2.8-4.6 5.5-4.6s4.9 1.6 5.5 4.6"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.8 14.6c2.3.1 4 1.5 4.6 4.1"/>',
   pessoas:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/>',
   modelos:'<path d="M5 6h9M18 6h1M5 12h3M12 12h7M5 18h11M20 18h-1"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  meritocracia:'<circle cx="12" cy="9" r="5"/><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
   config:'<circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/>',
   search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
   bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
@@ -2104,12 +2141,131 @@ function uiHandle(act,a){
   return false;
 }
 
+/* ---------- Meritocracia (protegida por senha, dados criptografados) ---------- */
+var MER={data:null,key:null,salt:null,err:"",busy:false,cycle:null,open:{},mode:""};
+var MER_RT=[["destaca","Destaca-se"],["alinhado","Alinhado"],["abaixo","Abaixo do esperado"]];
+var MER_ACT=["Promoção","Mérito salarial","Bônus / reconhecimento","Mudança de escopo ou papel","Manter e desenvolver","Plano de desenvolvimento intensivo","Plano de recuperação de performance","Outra"];
+function b64(u8){ var s=""; u8=new Uint8Array(u8); for(var i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); }
+function ub64(s){ var b=atob(s), u=new Uint8Array(b.length); for(var i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
+function merCryptoOk(){ return !!(window.crypto&&crypto.subtle&&window.TextEncoder); }
+function merDerive(pw,salt){ return crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]).then(function(base){ return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:250000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]); }); }
+function merEncrypt(){
+  if(!MER.key||!MER.data) return Promise.resolve();
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  return crypto.subtle.encrypt({name:"AES-GCM",iv:iv},MER.key,new TextEncoder().encode(JSON.stringify(MER.data))).then(function(ct){ S.merit={v:1,salt:b64(MER.salt),iv:b64(iv),ct:b64(ct)}; });
+}
+function merPersist(){ return merEncrypt().then(function(){ render(); schedule(); }).catch(function(){ toast("Não foi possível proteger os dados da meritocracia."); }); }
+function merLock(){ MER.data=null; MER.key=null; MER.salt=null; MER.err=""; MER.open={}; }
+function merSeed(){
+  var P=function(n){ return (S.people.filter(function(p){ return p.name===n; })[0]||{}).id||""; }, J=function(n){ return (S.projects.filter(function(p){ return p.name.indexOf(n)===0; })[0]||{}).id||""; };
+  var L=[
+   ["Juliana Rocha","destaca","Promoção","Promoção para Tech Lead Especialista no ciclo de março, com escopo sobre os domínios regulatórios.","Assume temas críticos com autonomia, antecipa riscos regulatórios e conduziu o comitê técnico sem a coordenação.",[J("Portal Comercial")],"Liderou a integração do Portal Comercial; peça-chave do MVP.","Ainda centraliza decisões técnicas; precisa formar backup.","Trilha de Arquitetura de Soluções (avançado)","Sucessora natural para coordenação técnica do Regulatório em 12 a 18 meses."],
+   ["Beatriz Santos","destaca","Mérito salarial","Mérito de 8% e ampliação de escopo para governança de dependências entre times.","Visão sistêmica e negociação com outras áreas; destravou o contrato do BFF.",[J("Modernização")],"Projeto em risco por dependência externa, não por execução do time.","Escalar bloqueios mais cedo.","Comunicação executiva e influência","Candidata a liderar a frente de Modernização sozinha a partir do Q2."],
+   ["Diego Alves","alinhado","Manter e desenvolver","Manter faixa salarial e investir em liderança informal: mentoria de uma pessoa do time.","Resolve problemas com consistência e apoia colegas; nem sempre explicita riscos.",[J("Biblioteca")],"Entregou 9 de 14 componentes previstos.","","Mentoria e feedback (Academy de Liderança)","Preparar para Tech Lead em 18 a 24 meses."],
+   ["Marcos Lima","alinhado","Manter e desenvolver","Manter e dar uma iniciativa de média complexidade com checkpoints.","Entrega com qualidade e disciplina; ainda pede validação para decisões de impacto.",[J("Portal Comercial")],"Widget de resumo financeiro em andamento.","","Tomada de decisão técnica","Ganhar autonomia para conduzir uma frente no próximo ciclo."],
+   ["Camila Ferreira","alinhado","Bônus / reconhecimento","Reconhecimento pelo cockpit executivo e pelo apoio ao discovery.","Traz contexto de negócio relevante; decisões ficam dispersas em conversas.",[J("Cockpit")],"Cockpit com 5 de 8 indicadores com meta e farol.","Formalizar decisões e critérios de aceite.","Escrita de decisões e critérios de aceite","Evoluir para Product Owner do domínio de crédito."],
+   ["Rafael Costa","abaixo","Plano de desenvolvimento intensivo","PDI de 90 dias com pairing semanal, metas mensais e revisão em fevereiro.","Executa bem tarefas estruturadas, mas trava em temas ambíguos e atrasou a configuração das filas.",[J("Modernização")],"Tarefa de filas SNS/SQS atrasada e bloqueada.","Avaliar motivação e encaixe no time; revisar em 90 dias.","Fundamentos de AWS e domínio de crédito","Se cumprir o PDI, voltar a Alinhado no próximo ciclo."]];
+  return {cycles:[{id:"c2026",year:2026,name:"Ciclo de meritocracia 2026",notes:"Calibração com a gerência em 05/12. Orçamento de mérito: 6% da folha do time. Duas indicações de promoção possíveis.",
+    attention:[{id:"a1",text:"Confirmar com RH o orçamento de mérito antes da calibração de 05/12",personId:""},{id:"a2",text:"Duas indicações de destaque no mesmo time (Regulatório e Modernização) podem ser questionadas: levar evidências",personId:""},{id:"a3",text:"Registrar o plano de 90 dias e alinhar expectativa por escrito",personId:P("Rafael Costa")},{id:"a4",text:"Risco de saída se a promoção não for aprovada neste ciclo",personId:P("Juliana Rocha")},{id:"a5",text:"Juliana ainda sem backup técnico: condição para a promoção",personId:P("Juliana Rocha")}],
+    people:L.map(function(r,i){ return {id:"m"+(i+1),gapFile:i===0?"https://empresa.sharepoint.com/sites/engenharia/Gaps/juliana-rocha-gap-2026.xlsx":i===5?"C:\\Users\\erica\\Documents\\Meritocracia 2026\\Gaps\\rafael-costa.xlsx":"",personId:P(r[0]),name:r[0],rank:i+1,rating:r[1],action:r[2],actionDesc:r[3],behavior:r[4],projects:r[5].filter(Boolean),projectNotes:r[6],notes:r[7],academy:r[8],future:r[9]}; })}],active:"c2026"};
+}
+function merCycle(){ var D=MER.data; if(!D) return null; var c=byId(D.cycles,MER.cycle||D.active)||D.cycles[D.cycles.length-1]; if(c){ MER.cycle=c.id; } return c||null; }
+function merNorm(c){ c.people.sort(function(a,b){ return num(a.rank)-num(b.rank); }).forEach(function(p,i){ p.rank=i+1; }); }
+function isUrl(s){ return /^https?:\/\//i.test(String(s||"").trim()); }
+function gapChip(m){ var f=String(m.gapFile||"").trim(); return isUrl(f)?'<a class="chip" href="'+esc(f)+'" target="_blank" rel="noopener" title="'+esc(f)+'">'+ico("file",13)+' Arquivo de gap</a>':'<button class="chip" style="cursor:pointer" data-act="mer-copypath" data-id="'+m.id+'" title="'+esc(f)+'">'+ico("file",13)+' Arquivo de gap · copiar caminho</button>'; }
+function gapBox(m){ var f=String(m.gapFile||"").trim(); if(!f) return '<div class="dbox"><h4>Arquivo de gap</h4><p class="muted">Nenhum arquivo associado. <a href="#" data-act="mer-edit" data-id="'+m.id+'">Associar</a></p></div>';
+  return '<div class="dbox"><h4>Arquivo de gap</h4><p style="word-break:break-all">'+(isUrl(f)?'<a href="'+esc(f)+'" target="_blank" rel="noopener">'+esc(f)+'</a>':esc(f)+'<br><button class="btn sm" style="margin-top:6px" data-act="mer-copypath" data-id="'+m.id+'">Copiar caminho</button><span class="tiny muted" style="display:block;margin-top:4px">Caminhos do seu computador não abrem direto do navegador: copie e cole no Explorador de Arquivos.</span>')+'</p></div>'; }
+function merName(m){ var p=byId(S.people,m.personId); return p?p.name:(m.name||"Colaborador"); }
+function vMerit(){
+  if(!merCryptoOk()) return {title:"Meritocracia",sub:"",actions:"",body:'<div class="panel empty">Este navegador não oferece a criptografia necessária para proteger esta página.</div>'};
+  if(!MER.data){
+    var first=!S.merit;
+    var box='<div class="lockbox panel"><div class="lockic">'+ico("lock",28)+'</div><h2 style="border:0;padding:0;margin:6px 0 4px;text-align:center">'+(first?"Defina a senha da meritocracia":"Página protegida")+'</h2><p class="small muted" style="text-align:center;margin:0 0 16px">'+(first?"Os dados desta página ficam criptografados com esta senha, inclusive no backup. Sem ela, ninguém consegue ler, nem você: guarde-a bem.":"Digite a senha para ver o ciclo de meritocracia.")+'</p>'+
+      '<form id="merform" class="stack" style="gap:10px" autocomplete="off"><div class="fld"><label for="mer-pw">Senha</label><input id="mer-pw" type="password" autocomplete="'+(first?"new-password":"current-password")+'"></div>'+(first?'<div class="fld"><label for="mer-pw2">Confirme a senha</label><input id="mer-pw2" type="password" autocomplete="new-password"></div>':'')+
+      (MER.err?'<div class="err">'+esc(MER.err)+'</div>':'')+'<button class="btn pri" type="submit"'+(MER.busy?" disabled":"")+'>'+(MER.busy?"Verificando…":first?"Criar e abrir":"Abrir")+'</button></form>'+
+      (!first?'<button class="btn sm ghost danger" style="margin-top:14px" data-act="mer-reset">Esqueci a senha: apagar os dados da meritocracia</button>':'')+'</div>';
+    return {title:"Meritocracia",sub:"Acesso restrito",actions:"",body:box};
+  }
+  var D=MER.data, c=merCycle();
+  var cyc='<select id="mer-cycle" class="btn" aria-label="Ciclo">'+D.cycles.slice().sort(function(a,b){ return b.year-a.year; }).map(function(x){ return '<option value="'+x.id+'"'+(c&&x.id===c.id?" selected":"")+'>'+esc(x.year+" · "+(x.name||"Ciclo"))+'</option>'; }).join("")+'</select>';
+  var actions=cyc+'<button class="btn" data-act="mer-cycle-add">+ Ciclo</button><button class="btn" data-act="mer-pw">Trocar senha</button><button class="btn pri" data-act="mer-lock">'+ico("lock",15)+' Bloquear</button>';
+  if(!c) return {title:"Meritocracia",sub:"",actions:actions,body:'<div class="panel empty">Nenhum ciclo. Crie o primeiro em “+ Ciclo”.</div>'};
+  merNorm(c);
+  var cnt={destaca:0,alinhado:0,abaixo:0}; c.people.forEach(function(m){ if(cnt[m.rating]!=null) cnt[m.rating]++; }); var tot=c.people.length||1;
+  var dist='<div class="merdist">'+MER_RT.map(function(r){ var n=cnt[r[0]]; return n?'<span class="md-'+r[0]+'" style="flex:'+n+'">'+esc(r[1])+' · '+n+' ('+Math.round(n/tot*100)+'%)</span>':''; }).join("")+'</div>';
+  var tiles='<div class="tiles">'+tile(c.year,"Ano do ciclo · "+(c.name||""),"acc")+tile(c.people.length,"Colaboradores no ranking","")+tile(cnt.destaca,"Destaca-se","ok")+tile(cnt.alinhado,"Alinhado","")+tile(cnt.abaixo,"Abaixo do esperado",cnt.abaixo?"bad":"ok")+'</div>';
+  var list=c.people.map(function(m,i){ var p=byId(S.people,m.personId), rt=(MER_RT.filter(function(r){ return r[0]===m.rating; })[0]||["",""]), open=!!MER.open[m.id];
+    var projs=(m.projects||[]).map(function(id){ var j=byId(S.projects,id); return j?'<a class="chip" href="#projeto-'+j.id+'">'+esc(j.name)+'</a>':''; }).join("");
+    var sec=function(t,v){ return v?'<div class="dbox"><h4>'+t+'</h4><p style="white-space:pre-line">'+esc(v)+'</p></div>':''; };
+    return '<div class="mcard r-'+esc(m.rating)+'"><div class="mtarja"><span>'+esc(rt[1]||"Sem avaliação")+'</span></div><div class="mbody"><div class="mhead"><span class="mrank">'+m.rank+'</span><span class="av">'+esc(initials(merName(m)))+'</span><div class="grow" style="min-width:0"><div class="mname">'+esc(merName(m))+'</div><div class="small muted">'+esc([p&&p.role,p&&p.seniority,p&&tName(p.teamId)].filter(Boolean).join(" · "))+'</div></div>'+
+      '<div class="row" style="flex-wrap:nowrap"><button class="btn sm ghost" data-act="mer-up" data-id="'+m.id+'" aria-label="Subir no ranking"'+(i===0?" disabled":"")+'>↑</button><button class="btn sm ghost" data-act="mer-down" data-id="'+m.id+'" aria-label="Descer no ranking"'+(i===c.people.length-1?" disabled":"")+'>↓</button><button class="btn sm" data-act="mer-edit" data-id="'+m.id+'">Editar</button></div></div>'+
+      '<div class="maction"><span class="pill">'+esc(m.action||"Sem ação definida")+'</span><span class="small">'+esc(m.actionDesc||"")+'</span></div>'+
+      (projs||m.gapFile?'<div class="row" style="margin-top:8px">'+projs+(m.gapFile?gapChip(m):'')+'</div>':'')+
+      '<button class="btn sm ghost" style="margin-top:8px;padding-left:0" data-act="mer-toggle" data-id="'+m.id+'" aria-expanded="'+open+'">'+(open?"▾ Ocultar detalhes":"▸ Comportamento, projetos, observações, academy e futuro")+'</button>'+
+      (open?'<div class="dgrid" style="margin-top:8px">'+sec("Comportamento observado",m.behavior)+sec("Projetos associados",((m.projects||[]).map(function(id){ var j=byId(S.projects,id); return j?j.name:""; }).filter(Boolean).join(", ")+(m.projectNotes?"\n"+m.projectNotes:"")))+gapBox(m)+sec("Observações",m.notes)+sec("Academy",m.academy)+sec("Futuro",m.future)+'</div>':'')+'</div></div>'; }).join("");
+  var missing=S.people.filter(function(p){ return !c.people.some(function(m){ return m.personId===p.id; }); });
+  var add='<div class="row" style="margin-top:12px"><select id="mer-addp" class="ctl" style="max-width:260px" aria-label="Colaborador para adicionar"><option value="">Adicionar colaborador…</option>'+missing.map(function(p){ return '<option value="'+p.id+'">'+esc(p.name)+'</option>'; }).join("")+'</select><button class="btn" data-act="mer-add">Adicionar</button>'+(missing.length?'<button class="btn ghost" data-act="mer-addall">Adicionar todo o time ('+missing.length+')</button>':'')+'</div>';
+  if(!Array.isArray(c.attention)) c.attention=[];
+  var att='<div class="panel"><h2>Pontos de atenção <span class="pill '+(c.attention.length?"warn":"mut")+'">'+c.attention.length+'</span></h2>'+
+    (c.attention.length?'<ul class="attl">'+c.attention.map(function(x,i){ var pp=byId(S.people,x.personId); return '<li><div class="grow"><span>'+esc(x.text)+'</span>'+(pp?' <span class="chip" style="font-size:11.5px;padding:0 7px">'+esc(pp.name)+'</span>':'')+'</div><span class="attb"><button class="btn sm ghost" data-act="mer-att-up" data-i="'+i+'" aria-label="Subir"'+(i===0?" disabled":"")+'>↑</button><button class="btn sm ghost" data-act="mer-att-edit" data-i="'+i+'" aria-label="Editar">✎</button><button class="btn sm ghost danger" data-act="mer-att-del" data-i="'+i+'" aria-label="Remover">×</button></span></li>'; }).join("")+'</ul>':'<div class="empty">Nenhum ponto de atenção registrado.</div>')+
+    '<form id="merattform" class="stack" style="gap:8px;margin-top:10px"><textarea id="mer-att" class="ctl" style="min-height:56px" placeholder="Ex.: confirmar orçamento de mérito antes da calibração"></textarea><div class="row" style="flex-wrap:nowrap"><select id="mer-att-p" class="ctl" aria-label="Colaborador relacionado"><option value="">Geral do ciclo</option>'+c.people.map(function(m){ return '<option value="'+esc(m.personId)+'">'+esc(merName(m))+'</option>'; }).join("")+'</select><button class="btn" type="submit">Adicionar</button></div></form></div>';
+  var notes='<div class="panel"><h2>Observações do ciclo <button class="btn sm" data-act="mer-cycle-edit">Editar ciclo</button></h2><p style="white-space:pre-line;margin:0">'+esc(c.notes||"Sem observações.")+'</p></div>';
+  return {title:"Meritocracia "+c.year,sub:"Ranking por prioridade, avaliação e ação de cada colaborador · dados criptografados",actions:actions,
+    body:tiles+'<div class="panel" style="margin-bottom:18px"><h2>Distribuição do ciclo</h2>'+dist+'</div><div class="grid2" style="grid-template-columns:minmax(0,1.9fr) minmax(0,1fr)"><div class="panel"><h2>Ranking de prioridade</h2><div class="stack" style="gap:12px">'+(list||'<div class="empty">Nenhum colaborador neste ciclo.</div>')+'</div>'+add+'</div><div class="stack">'+att+notes+
+    '<div class="panel small muted">A ordem do ranking define a prioridade na calibração. Use ↑ ↓ para ajustar. A página bloqueia sozinha ao sair dela; o conteúdo fica criptografado no portal e no backup.</div></div></div>'};
+}
+var FM={
+  person:[{k:"personId",l:"Colaborador",t:"select",o:function(v){ return opts(S.people,"name",v,"—"); }},{k:"rating",l:"Avaliação",t:"select",d:"alinhado",o:function(v){ return lopts(MER_RT,v); }},
+    {k:"action",l:"Ação",t:"select",d:"Manter e desenvolver",o:function(v){ return lopts(MER_ACT,v); }},{k:"rank",l:"Posição no ranking",t:"number"},
+    {k:"actionDesc",l:"Descrição da ação",t:"textarea",full:1},{k:"behavior",l:"Comportamento observado",t:"textarea",full:1},
+    {k:"projects",l:"Projetos associados",t:"multi",full:1,o:function(){ return S.projects.map(function(j){ return [j.id,j.name]; }); }},{k:"projectNotes",l:"Observação sobre os projetos",t:"textarea",full:1},
+    {k:"gapFile",l:"Arquivo de gap (link ou caminho local)",full:1},{k:"notes",l:"Observações",t:"textarea",full:1},{k:"academy",l:"Academy (trilhas, cursos, mentorias)",t:"textarea"},{k:"future",l:"Futuro (próximos passos e carreira)",t:"textarea"}],
+  cycle:[{k:"year",l:"Ano da meritocracia",t:"number",req:1},{k:"name",l:"Nome do ciclo"},{k:"notes",l:"Observações do ciclo",t:"textarea",full:1}]
+};
+function merUnlock(){
+  var pw=(document.getElementById("mer-pw")||{}).value||"", first=!S.merit;
+  if(first){ var pw2=(document.getElementById("mer-pw2")||{}).value||""; if(pw.length<6){ MER.err="Use pelo menos 6 caracteres."; render(); return; } if(pw!==pw2){ MER.err="As senhas não conferem."; render(); return; } }
+  else if(!pw){ MER.err="Digite a senha."; render(); return; }
+  MER.busy=true; MER.err=""; render();
+  if(first){ var salt=crypto.getRandomValues(new Uint8Array(16)); merDerive(pw,salt).then(function(k){ MER.key=k; MER.salt=salt; MER.data=merSeed(); MER.busy=false; return merPersist(); }).then(function(){ toast("Senha definida. Os dados de exemplo usam as pessoas do portal."); }).catch(function(){ MER.busy=false; MER.err="Não foi possível criar a proteção."; render(); }); return; }
+  var m=S.merit, salt2=ub64(m.salt);
+  merDerive(pw,salt2).then(function(k){ return crypto.subtle.decrypt({name:"AES-GCM",iv:ub64(m.iv)},k,ub64(m.ct)).then(function(pt){ MER.key=k; MER.salt=salt2; MER.data=JSON.parse(new TextDecoder().decode(pt)); if(!Array.isArray(MER.data.cycles)) MER.data.cycles=[]; MER.busy=false; render(); }); })
+    .catch(function(){ MER.busy=false; MER.err="Senha incorreta."; render(); var el=document.getElementById("mer-pw"); if(el) el.focus(); });
+}
+function merHandle(act,a,id){
+  var c=MER.data?merCycle():null, m=c?byId(c.people,id):null;
+  switch(act){
+    case "mer-lock": merLock(); render(); return true;
+    case "mer-reset": confirmBox("Apagar todos os dados da meritocracia? Sem a senha não há como recuperá-los. O restante do portal não é afetado.",function(){ delete S.merit; merLock(); },"Apagar e recomeçar"); return true;
+    case "mer-copypath": if(m){ var t=String(m.gapFile||""); try{ navigator.clipboard.writeText(t).then(function(){ toast("Caminho copiado."); },function(){ showText(t); }); }catch(x){ showText(t); } } return true;
+    case "mer-att-del": if(c){ c.attention.splice(+a.getAttribute("data-i"),1); merPersist(); } return true;
+    case "mer-att-up": if(c){ var ai=+a.getAttribute("data-i"); if(ai>0){ var t0=c.attention[ai]; c.attention[ai]=c.attention[ai-1]; c.attention[ai-1]=t0; merPersist(); } } return true;
+    case "mer-att-edit": if(c){ var it=c.attention[+a.getAttribute("data-i")]; if(it) openForm({title:"Editar ponto de atenção",fields:[{k:"text",l:"Ponto de atenção",t:"textarea",req:1,full:1},{k:"personId",l:"Colaborador relacionado",t:"select",o:function(v){ return '<option value="">Geral do ciclo</option>'+c.people.map(function(m){ return '<option value="'+esc(m.personId)+'"'+(m.personId===v?" selected":"")+'>'+esc(merName(m))+'</option>'; }).join(""); }}],values:it,onSave:function(v){ Object.assign(it,v); merPersist(); }}); } return true;
+    case "mer-toggle": MER.open[id]=!MER.open[id]; render(); return true;
+    case "mer-up": case "mer-down": if(m){ var i=c.people.indexOf(m), j=act==="mer-up"?i-1:i+1; if(j>=0&&j<c.people.length){ var o=c.people[j], r=m.rank; m.rank=o.rank; o.rank=r; merNorm(c); merPersist(); } } return true;
+    case "mer-edit": if(m){ var vals=Object.assign({},m); openForm({title:"Avaliação · "+merName(m),fields:FM.person,values:vals,wide:true,onSave:function(v){ var old=m.rank, nr=num(v.rank)||old; Object.assign(m,v); m.name=merName(m); m.rank=nr<old?nr-0.5:nr>old?nr+0.5:old; merNorm(c); merPersist(); },onDelete:function(){ c.people=c.people.filter(function(x){ return x!==m; }); merNorm(c); merPersist(); }}); } return true;
+    case "mer-add": var pid=(document.getElementById("mer-addp")||{}).value; if(c&&pid){ var p=byId(S.people,pid); c.people.push({id:"m"+uid(),personId:pid,name:p?p.name:"",rank:c.people.length+1,rating:"alinhado",action:"Manter e desenvolver",actionDesc:"",behavior:"",projects:S.projects.filter(function(j){ return j.ownerId===pid||S.tasks.some(function(t){ return t.projectId===j.id&&t.ownerId===pid; }); }).map(function(j){ return j.id; }),projectNotes:"",notes:"",academy:p&&p.devAction?p.devAction:"",future:""}); merPersist(); } return true;
+    case "mer-addall": if(c){ S.people.filter(function(p){ return !c.people.some(function(x){ return x.personId===p.id; }); }).forEach(function(p){ c.people.push({id:"m"+uid(),personId:p.id,name:p.name,rank:c.people.length+1,rating:"alinhado",action:"Manter e desenvolver",actionDesc:"",behavior:"",projects:S.projects.filter(function(j){ return j.ownerId===p.id||S.tasks.some(function(t){ return t.projectId===j.id&&t.ownerId===p.id; }); }).map(function(j){ return j.id; }),projectNotes:"",notes:"",academy:p.devAction||"",future:""}); }); merPersist(); } return true;
+    case "mer-cycle-add": if(MER.data) openForm({title:"Novo ciclo de meritocracia",fields:FM.cycle.concat([{k:"copy",l:"Começar com",t:"select",o:function(v){ return lopts([["empty","Ranking vazio"],["copy","Mesmas pessoas do ciclo atual, sem avaliação"]],v); }}]),values:{year:(c?c.year:new Date().getFullYear())+1,name:"Ciclo de meritocracia "+((c?c.year:new Date().getFullYear())+1),copy:"copy"},onSave:function(v){ var n={id:"c"+uid(),year:num(v.year),name:v.name,notes:v.notes,people:[]}; if(v.copy==="copy"&&c) n.people=c.people.map(function(x){ return {id:"m"+uid(),personId:x.personId,name:merName(x),rank:x.rank,rating:"alinhado",action:"Manter e desenvolver",actionDesc:"",behavior:"",projects:(x.projects||[]).slice(),projectNotes:"",notes:"",academy:"",future:x.future||""}; }); MER.data.cycles.push(n); MER.cycle=n.id; MER.data.active=n.id; merPersist(); }}); return true;
+    case "mer-cycle-edit": if(c) openForm({title:"Editar ciclo",fields:FM.cycle,values:c,onSave:function(v){ v.year=num(v.year); Object.assign(c,v); merPersist(); },onDelete:MER.data.cycles.length>1?function(){ MER.data.cycles=MER.data.cycles.filter(function(x){ return x!==c; }); MER.cycle=null; merPersist(); }:null}); return true;
+    case "mer-pw": formCtx={}; modal.innerHTML='<form class="dlg" id="merpwform" role="dialog" aria-modal="true"><h2>Trocar senha da meritocracia</h2><div class="stack" style="gap:10px"><div class="fld"><label for="mpw1">Nova senha</label><input id="mpw1" type="password" autocomplete="new-password"></div><div class="fld"><label for="mpw2">Confirme</label><input id="mpw2" type="password" autocomplete="new-password"></div><div class="err" id="mpwerr"></div></div><div class="foot"><span></span><div class="row"><button type="button" class="btn" data-act="close">Cancelar</button><button type="submit" class="btn pri">Trocar senha</button></div></div></form>'; modal.hidden=false; document.getElementById("mpw1").focus(); return true;
+  }
+  return false;
+}
+document.addEventListener("submit",function(e){
+  if(e.target.id==="merattform"){ e.preventDefault(); var c=MER.data?merCycle():null, t=(document.getElementById("mer-att").value||"").trim(); if(!c||!t) return; if(!Array.isArray(c.attention)) c.attention=[]; c.attention.push({id:"a"+uid(),text:t,personId:document.getElementById("mer-att-p").value}); merPersist().then(function(){ var el=document.getElementById("mer-att"); if(el) el.focus(); }); return; }
+  if(e.target.id==="merform"){ e.preventDefault(); merUnlock(); }
+  else if(e.target.id==="merpwform"){ e.preventDefault(); var a=document.getElementById("mpw1").value, b=document.getElementById("mpw2").value, er=document.getElementById("mpwerr");
+    if(a.length<6){ er.textContent="Use pelo menos 6 caracteres."; return; } if(a!==b){ er.textContent="As senhas não conferem."; return; }
+    var salt=crypto.getRandomValues(new Uint8Array(16)); merDerive(a,salt).then(function(k){ MER.key=k; MER.salt=salt; closeModal(); return merPersist(); }).then(function(){ toast("Senha trocada. Backups antigos continuam com a senha anterior."); }); }
+});
+
 /* ---------- render ---------- */
 function route(){ return (location.hash||"").replace(/^#/,"")||"painel"; }
 function render(){
   var r=route(), v, cur=r;
   if(r.indexOf("projeto-")===0){ var pp=r.split("-"); v=vProjeto(pp[1],pp[2]||"geral"); cur="projetos"; }
-  else v=({painel:vPainel,projetos:vProjetos,tarefas:vTarefas,followups:vFollowups,indicadores:vIndicadores,lideranca:vLideranca,osa:vOsa,equipes:vEquipes,pessoas:vPessoas,modelos:vModelos,config:vConfig}[r]||vPainel)();
+  else v=({painel:vPainel,projetos:vProjetos,tarefas:vTarefas,followups:vFollowups,indicadores:vIndicadores,lideranca:vLideranca,osa:vOsa,equipes:vEquipes,pessoas:vPessoas,modelos:vModelos,meritocracia:vMerit,config:vConfig}[r]||vPainel)();
   var lateN=S.tasks.filter(isLate).length, fuN=S.followups.filter(function(f){return f.status!=="feito"&&diff(f.date)<=0;}).length;
   var counts={tarefas:lateN?[lateN,"bad"]:null,followups:fuN?[fuN,"bad"]:null};
   var ae=document.activeElement, aid=ae&&ae.id&&ae!==document.body?ae.id:null, y=window.scrollY;
@@ -2127,7 +2283,7 @@ function render(){
   placePill();
   if(aid){ var el=document.getElementById(aid); if(el){ try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); } } }
 }
-window.addEventListener("hashchange",function(){ GFULL=false; POP=null; GQ=""; render(); window.scrollTo(0,0); });
+window.addEventListener("hashchange",function(){ GFULL=false; POP=null; GQ=""; if(route()!=="meritocracia"&&MER.data){ merLock(); } render(); window.scrollTo(0,0); });
 
 /* ---------- eventos ---------- */
 document.addEventListener("click",function(e){
@@ -2158,6 +2314,7 @@ document.addEventListener("change",function(e){
   if(id==="plf-dim"){PLF.dim=el.value;render();return;}
   if(id==="plf-open"){PLF.open=el.value;render();return;}
   if(mcpChange(el)) return;
+  if(el.id==="mer-cycle"){ MER.cycle=el.value; if(MER.data) MER.data.active=el.value; merPersist(); return; }
   if(el.hasAttribute("data-pz-img")){ p=proj(el); if(p&&el.files&&el.files[0]) pzImage(p,el.files[0]); return; }
   if(el.hasAttribute("data-xls")){ if(el.files&&el.files[0]) importDiag(el.files[0]); return; }
   if(el.hasAttribute("data-import-file")){ var f=el.files&&el.files[0]; if(!f) return; var fr=new FileReader(); fr.onload=function(){ var ta=document.getElementById("bk-in"); if(ta) ta.value=String(fr.result||""); }; fr.readAsText(f); return; }
@@ -2190,7 +2347,7 @@ function itemTask(p,it){ var t={id:uid(),title:it.name,projectId:p.id,ownerId:""
 function handle(a,e){
   var act=a.getAttribute("data-act"), id=a.getAttribute("data-id"), p=a.hasAttribute("data-pid")?proj(a):null;
   if(a.tagName==="A" || a.tagName==="BUTTON") e.preventDefault();
-  if(uiHandle(act,a)||osaHandle(act,a,id)||mcpHandle(act,a,id)) return;
+  if(uiHandle(act,a)||osaHandle(act,a,id)||mcpHandle(act,a,id)||merHandle(act,a,id)) return;
   switch(act){
     case "close": closeModal(); break;
     case "del-confirm": var ctx=formCtx; confirmBox("Excluir este item? Essa ação não pode ser desfeita.",function(){ ctx.onDelete(); },"Excluir"); break;
@@ -2212,10 +2369,10 @@ function handle(a,e){
     case "follow": editFollow(id); break;
     case "follow-done": if(byId(S.followups,id)){ editFollow(id); var st=document.getElementById("f_status"); if(st) st.value="feito"; var n=document.getElementById("f_notes"); if(n) n.focus(); } break;
     case "keep-example": S.example=false; commit(); break;
-    case "clear-all": confirmBox("Apagar todos os dados de exemplo e começar com o portal vazio? O catálogo de atividades e os critérios W/Z/A são mantidos.",function(){ S={version:2,teams:[],people:[],projects:[],tasks:[],followups:[],catalog:S.catalog,criteria:S.criteria,diag:{dims:[],swot:[],plans:[]},skills:{team:S.skills.team,teamLv:{},coord:S.skills.coord}}; migrate(); location.hash="equipes"; },"Começar do zero"); break;
+    case "clear-all": confirmBox("Apagar todos os dados de exemplo e começar com o portal vazio? O catálogo de atividades e os critérios W/Z/A são mantidos.",function(){ S={version:2,teams:[],people:[],projects:[],tasks:[],followups:[],catalog:S.catalog,criteria:S.criteria,diag:{dims:[],swot:[],plans:[]},skills:{team:S.skills.team,teamLv:{},coord:S.skills.coord},merit:S.merit}; migrate(); location.hash="equipes"; },"Começar do zero"); break;
     case "backup": openBackup(); break;
     case "copy-json": var ta=document.getElementById("bk-json"); try{ navigator.clipboard.writeText(ta.value).then(function(){ a.textContent="Copiado"; },function(){ ta.select(); a.textContent="Selecionado: use Ctrl+C"; }); }catch(x){ ta.select(); } break;
-    case "import-json": var src=document.getElementById("bk-in").value.trim(); try{ var d=JSON.parse(src); if(!d||!Array.isArray(d.teams)||!Array.isArray(d.tasks)) throw 0; S=d; migrate(); S.example=false; closeModal(); commit(); }catch(x){ document.getElementById("bk-err").textContent="Esse conteúdo não é um backup válido do portal."; } break;
+    case "import-json": var src=document.getElementById("bk-in").value.trim(); try{ var d=JSON.parse(src); if(!d||!Array.isArray(d.teams)||!Array.isArray(d.tasks)) throw 0; S=d; migrate(); S.example=false; merLock(); closeModal(); commit(); }catch(x){ document.getElementById("bk-err").textContent="Esse conteúdo não é um backup válido do portal."; } break;
     // projeto: estimativa
     case "est-sub": ESUB=a.getAttribute("data-sub"); render(); break;
     case "grade": if(p){ p.est.grade=a.getAttribute("data-g"); commit(); } break;
