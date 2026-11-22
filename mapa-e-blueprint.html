@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mapa de Fluxo + Service Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%}
+body{display:flex;flex-direction:column;background:#f3f5f8;font-family:'Inter',system-ui,sans-serif}
+.switch{background:#08111d;display:flex;align-items:stretch;gap:2px;padding:0 16px;flex:none;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto}
+.switch .lbl{color:#6f8299;font-size:10px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;margin-right:12px;white-space:nowrap}
+.switch button{font:inherit;font-size:12.5px;font-weight:600;color:#9fb0c6;background:transparent;border:0;border-bottom:2px solid transparent;padding:10px 14px 8px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.switch button:hover{color:#fff}
+.switch button.on{color:#fff;border-bottom-color:#b08436}
+.switch button svg{width:15px;height:15px}
+.app{flex:1;min-height:0;display:none}
+.app.on{display:block}
+</style>
+</head>
+<body>
+<nav class="switch" role="tablist">
+  <span class="lbl">Ferramentas</span>
+  <button data-app="mapa" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><path d="M10 6.5h4a3 3 0 013 3V14"/></svg>Mapa de fluxo · Clientes × Canais</button>
+  <button data-app="blueprint" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5h18M3 10h18M3 15h18M3 20h18" stroke-dasharray="2 2.5"/></svg>Service Blueprint</button>
+</nav>
+<div class="app" id="app-mapa"></div>
+<div class="app" id="app-blueprint"></div>
+<script>
+const APPS={};
+/* ===== Mapa de fluxo ===== */
+(function(){
+const host=document.getElementById('app-mapa');
+const root=host.attachShadow({mode:'open'});
+root.innerHTML="<style>\n:host{--bg:#f3f5f8;--ink:#0f1c2e;--ink2:#2b3a4f;--muted:#66758a;--line:#dde2ea;--soft:#eef1f5;--accent:#1f4e8c;--gold:#b08436;--colw:200px;--rowh:196px}\n*{box-sizing:border-box}\n:host{height:100%;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;font-feature-settings:\"cv11\",\"ss01\"}\nbutton{font:inherit;cursor:pointer;color:inherit}\n.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}\n.top{background:var(--ink);color:#fff;padding:14px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}\n.brand{display:flex;align-items:center;gap:14px;min-width:0}\n.logo{width:38px;height:38px;border-radius:8px;border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;color:var(--gold);flex:none}\n.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9fb0c6;margin:0 4px 2px}\nh1{font-size:18px;margin:0;font-weight:650;letter-spacing:-.01em;outline:none;border-radius:4px;padding:1px 4px;color:#fff}\nh1:hover{background:rgba(255,255,255,.06)}\nh1:focus{background:rgba(255,255,255,.1);box-shadow:0 0 0 1px var(--gold)}\n.sub{display:none}\n.actions{display:flex;flex-wrap:wrap;gap:6px}\n.btn{border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:6px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;letter-spacing:.01em}\n.btn:hover{border-color:#b9c2cf}\n.btn:disabled{opacity:.4;cursor:default}\n.top .btn{background:transparent;color:#dce4ef;border-color:rgba(255,255,255,.18)}\n.top .btn:hover{border-color:rgba(255,255,255,.45);color:#fff}\n.top .btn.primary{background:var(--gold);border-color:var(--gold);color:#0f1c2e}\n.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}\n.btn.danger{color:#9b2c35}\n.btn.ghost{border-color:transparent;background:transparent}\n.btn svg{width:15px;height:15px}\n.kpis{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));background:#fff;border-bottom:1px solid var(--line)}\n.kpi{padding:12px 20px;border-right:1px solid var(--line)}\n.kpi:last-child{border-right:0}\n.kpi b{display:block;font-size:22px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}\n.kpi span{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}\n.kpi.focus{grid-column:1/-1;display:flex;align-items:center;gap:24px;flex-wrap:wrap;border-right:0;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 9%,#fff),#fff 60%);border-left:4px solid var(--c)}\n.kpi.focus .fn{font-size:15px;font-weight:650}\n.kpi.focus .fd{font-size:12.5px;color:var(--muted);max-width:420px}\n.kpi.focus .st{display:flex;gap:22px}\n.kpi.focus .st div b{font-size:18px}\n@media (max-width:760px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi{border-bottom:1px solid var(--line)}}\n.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 24px;border-bottom:1px solid var(--line);background:#fff}\n#filters{background:var(--bg)}\n.lbl{font-size:10.5px;font-weight:650;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-right:6px}\n.chip{--c:#999;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 4px 4px 10px;font-size:12.5px;font-weight:600;cursor:pointer;user-select:none;color:var(--ink2)}\n.chip .dot{width:14px;height:3px;border-radius:2px;background:var(--c);flex:none}\n.chip .cnt{font-size:11px;color:var(--muted);font-weight:500;font-family:'IBM Plex Mono',monospace}\n.chip.on{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c);color:var(--ink)}\n.chip.off{opacity:.45}\n.chip .mini{border:0;background:transparent;padding:4px;border-radius:4px;color:var(--muted);display:grid;place-items:center}\n.chip .mini:hover{background:var(--soft);color:var(--ink)}\n.chip .mini svg{width:13px;height:13px}\n.seg{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 4px;margin-right:10px;font-size:12.5px;font-weight:600;color:var(--muted);border-radius:0}\n.seg.on{color:var(--ink);border-bottom-color:var(--gold)}\n.vsep{width:1px;height:20px;background:var(--line);margin:0 6px}\n.scroller{flex:1;overflow:auto;position:relative;-webkit-overflow-scrolling:touch}\n.matrix{display:grid;column-gap:30px;row-gap:14px;position:relative;padding:0 28px 48px 0;width:max-content;min-width:100%}\n#lines{position:absolute;left:0;top:0;pointer-events:none;z-index:0;overflow:visible}\n.corner,.stage,.rowhead,.cell{position:relative;z-index:1}\n.corner{position:sticky;left:0;top:0;z-index:6;background:var(--bg);padding:14px 10px 10px 24px;display:flex;align-items:flex-end;font-size:10px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;line-height:1.6}\n.stage{position:sticky;top:0;z-index:4;background:var(--bg);padding:14px 0 10px;cursor:pointer}\n.stage .in{border-top:3px solid var(--ink);background:#fff;padding:9px 12px 10px;display:flex;gap:10px;align-items:center;box-shadow:0 1px 0 var(--line);transition:border-color .15s}\n.stage:hover .in{border-top-color:var(--gold)}\n.stage .ic{color:var(--ink2);display:grid;place-items:center;flex:none;opacity:.8}\n.stage .n{font-size:10px;font-weight:600;color:var(--gold);letter-spacing:.12em;font-family:'IBM Plex Mono',monospace}\n.stage .nm{font-weight:650;font-size:13.5px;line-height:1.2}\n.rowhead{position:sticky;left:0;z-index:3;background:var(--bg);padding:0 10px 0 24px;display:flex;cursor:pointer}\n.rowhead .in{background:#fff;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:4px;padding:10px 12px;width:100%;display:flex;flex-direction:column;justify-content:center;gap:6px}\n.rowhead:hover .in{border-color:#b9c2cf;border-left-color:var(--c)}\n.tag{font-size:10px;font-weight:650;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}\n.rowhead .ch{display:flex;gap:8px;align-items:center;font-weight:650;font-size:13.5px;line-height:1.25}\n.rowhead .ch svg{color:var(--c);flex:none}\n.cell{min-height:132px;display:flex;border-radius:4px}\n.cell.empty{border:1px dashed transparent;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:6px}\n.cell.empty .plus{color:transparent;font-size:11.5px;font-weight:600}\n.cell.empty:hover{border-color:#c3cad5;background:rgba(255,255,255,.5)}\n.cell.empty:hover .plus{color:var(--muted)}\n.card{--c:#888;width:100%;background:#fff;border:1px solid var(--line);border-top:2px solid var(--c);border-radius:4px;padding:11px 12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:box-shadow .15s,opacity .2s,border-color .15s;text-align:left}\n.card:hover{box-shadow:0 6px 18px rgba(15,28,46,.10);border-color:#c3cad5;border-top-color:var(--c)}\n.chead{display:flex;align-items:center;justify-content:space-between}\n.ill{width:28px;height:28px;border-radius:4px;background:var(--soft);color:var(--ink2);display:grid;place-items:center;overflow:hidden;flex:none}\n.ill img{width:100%;height:100%;object-fit:cover}\n.code{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.04em}\n.ct{font-weight:650;font-size:13px;line-height:1.3;color:var(--ink)}\n.owner{font-size:11.5px;color:var(--muted)}\n.cfoot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:auto;padding-top:7px;border-top:1px solid var(--soft)}\n.meta{font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace}\n.meta svg{width:12px;height:12px}\n.flag{font-size:10.5px;font-weight:600;color:#9b2c35;display:inline-flex;align-items:center;gap:3px}\n.flag svg{width:12px;height:12px}\n.hits{display:flex;gap:3px;flex-wrap:wrap}\n.hit{min-width:18px;height:18px;border-radius:3px;color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 4px;font-family:'IBM Plex Mono',monospace}\n.dim{opacity:.22}\n.tracing .cell{cursor:crosshair}\n.tracing .cell:hover{outline:2px solid var(--tc);outline-offset:3px}\n.base{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:.55;transition:opacity .2s}\n.base.strong{stroke-width:4;opacity:1}\n.base.faded{opacity:.06}\n.flowdash{fill:none;stroke:#fff;stroke-width:1.6;stroke-dasharray:1 15;stroke-linecap:round;animation:dash 1.6s linear infinite;opacity:.9}\n@keyframes dash{to{stroke-dashoffset:-16}}\n@media (prefers-reduced-motion:reduce){.flowdash{animation:none}}\n.tracebar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:8px;padding:10px 10px 10px 16px;display:none;align-items:center;gap:10px;z-index:40;box-shadow:0 12px 32px rgba(0,0,0,.25);max-width:calc(100% - 24px);flex-wrap:wrap}\n.tracebar.show{display:flex}\n.tracebar .t{font-size:13px;font-weight:600}\n.tracebar .t small{display:block;font-weight:500;opacity:.7}\n.tracebar .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.25)}\n.tracebar .btn.primary{background:var(--gold);color:var(--ink);border-color:var(--gold)}\n.ov{position:fixed;inset:0;background:rgba(10,18,30,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}\n.ov.show{display:flex}\n.sheet{background:#fff;border-radius:8px;width:min(640px,100%);max-height:90vh;overflow:auto;box-shadow:0 30px 70px rgba(0,0,0,.28);animation:pop .18s ease}\n@keyframes pop{from{transform:translateY(8px);opacity:0}}\n.ov.drawer{justify-content:flex-end;padding:0}\n.ov.drawer .sheet{width:min(540px,100%);height:100%;max-height:100%;border-radius:0;animation:slide .22s ease;display:flex;flex-direction:column}\n.ov.drawer .sh-body{flex:1}\n@keyframes slide{from{transform:translateX(30px);opacity:0}}\n@media (max-width:640px){.ov{align-items:flex-end;padding:0}.sheet{border-radius:12px 12px 0 0;max-height:92vh}.ov.drawer .sheet{border-radius:0}}\n.sh-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}\n.sh-head h2{font-size:11px;margin:0;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}\n.sh-body{padding:20px}\n.sh-foot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff}\n.sh-foot .r{display:flex;gap:8px;margin-left:auto}\n.x{border:1px solid var(--line);background:#fff;width:30px;height:30px;border-radius:6px;display:grid;place-items:center;flex:none}\n.f{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}\n.f label{font-size:11px;font-weight:650;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}\n.f input,.f textarea,.f select{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:6px;padding:9px 11px;background:#fff;color:var(--ink);width:100%}\n.f textarea{min-height:70px;resize:vertical}\n.f input:focus,.f textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}\n.hint{font-size:12px;color:var(--muted)}\n.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}\n@media (max-width:480px){.g2{grid-template-columns:1fr}}\n.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:5px}\n.icons button{height:38px;border:1px solid var(--line);border-radius:6px;background:#fff;display:grid;place-items:center;color:var(--ink2)}\n.icons button.sel{border-color:var(--ink);background:var(--soft);box-shadow:inset 0 0 0 1px var(--ink)}\n.sw{display:flex;flex-wrap:wrap;gap:8px}\n.sw button{width:28px;height:28px;border-radius:6px;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}\n.sw button.sel{box-shadow:0 0 0 2px var(--ink)}\n.hero{border-radius:6px;overflow:hidden;margin-bottom:18px;display:block;background:var(--ink)}\n.hero img{width:100%;height:200px;object-fit:cover;display:block}\n.crumbs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}\n.crumb{font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:var(--soft);color:var(--ink2);display:inline-flex;align-items:center;gap:5px}\n.crumb svg{width:13px;height:13px}\n.dt{font-size:21px;font-weight:650;margin:0 0 6px;letter-spacing:-.015em}\n.desc{color:var(--ink2);font-size:14px;line-height:1.6;margin:0 0 18px}\n.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:0;margin-bottom:18px;border:1px solid var(--line);border-radius:6px;overflow:hidden}\n.kv div{padding:11px 14px;font-size:13.5px;font-weight:500;border-bottom:1px solid var(--line);border-right:1px solid var(--line);margin:0 -1px -1px 0}\n.kv b{display:block;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.12em;margin-bottom:3px;font-weight:650}\n.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}\n@media (max-width:480px){.cols,.kv{grid-template-columns:1fr}}\n.box{border:1px solid var(--line);border-left:3px solid var(--bc);border-radius:4px;padding:12px 14px}\n.box h4{margin:0 0 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:6px;color:var(--bc)}\n.box ul{margin:0;padding-left:16px;font-size:13.5px;line-height:1.6;color:var(--ink2)}\n.box.pain{--bc:#9b2c35}.box.opp{--bc:#2f6f55}\n.flowrow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:6px;padding:8px 8px 8px 12px;margin-bottom:6px}\n.flowrow .dot{width:16px;height:4px;border-radius:2px;flex:none}\n.flowrow .nm{font-weight:600;font-size:13.5px;flex:1}\n.flowrow .st{font-size:11.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace}\n.nav{border:1px solid var(--line);background:#fff;width:28px;height:28px;border-radius:5px;display:grid;place-items:center}\n.nav:disabled{opacity:.3;cursor:default}\n.sec{font-size:10.5px;font-weight:650;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:4px 0 8px}\n.pathlist{list-style:none;margin:0 0 10px;padding:0}\n.pathlist li{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--soft);font-size:13px}\n.pathlist li .num{width:22px;height:22px;border-radius:4px;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:600;flex:none;font-family:'IBM Plex Mono',monospace}\n.pathlist li span.l{flex:1}\n.pathlist li button{border:0;background:transparent;color:var(--muted);padding:4px;border-radius:4px}\n.pathlist li button:hover{background:var(--soft)}\n.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:600;z-index:80;opacity:0;transition:opacity .2s;pointer-events:none}\n.toast.show{opacity:1}\n.empty-state{padding:40px;color:var(--muted)}\n.imgrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}\n.imgrow img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}\n@media (max-width:760px){\n .top{padding:10px 14px}.eyebrow{display:none}h1{font-size:15px}.logo{width:32px;height:32px}\n .actions{flex-wrap:nowrap;overflow-x:auto;width:100%;scrollbar-width:none}.actions::-webkit-scrollbar{display:none}\n .kpis{display:flex;overflow-x:auto;scrollbar-width:none}.kpi{flex:none;padding:8px 14px;border-bottom:0}.kpi b{font-size:17px}.kpi span{font-size:9.5px}\n .kpi.focus{flex:none;gap:12px}.kpi.focus .fd{display:none}\n .bar{flex-wrap:nowrap;overflow-x:auto;padding:8px 14px;scrollbar-width:none}.bar::-webkit-scrollbar{display:none}.chip,.seg,.lbl{flex:none}\n :host{--rowh:136px;--colw:180px}.rowhead{padding-left:10px}.corner{padding-left:12px}\n}\n.stage .ic img{width:34px;height:34px;object-fit:cover;border-radius:4px;display:block}\n.stage .ic.hasimg{opacity:1}\n.sig{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.04em;background:var(--ink);color:#fff;padding:2px 6px;border-radius:3px;white-space:nowrap}\n.sig.l{background:var(--soft);color:var(--ink2);border:1px solid var(--line)}\n.atag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:4px;padding:3px 8px 3px 3px;font-size:12px;font-weight:600;color:var(--ink2);white-space:nowrap}\n.atag .sig{font-size:9.5px}\n.atype{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}\n.fa{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}\n.flowrow .nm small{display:flex;align-items:center;gap:6px;font-weight:500;color:var(--muted);font-size:12px;margin-top:4px}\n.pathlist li select{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:5px;padding:4px 6px;max-width:170px;background:#fff}\n.pathlist li .l small{display:block;color:var(--muted);font-size:11.5px}\n.achips{display:flex;flex-wrap:wrap;gap:6px}\n.achips button{border:1px solid var(--line);background:#fff;border-radius:4px;padding:4px 8px 4px 4px;font-size:12.5px;font-weight:600;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}\n.achips button.sel{border-color:var(--ink);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}\n.alist{border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}\n.alist .it{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}\n.alist .it:last-child{border-bottom:0}\n.alist .it:hover{background:var(--soft)}\n.alist .it .sig{min-width:64px;text-align:center}\n.alist .it .nm{flex:1;font-weight:600;font-size:13.5px}\n.alist .it .nm small{display:block;font-weight:500;color:var(--muted);font-size:12px}\n.kpis{grid-template-columns:repeat(7,minmax(110px,1fr))}\n.kpi .atag span{text-transform:none;letter-spacing:.02em}.kpi .atag{text-transform:none;letter-spacing:0}.kpi .atag .sig{font-size:9.5px;color:#fff;letter-spacing:.04em}\n</style>\n<header class=\"top\">\n  <div class=\"brand\">\n    <div class=\"logo\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/><path d=\"M10 6.5h4a3 3 0 013 3V14\"/></svg></div>\n    <div style=\"min-width:0\">\n      <p class=\"eyebrow\">Service blueprint \u00b7 Jornada \u00d7 Canais</p>\n      <h1 id=\"title\" contenteditable=\"true\" spellcheck=\"false\"></h1>\n      <p class=\"sub\">Etapas nas colunas \u00b7 clientes/canais nas linhas \u00b7 toque num ponto para ver os detalhes</p>\n    </div>\n  </div>\n  <div class=\"actions\">\n    <button class=\"btn\" id=\"addStage\"></button>\n    <button class=\"btn\" id=\"addRow\"></button>\n    <button class=\"btn primary\" id=\"addFlow\"></button>\n    <button class=\"btn\" id=\"actorsBtn\"></button>\n    <button class=\"btn\" id=\"exportBtn\"></button>\n    <button class=\"btn\" id=\"importBtn\"></button>\n    <button class=\"btn ghost\" id=\"resetBtn\" title=\"Restaurar exemplo\"></button>\n  </div>\n</header>\n<section class=\"kpis\" id=\"kpis\"></section>\n<div class=\"bar\" id=\"legend\"></div>\n<div class=\"bar\" id=\"filters\"></div>\n<main class=\"scroller\" id=\"scroller\">\n  <div class=\"matrix\" id=\"matrix\"></div>\n</main>\n<div class=\"tracebar\" id=\"tracebar\">\n  <div class=\"t\" id=\"traceText\"></div>\n  <button class=\"btn\" id=\"traceUndo\">Desfazer</button>\n  <button class=\"btn\" id=\"traceClear\">Limpar</button>\n  <button class=\"btn primary\" id=\"traceDone\">Concluir</button>\n</div>\n<div class=\"ov\" id=\"ov\"><div class=\"sheet\" id=\"sheet\" role=\"dialog\" aria-modal=\"true\"></div></div>\n<div class=\"toast\" id=\"toast\"></div>\n\n";
+APPS['mapa']=root;
+
+/* ---------- Ícones ---------- */
+const ICONS={
+ megaphone:'<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+ cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h11l2-8H6.5"/>',
+ card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/>',
+ phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+ store:'<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9a2.7 2.7 0 005.3 0 2.7 2.7 0 005.4 0 2.7 2.7 0 005.3 0M10 20v-5h4v5"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5 6.5-5s5.7 1.5 6.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.3 4.5 4"/>',
+ building:'<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M11 21v-3h2v3"/>',
+ headset:'<path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/><path d="M19 19c0 1.5-2 2.5-5 2.5"/>',
+ chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+ doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+ star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+ gift:'<rect x="3" y="8" width="18" height="4"/><path d="M5 12v9h14v-9M12 8v13M12 8C10 4 6 4 7 7c.5 1.2 3 1 5 1zM12 8c2-4 6-4 5-1-.5 1.2-3 1-5 1z"/>',
+ truck:'<path d="M2 6h12v10H2zM14 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+ chart:'<path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',
+ sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+ heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 017-2.5A4 4 0 0119 10c0 5.5-7 10-7 10z"/>',
+ alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17.5v.5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+ map:'<path d="M9 4l-6 2v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'
+};
+const UI={
+ plus:'<path d="M12 5v14M5 12h14"/>',edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+ eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ eyeoff:'<path d="M3 3l18 18M10.6 6.1A10 10 0 0112 6c6.5 0 10 6 10 6a17 17 0 01-3 3.6M6.5 7.5C3.8 9.2 2 12 2 12s3.5 6 10 6a10 10 0 004-.8"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',left:'<path d="M15 6l-6 6 6 6"/>',right:'<path d="M9 6l6 6-6 6"/>',up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
+ upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',reset:'<path d="M4 4v6h6"/><path d="M20 12a8 8 0 01-14.9 4M4.6 10A8 8 0 0120 12"/>',
+ route:'<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H16a3.5 3.5 0 000-7H8a3.5 3.5 0 010-7h7.5"/>',
+ trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'
+};
+const ic=(n,s=20,set=ICONS)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${set[n]||ICONS.doc}</svg>`;
+const ui=(n,s=16)=>ic(n,s,UI);
+const COLORS=['#1f4e8c','#b08436','#2a7f8f','#8c2f39','#5b4b8a','#3f7d58','#a3542c','#4b5d73','#0f1c2e','#7a8699'];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>root.querySelector(s);
+const lines=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
+
+/* ---------- Exemplo ---------- */
+function sample(){
+ const st=[['s1','Descoberta','megaphone','Cliente toma conhecimento da marca ou da oferta.'],['s2','Consideração','search','Compara alternativas, preços e condições.'],['s3','Contratação','cart','Decide e formaliza a compra ou adesão.'],['s4','Onboarding','check','Primeiros passos e ativação do produto.'],['s5','Uso','sliders','Uso recorrente e geração de valor.'],['s6','Suporte','headset','Dúvidas, problemas e solicitações.'],['s7','Fidelização','gift','Retenção, recompra e indicação.']]
+  .map(([id,name,icon,desc])=>({id,name,icon,desc}));
+ const rows=[['r1','Pessoa Física','App mobile','phone','#1f4e8c'],['r2','Pessoa Física','Site / e-commerce','globe','#2a7f8f'],['r3','Pessoa Física','Loja física','store','#b08436'],['r4','Pessoa Jurídica','Gerente comercial','users','#5b4b8a'],['r5','Pessoa Jurídica','Portal empresas','building','#3f7d58'],['r6','Todos','Central / WhatsApp','chat','#8c2f39']]
+  .map(([id,segment,channel,icon,color])=>({id,segment,channel,icon,color}));
+ const C=(title,icon,desc,owner,sla,kpi,systems,pains,opps)=>({title,icon,desc,owner,sla,kpi,systems,pains,opps});
+ const cells={
+  'r2|s1':C('Anúncio e busca orgânica','megaphone','Cliente chega pelo Google, redes sociais ou mídia paga e cai numa landing page.','Marketing digital','—','CTR, CAC','Google Ads, CMS, Analytics','Mensagem genérica para todos os perfis\nLanding page lenta no 4G','Landing pages por segmento\nTeste A/B de oferta'),
+  'r3|s1':C('Vitrine e indicação na loja','store','Contato espontâneo na loja ou indicação de amigo/familiar.','Varejo','—','Fluxo de loja, % indicações','PDV, contador de fluxo','Pouca sinalização da oferta digital','QR code na vitrine levando ao app'),
+  'r5|s1':C('Evento e prospecção ativa','users','Time comercial prospecta empresas em eventos e via base qualificada.','Comercial PJ','Contato em até 24h do lead','Leads qualificados (SQL)','CRM','Lead chega sem contexto','Score de lead automático no CRM'),
+  'r2|s2':C('Comparar planos no site','search','Simulador e tabela comparativa de planos, com FAQ.','Produto digital','—','Conversão do simulador','Site, simulador, chatbot','Tabela de preços confusa\nAbandono no simulador','Simulador com recomendação personalizada'),
+  'r4|s2':C('Reunião consultiva','users','Gerente entende a necessidade e monta proposta sob medida.','Comercial PJ','Proposta em até 48h','Taxa proposta → fechamento','CRM, gerador de propostas','Proposta montada manualmente','Templates de proposta por porte'),
+  'r1|s3':C('Contratação 100% no app','cart','Cadastro, envio de documentos, análise automática e aceite digital.','Squad Aquisição','10 min','Conversão do funil, % aprovação automática','App, KYC, motor de crédito','Falha na validação de documento\nEtapas demais no cadastro','OCR automático\nCadastro em 3 passos'),
+  'r3|s3':C('Contratação assistida','card','Atendente conduz a contratação no balcão com o cliente.','Varejo','25 min','Tempo médio de atendimento','PDV, sistema de vendas','Fila em horário de pico','Pré-cadastro pelo app antes de ir à loja'),
+  'r4|s3':C('Proposta e contrato','doc','Negociação final, aprovação interna e assinatura digital.','Comercial PJ + Jurídico','5 dias úteis','Ciclo de venda (dias)','CRM, assinatura digital','Aprovações em série atrasam','Alçadas automáticas por valor'),
+  'r1|s4':C('Boas-vindas e primeiro acesso','check','Tour guiado, configuração inicial e primeira ação de valor.','Squad Ativação','D+1','Ativação em 7 dias','App, CRM de engajamento','Cliente não conclui configuração','Checklist gamificado de ativação'),
+  'r3|s4':C('Kit de boas-vindas','mail','Entrega de material físico e orientação para baixar o app.','Varejo + Logística','D+3','% clientes que baixam o app','PDV, logística','Cliente sai da loja sem o app instalado','Instalação assistida no balcão'),
+  'r5|s4':C('Implantação da conta empresa','building','Configuração de usuários, permissões e integrações da empresa.','Customer Success PJ','10 dias úteis','Time-to-value','Portal, API, CRM','Integração técnica demorada','Kit de integração self-service'),
+  'r1|s5':C('Uso recorrente no app','phone','Cliente usa as principais funcionalidades no dia a dia.','Squads de produto','—','MAU, frequência de uso','App, analytics','Funcionalidades pouco descobertas','Recomendações contextuais na home'),
+  'r5|s5':C('Gestão no portal','chart','Empresa acompanha relatórios, usuários e consumo pelo portal.','Produto PJ','—','Usuários ativos por empresa','Portal, data warehouse','Relatórios pouco flexíveis','Painel customizável'),
+  'r1|s6':C('Central de ajuda no app','doc','Artigos, busca e chatbot antes de falar com uma pessoa.','Atendimento digital','Imediato','Taxa de autoatendimento','App, base de conhecimento, chatbot','Busca não encontra a resposta','Busca semântica e artigos por contexto'),
+  'r3|s6':C('Atendimento no balcão','store','Resolução presencial de dúvidas e solicitações.','Varejo','15 min de fila','FCR presencial','PDV, CRM','Atendente sem histórico do cliente','Visão 360° do cliente no PDV'),
+  'r6|s6':C('Atendimento humano','headset','Atendimento por telefone e WhatsApp com escalonamento para N2.','Central de relacionamento','1ª resposta < 2 min','FCR, TMA, CSAT','URA, WhatsApp, CRM, ticketing','Cliente repete a história várias vezes\nTransferências entre filas','Contexto do app enviado ao atendente\nRoteamento por intenção'),
+  'r1|s7':C('Programa de pontos','star','Benefícios por uso e indicação, com resgate no app.','Marketing de relacionamento','—','Retenção 12 meses','App, plataforma de loyalty','Regras pouco claras','Simulador de pontos'),
+  'r3|s7':C('Ofertas exclusivas na loja','gift','Ofertas personalizadas apresentadas na visita à loja.','Varejo','—','Recompra, ticket médio','PDV, CRM','Oferta não conversa com o digital','Mesma oferta em todos os canais'),
+  'r4|s7':C('Revisão de conta trimestral','chart','Gerente revisa resultados e propõe expansão.','Comercial PJ','Trimestral','Churn PJ, NRR','CRM, BI','Revisões só acontecem com contas grandes','Revisão automatizada para médias contas'),
+  'r6|s7':C('Pesquisa NPS e recuperação','heart','Pesquisa pós-atendimento e contato ativo com detratores.','CX','Contato com detrator em 48h','NPS, taxa de recuperação','Plataforma de pesquisa, CRM','Detrator não recebe retorno','Fluxo automático de recuperação')
+ };
+ const P=a=>a.map(k=>{const[r,s]=k.split('|');return{r,s}});
+ const flows=[
+  {id:'f1',name:'PF digital',color:'#1f4e8c',desc:'Cliente pessoa física que resolve tudo pelo digital.',visible:true,path:P(['r2|s1','r2|s2','r1|s3','r1|s4','r1|s5','r1|s7'])},
+  {id:'f2',name:'PF omnichannel',color:'#b08436',desc:'Cliente que começa na loja, pesquisa no site e volta à loja.',visible:true,path:P(['r3|s1','r2|s2','r3|s3','r3|s4','r1|s5','r3|s6','r3|s7'])},
+  {id:'f3',name:'PJ consultivo',color:'#2a7f8f',desc:'Venda consultiva para empresas, com gerente dedicado.',visible:true,path:P(['r5|s1','r4|s2','r4|s3','r5|s4','r5|s5','r6|s6','r4|s7'])},
+  {id:'f4',name:'Suporte com escalonamento',color:'#8c2f39',desc:'Autoatendimento não resolve e o cliente é escalado para atendimento humano.',visible:true,path:P(['r1|s5','r1|s6','r6|s6','r6|s7'])}
+ ];
+ return {title:'Mapa de jornada · Clientes × Canais',stages:st,rows,cells,flows};
+}
+
+/* ---------- Estado ---------- */
+const KEY='mapa-fluxo-exec-v1';
+const DEF={
+ stage:{s1:'DES',s2:'CON',s3:'CTR',s4:'ONB',s5:'USO',s6:'SUP',s7:'FID'},
+ cell:{'r2|s1':'SITE-MKT','r3|s1':'PDV','r5|s1':'CRM-PJ','r2|s2':'SITE-SIM','r4|s2':'CRM-PJ','r1|s3':'APP-CTR','r3|s3':'PDV-VND','r4|s3':'CRM-PRP','r1|s4':'APP-ATV','r3|s4':'PDV-LOG','r5|s4':'PTL-IMP','r1|s5':'APP-CORE','r5|s5':'PTL-GES','r1|s6':'APP-HELP','r3|s6':'PDV-ATD','r6|s6':'URA-WPP','r1|s7':'LOY','r3|s7':'PDV-OFT','r4|s7':'BI-PJ','r6|s7':'NPS'},
+ actors:[['a1','Cliente PF','CLI-PF','Cliente'],['a2','Cliente PJ','CLI-PJ','Cliente'],['a3','Atendente de loja','ATD-LJ','Interno'],['a4','Gerente comercial PJ','GER-PJ','Interno'],['a5','Analista Customer Success','CS-PJ','Interno'],['a6','Agente de relacionamento','AGT-CRC','Interno'],['a7','Motor de crédito','MCR','Sistema'],['a8','Assistente virtual (chatbot)','BOT','Sistema'],['a9','Time de Marketing','MKT','Interno'],['a10','CRM corporativo','CRM','Sistema']],
+ flow:{f1:['JPF-DIG',['a9','a1','a7','a1','a1','a1']],f2:['JPF-OMN',['a3','a1','a3','a3','a1','a3','a3']],f3:['JPJ-CON',['a4','a4','a4','a5','a2','a6','a4']],f4:['JSU-ESC',['a1','a8','a6','a10']]}
+};
+function migrate(d){
+ d.cells=d.cells||{};d.actors=d.actors||[];
+ if(!d._v2){
+  if(!d.actors.length)d.actors=DEF.actors.map(([id,name,sigla,type])=>({id,name,sigla,type,desc:''}));
+  d.stages.forEach(s=>{if(!s.sigla&&DEF.stage[s.id])s.sigla=DEF.stage[s.id]});
+  Object.entries(DEF.cell).forEach(([k,v])=>{if(d.cells[k]&&!d.cells[k].sigla)d.cells[k].sigla=v});
+  d.flows.forEach(f=>{const x=DEF.flow[f.id];if(!x)return;if(!f.sigla)f.sigla=x[0];if(f.path.length===x[1].length)f.path.forEach((p,i)=>{if(!p.a)p.a=x[1][i]})});
+  d._v2=true;
+ }
+ d.flows.forEach(f=>{f.actors=f.actors||[]});
+ return d;
+}
+let S; const V={focus:null,trace:null,seg:'Todos'};
+try{const raw=localStorage.getItem(KEY);S=migrate(raw?JSON.parse(raw):sample())}catch(e){S=migrate(sample())}
+const actorById=id=>S.actors.find(a=>a.id===id);
+const atag=a=>a?`<span class="atag"><span class="sig">${esc(a.sigla||'—')}</span>${esc(a.name)}</span>`:'';
+const flowActors=f=>{const ids=[...new Set([...(f.actors||[]),...f.path.map(p=>p.a).filter(Boolean)])];return ids.map(actorById).filter(Boolean)};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const stageById=id=>S.stages.find(s=>s.id===id), rowById=id=>S.rows.find(r=>r.id===id), flowById=id=>S.flows.find(f=>f.id===id);
+const pointLabel=p=>{const s=stageById(p.s),r=rowById(p.r);return `${s?s.name:'?'} — ${r?r.segment+' · '+r.channel:'?'}`};
+
+/* ---------- Render ---------- */
+function render(){
+ $('#title').textContent=S.title;
+ renderKpis();renderLegend();renderFilters();renderMatrix();
+ requestAnimationFrame(drawLines);
+}
+function renderKpis(){
+ const cells=Object.values(S.cells),pains=cells.reduce((a,c)=>a+lines(c.pains).length,0),opps=cells.reduce((a,c)=>a+lines(c.opps).length,0);
+ const f=V.focus&&flowById(V.focus);
+ if(f){const ch=new Set(f.path.map(p=>p.r)).size,st=new Set(f.path.map(p=>p.s)).size;const fc=f.path.map(p=>S.cells[p.r+'|'+p.s]).filter(Boolean);
+  const fp=fc.reduce((a,c)=>a+lines(c.pains).length,0),fo=fc.reduce((a,c)=>a+lines(c.opps).length,0);
+  $('#kpis').innerHTML=`<div class="kpi focus" style="--c:${f.color}"><div><span>Fluxo em foco</span><div class="fn">${f.sigla?`<span class="sig">${esc(f.sigla)}</span> `:''}${esc(f.name)}</div>${f.desc?`<div class="fd">${esc(f.desc)}</div>`:''}<div class="fa">${flowActors(f).map(atag).join('')}</div></div><div class="st"><div><b>${f.path.length}</b><span>Passos</span></div><div><b>${st}</b><span>Etapas</span></div><div><b>${ch}</b><span>Canais</span></div><div><b>${flowActors(f).length}</b><span>Atores</span></div><div><b>${fp}</b><span>Dores</span></div><div><b>${fo}</b><span>Oportunidades</span></div></div></div>`;return}
+ const k=[[S.stages.length,'Etapas'],[S.rows.length,'Clientes · canais'],[cells.length,'Pontos de contato'],[S.flows.length,'Fluxos'],[S.actors.length,'Atores'],[pains,'Dores mapeadas'],[opps,'Oportunidades']];
+ $('#kpis').innerHTML=k.map(([n,l])=>`<div class="kpi"><b>${n}</b><span>${l}</span></div>`).join('');
+}
+function renderLegend(){
+ const L=$('#legend');
+ L.innerHTML=`<span class="lbl">Fluxos</span>`+S.flows.map(f=>`<span class="chip ${V.focus===f.id?'on':''} ${f.visible===false?'off':''}" style="--c:${f.color}" data-f="${f.id}" title="Toque para destacar"><span class="dot"></span>${f.sigla?`<span class="cnt">${esc(f.sigla)}</span>`:''}${esc(f.name)} <span class="cnt">${f.path.length}</span><button class="mini" data-vis="${f.id}" title="Mostrar/ocultar">${ui(f.visible===false?'eyeoff':'eye',14)}</button><button class="mini" data-ed="${f.id}" title="Editar fluxo">${ui('edit',14)}</button></span>`).join('')+(S.flows.length?'':'<span class="hint">Nenhum fluxo ainda — crie um em “+ Fluxo”.</span>');
+ L.querySelectorAll('.chip').forEach(ch=>ch.onclick=e=>{
+  if(e.target.closest('[data-vis]')){const f=flowById(ch.dataset.f);f.visible=f.visible===false;if(!f.visible&&V.focus===f.id)V.focus=null;save();render();return}
+  if(e.target.closest('[data-ed]')){openFlow(ch.dataset.f);return}
+  V.focus=V.focus===ch.dataset.f?null:ch.dataset.f;const f=flowById(ch.dataset.f);if(f.visible===false)f.visible=true;render();
+ });
+}
+function renderFilters(){
+ const segs=['Todos',...new Set(S.rows.map(r=>r.segment).filter(x=>x&&x!=='Todos'))];
+ if(!segs.includes(V.seg))V.seg='Todos';
+ $('#filters').innerHTML=`<span class="lbl">Tipo de cliente</span>`+segs.map(s=>`<button class="seg ${V.seg===s?'on':''}" data-s="${esc(s)}">${esc(s)}</button>`).join('')+
+  (V.focus?`<span class="vsep"></span><button class="btn ghost" id="clearFocus">${ui('x',14)} Limpar destaque</button>`:'');
+ $('#filters').querySelectorAll('.seg').forEach(b=>b.onclick=()=>{V.seg=b.dataset.s;render()});
+ const cf=$('#clearFocus');if(cf)cf.onclick=()=>{V.focus=null;render()};
+}
+function hitsMap(){
+ const h={};S.flows.filter(f=>f.visible!==false).forEach(f=>f.path.forEach((p,i)=>{(h[p.r+'|'+p.s]=h[p.r+'|'+p.s]||[]).push({f,i})}));return h;
+}
+function renderMatrix(){
+ const m=$('#matrix');const rows=S.rows.filter(r=>V.seg==='Todos'||r.segment===V.seg||r.segment==='Todos');
+ m.style.gridTemplateColumns=`var(--rowh) repeat(${S.stages.length},var(--colw))`;
+ const H=hitsMap();let h=`<svg id="lines"></svg><div class="corner">Cliente · Canal<br>↓ &nbsp; Etapa →</div>`;
+ S.stages.forEach((s,i)=>{h+=`<div class="stage" data-st="${s.id}"><div class="in"><div class="ic ${s.img?'hasimg':''}">${s.img?`<img src="${s.img}" alt="">`:ic(s.icon,20)}</div><div><div class="n">E${String(i+1).padStart(2,'0')}${s.sigla?' · '+esc(s.sigla):''}</div><div class="nm">${esc(s.name)}</div></div></div></div>`});
+ rows.forEach(r=>{
+  h+=`<div class="rowhead" data-row="${r.id}" style="--c:${r.color}"><div class="in"><span class="tag">${esc(r.segment)}</span><span class="ch">${ic(r.icon,20)}${esc(r.channel)}</span></div></div>`;
+  S.stages.forEach(s=>{
+   const k=r.id+'|'+s.id,c=S.cells[k],hs=H[k]||[];
+   const inFocus=!V.focus||hs.some(x=>x.f.id===V.focus);
+   const dots=hs.map(x=>`<span class="hit" style="background:${x.f.color}" title="${esc(x.f.name)} · passo ${x.i+1}${(a=>a?' · '+a.name+' ['+a.sigla+']':'')(actorById(x.f.path[x.i].a))}">${x.i+1}</span>`).join('');
+   if(c){const np=lines(c.pains).length,code=`${S.stages.indexOf(s)+1}.${S.rows.indexOf(r)+1}`;h+=`<div class="cell" data-key="${k}"><div class="card ${inFocus?'':'dim'}" style="--c:${r.color}"><div class="chead"><div class="ill">${c.img?`<img src="${c.img}" alt="">`:ic(c.icon,16)}</div>${c.sigla?`<span class="sig" title="Sigla do sistema">${esc(c.sigla)}</span>`:`<span class="code">PC ${code}</span>`}</div><div class="ct">${esc(c.title)}</div>${c.owner?`<div class="owner">${esc(c.owner)}</div>`:''}<div class="cfoot">${c.sla&&c.sla!=='—'?`<span class="meta">${ic('clock',12)} ${esc(c.sla)}</span>`:np?`<span class="flag">${ic('alert',12)} ${np} dor${np>1?'es':''}</span>`:'<span></span>'}<div class="hits">${dots}</div></div></div></div>`}
+   else h+=`<div class="cell empty ${inFocus?'':'dim'}" data-key="${k}">${dots?`<div class="hits">${dots}</div>`:''}<span class="plus">+ adicionar ponto</span></div>`;
+  });
+ });
+ if(!S.stages.length||!rows.length)h+=`<div class="empty-state">Adicione etapas e linhas para começar.</div>`;
+ m.innerHTML=h;
+ m.classList.toggle('tracing',!!V.trace);
+ if(V.trace)m.style.setProperty('--tc',flowById(V.trace)?.color||'#000');
+ m.querySelectorAll('.stage').forEach(el=>el.onclick=()=>openStage(el.dataset.st));
+ m.querySelectorAll('.rowhead').forEach(el=>el.onclick=()=>openRow(el.dataset.row));
+ m.querySelectorAll('.cell').forEach(el=>el.onclick=()=>{
+  const k=el.dataset.key;
+  if(V.trace){const f=flowById(V.trace);const[r,s]=k.split('|');const last=f.path[f.path.length-1];if(!last||last.r!==r||last.s!==s){f.path.push({r,s});save();render();updateTrace()}return}
+  S.cells[k]?openDetail(k):openEdit(k);
+ });
+}
+function drawLines(){
+ const m=$('#matrix'),svg=$('#lines');if(!svg)return;
+ svg.setAttribute('width',m.scrollWidth);svg.setAttribute('height',m.scrollHeight);
+ const gap=parseFloat(getComputedStyle(m).columnGap)||30;
+ const fl=S.flows.filter(f=>f.visible!==false);let out='';
+ const order=[...fl].sort((a,b)=>(a.id===V.focus)-(b.id===V.focus));
+ order.forEach(f=>{
+  const k=fl.indexOf(f),off=(k-(fl.length-1)/2)*6;
+  const pts=f.path.map(p=>{const el=m.querySelector(`.cell[data-key="${p.r}|${p.s}"]`);return el?{x:el.offsetLeft+el.offsetWidth/2,y:el.offsetTop+el.offsetHeight/2+off,w:el.offsetWidth}:null}).filter(Boolean);
+  let d='';for(let i=1;i<pts.length;i++)d+=seg(pts[i-1],pts[i],gap,off);
+  if(!d)return;
+  const strong=V.focus===f.id,faded=V.focus&&!strong;
+  out+=`<path d="${d}" stroke="${f.color}" class="base ${strong?'strong':''} ${faded?'faded':''}"/>`;
+  if(!faded)out+=`<path d="${d}" class="flowdash"/>`;
+ });
+ svg.innerHTML=out;
+}
+function seg(a,b,gap,off){
+ if(Math.abs(a.y-b.y)<1)return `M${a.x} ${a.y}H${b.x}`;
+ let dir=b.x>a.x+1?1:b.x<a.x-1?-1:1;
+ const xg=a.x+dir*(a.w/2+gap/2)+off, vy=b.y>a.y?1:-1, dir2=b.x>=xg?1:-1;
+ const r=Math.max(0,Math.min(12,Math.abs(b.y-a.y)/2,Math.abs(xg-a.x),Math.abs(b.x-xg)));
+ return `M${a.x} ${a.y}H${xg-dir*r}Q${xg} ${a.y} ${xg} ${a.y+vy*r}V${b.y-vy*r}Q${xg} ${b.y} ${xg+dir2*r} ${b.y}H${b.x}`;
+}
+new ResizeObserver(()=>drawLines()).observe($('#matrix'));
+if(document.fonts)document.fonts.ready.then(drawLines);
+
+/* ---------- Modal ---------- */
+function modal(title,body,foot,mount){
+ $('#sheet').innerHTML=`<div class="sh-head"><h2>${title}</h2><button class="x" id="mx" aria-label="Fechar">${ui('x',16)}</button></div><div class="sh-body">${body}</div>${foot?`<div class="sh-foot">${foot}</div>`:''}`;
+ $('#ov').classList.remove('drawer');$('#ov').classList.add('show');$('#mx').onclick=close;$('#sheet').scrollTop=0;mount&&mount($('#sheet'));
+}
+function close(){$('#ov').classList.remove('show')}
+$('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov')close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#ov').classList.contains('show'))close();else if(V.trace)endTrace()}});
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),1600)}
+function confirmBox(msg,yes){modal('Confirmar',`<p class="desc">${msg}</p>`,`<div class="r"><button class="btn" id="cn">Cancelar</button><button class="btn primary" id="cy" style="background:#c0262d;border-color:#c0262d">Excluir</button></div>`,s=>{s.querySelector('#cn').onclick=close;s.querySelector('#cy').onclick=()=>{yes();close()}})}
+function iconPicker(sel){return `<div class="icons" id="icp">${Object.keys(ICONS).map(n=>`<button type="button" data-i="${n}" class="${n===sel?'sel':''}" title="${n}">${ic(n,20)}</button>`).join('')}</div>`}
+function bindPicker(s,cb){s.querySelectorAll('#icp button').forEach(b=>b.onclick=()=>{s.querySelectorAll('#icp button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');cb(b.dataset.i)})}
+function swatches(sel){return `<div class="sw" id="sw">${COLORS.map(c=>`<button type="button" data-c="${c}" style="background:${c}" class="${c===sel?'sel':''}"></button>`).join('')}</div>`}
+function bindSw(s,cb){s.querySelectorAll('#sw button').forEach(b=>b.onclick=()=>{s.querySelectorAll('#sw button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');cb(b.dataset.c)})}
+
+/* ---------- Detalhes do ponto ---------- */
+function heroSVG(color,icon,stIcon,rwIcon,stNum,stName='',rwName=''){
+ const sub=(n,x,y,sz,c,w=1.5)=>`<svg x="${x}" y="${y}" width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||ICONS.doc}</svg>`;
+ let grid='';for(let x=0;x<=600;x+=30)grid+=`<path d="M${x} 0V200"/>`;for(let y=0;y<=200;y+=30)grid+=`<path d="M0 ${y}H600"/>`;
+ const T='font-family="Inter,sans-serif"';
+ return `<svg viewBox="0 0 600 200" width="100%" height="200" preserveAspectRatio="xMinYMid slice" style="display:block">
+ <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f1c2e"/><stop offset="1" stop-color="#1b2f4a"/></linearGradient>
+ <radialGradient id="hr" cx=".72" cy=".45" r=".5"><stop offset="0" stop-color="${color}" stop-opacity=".55"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient></defs>
+ <rect width="600" height="200" fill="url(#hg)"/><g stroke="#fff" stroke-opacity=".05">${grid}</g><rect width="600" height="200" fill="url(#hr)"/>
+ <rect x="0" y="0" width="5" height="200" fill="${color}"/>
+ <text x="34" y="46" ${T} font-size="11" font-weight="600" letter-spacing="2.4" fill="#b08436">ETAPA ${String(stNum).padStart(2,'0')}</text>
+ <text x="34" y="74" ${T} font-size="22" font-weight="650" fill="#fff">${esc(stName)}</text>
+ <path d="M34 92H140" stroke="#fff" stroke-opacity=".25"/>
+ ${sub(rwIcon,34,110,18,'#9fb0c6',1.8)}<text x="60" y="124" ${T} font-size="12.5" font-weight="500" fill="#c9d4e2">${esc(rwName)}</text>
+ ${sub(stIcon,34,140,18,'#9fb0c6',1.8)}<text x="60" y="154" ${T} font-size="12.5" font-weight="500" fill="#c9d4e2">Etapa ${stNum} da jornada</text>
+ <circle cx="440" cy="100" r="64" fill="none" stroke="#fff" stroke-opacity=".12"/><circle cx="440" cy="100" r="46" fill="#fff" fill-opacity=".06" stroke="${color}" stroke-width="1.5"/>
+ <path d="M300 160 C 360 160, 360 100, 394 100" fill="none" stroke="${color}" stroke-width="1.5" stroke-dasharray="3 5"/><path d="M486 100 C 530 100, 540 50, 600 50" fill="none" stroke="${color}" stroke-width="1.5" stroke-dasharray="3 5"/>
+ ${sub(icon,414,74,52,'#fff',1.4)}</svg>`;
+}
+function openDetail(k){
+ const c=S.cells[k];if(!c)return openEdit(k);
+ const[rid,sid]=k.split('|'),r=rowById(rid),s=stageById(sid),si=S.stages.indexOf(s)+1;
+ const hs=(hitsMap()[k]||[]);
+ const kv=[['Sigla do sistema',c.sigla],['Código do ponto',`PC ${si}.${S.rows.indexOf(r)+1}`],['Responsável',c.owner],['Tempo / SLA',c.sla],['Indicadores',c.kpi],['Sistemas',c.systems]].filter(x=>x[1]&&x[1]!=='—').map(([a,b])=>`<div><b>${a}</b>${esc(b)}</div>`).join('');
+ const pains=lines(c.pains),opps=lines(c.opps);
+ const body=`<div class="hero">${c.img?`<img src="${c.img}" alt="">`:heroSVG(r.color,c.icon,s.icon,r.icon,si,s.name,r.segment+' · '+r.channel)}</div>
+ <div class="crumbs"><span class="crumb">${ic(s.icon,13)} Etapa ${si} · ${esc(s.name)}</span><span class="crumb" style="color:${r.color}">${ic(r.icon,13)} ${esc(r.segment)} · ${esc(r.channel)}</span></div>
+ <h3 class="dt">${esc(c.title)}</h3>${c.desc?`<p class="desc">${esc(c.desc)}</p>`:''}
+ ${kv?`<div class="kv">${kv}</div>`:''}
+ ${pains.length||opps.length?`<div class="cols">${pains.length?`<div class="box pain"><h4>${ic('alert',14)} Dores</h4><ul>${pains.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>`:''}${opps.length?`<div class="box opp"><h4>${ic('bolt',14)} Oportunidades</h4><ul>${opps.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>`:''}</div>`:''}
+ <div class="sec">Fluxos que passam por aqui</div>
+ ${hs.length?hs.map(x=>`<div class="flowrow"><span class="dot" style="background:${x.f.color}"></span><span class="nm">${x.f.sigla?`<span class="sig l">${esc(x.f.sigla)}</span> `:''}${esc(x.f.name)}${(a=>a?`<small>Ator: ${atag(a)}</small>`:'')(actorById(x.f.path[x.i].a))}</span><span class="st">passo ${x.i+1} de ${x.f.path.length}</span><button class="nav" data-go="${x.f.id}|${x.i-1}" ${x.i===0?'disabled':''} title="Passo anterior">${ui('left')}</button><button class="nav" data-go="${x.f.id}|${x.i+1}" ${x.i===x.f.path.length-1?'disabled':''} title="Próximo passo">${ui('right')}</button></div>`).join(''):'<p class="hint">Nenhum fluxo passa por este ponto.</p>'}`;
+ modal(`Ponto de contato · ${si}.${S.rows.indexOf(r)+1}`,body,`<button class="btn" id="dfocus" ${hs.length?'':'disabled'}>${ui('route')} Destacar fluxo</button><div class="r"><button class="btn primary" id="ded">${ui('edit')} Editar</button></div>`,sh=>{
+  $('#ov').classList.add('drawer');
+  sh.querySelector('#ded').onclick=()=>openEdit(k);
+  sh.querySelector('#dfocus').onclick=()=>{if(hs[0]){V.focus=hs[0].f.id;close();render()}};
+  sh.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{const[fid,i]=b.dataset.go.split('|');const f=flowById(fid),p=f.path[+i];if(!p)return;V.focus=fid;render();const nk=p.r+'|'+p.s;S.cells[nk]?openDetail(nk):openEdit(nk)});
+ });
+}
+function openEdit(k){
+ const[rid,sid]=k.split('|'),r=rowById(rid),s=stageById(sid);const c=S.cells[k]||{icon:s.icon};let icon=c.icon,img=c.img||'';
+ const body=`<div class="crumbs"><span class="crumb">${ic(s.icon,13)} ${esc(s.name)}</span><span class="crumb" style="color:${r.color}">${ic(r.icon,13)} ${esc(r.segment)} · ${esc(r.channel)}</span></div>
+ <div class="g2"><div class="f"><label>Título do ponto de contato *</label><input id="e_t" value="${esc(c.title)}" placeholder="Ex.: Contratação pelo app"></div><div class="f"><label>Sigla do sistema</label><input id="e_g" value="${esc(c.sigla)}" placeholder="Ex.: APP-CTR" style="text-transform:uppercase"></div></div>
+ <div class="f"><label>Imagem (ícone)</label>${iconPicker(icon)}</div>
+ <div class="f"><label>Ou envie uma imagem própria</label><div class="imgrow"><span id="e_prev">${img?`<img src="${img}">`:''}</span><input type="file" id="e_img" accept="image/*" style="max-width:240px"><button type="button" class="btn ghost" id="e_rm" ${img?'':'hidden'}>Remover imagem</button></div></div>
+ <div class="f"><label>Descrição</label><textarea id="e_d" placeholder="O que acontece neste ponto?">${esc(c.desc)}</textarea></div>
+ <div class="g2"><div class="f"><label>Responsável</label><input id="e_o" value="${esc(c.owner)}"></div><div class="f"><label>Tempo / SLA</label><input id="e_s" value="${esc(c.sla)}"></div>
+ <div class="f"><label>Indicadores</label><input id="e_k" value="${esc(c.kpi)}"></div><div class="f"><label>Sistemas</label><input id="e_y" value="${esc(c.systems)}"></div></div>
+ <div class="g2"><div class="f"><label>Dores (uma por linha)</label><textarea id="e_p">${esc(c.pains)}</textarea></div><div class="f"><label>Oportunidades (uma por linha)</label><textarea id="e_op">${esc(c.opps)}</textarea></div></div>`;
+ modal(S.cells[k]?'Editar ponto':'Novo ponto de contato',body,`${S.cells[k]?`<button class="btn danger" id="e_del">${ui('trash')} Excluir</button>`:''}<div class="r"><button class="btn" id="e_c">Cancelar</button><button class="btn primary" id="e_ok">Salvar</button></div>`,sh=>{
+  bindPicker(sh,v=>icon=v);
+  sh.querySelector('#e_c').onclick=()=>S.cells[k]?openDetail(k):close();
+  sh.querySelector('#e_img').onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,d=>{img=d;sh.querySelector('#e_prev').innerHTML=`<img src="${d}">`;sh.querySelector('#e_rm').hidden=false})};
+  sh.querySelector('#e_rm').onclick=()=>{img='';sh.querySelector('#e_prev').innerHTML='';sh.querySelector('#e_rm').hidden=true};
+  const del=sh.querySelector('#e_del');if(del)del.onclick=()=>confirmBox('Excluir este ponto de contato? Os fluxos continuam passando pela célula.',()=>{delete S.cells[k];save();render()});
+  sh.querySelector('#e_ok').onclick=()=>{
+   const v=id=>sh.querySelector(id).value.trim();const t=v('#e_t');if(!t){sh.querySelector('#e_t').focus();toast('Dê um título ao ponto');return}
+   S.cells[k]={title:t,sigla:v('#e_g').toUpperCase(),icon,img,desc:v('#e_d'),owner:v('#e_o'),sla:v('#e_s'),kpi:v('#e_k'),systems:v('#e_y'),pains:v('#e_p'),opps:v('#e_op')};
+   save();render();openDetail(k);
+  };
+  setTimeout(()=>sh.querySelector('#e_t').focus(),50);
+ });
+}
+function resizeImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const M=640,sc=Math.min(1,M/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*sc;cv.height=im.height*sc;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/jpeg',.82))};im.src=fr.result};fr.readAsDataURL(file)}
+
+/* ---------- Etapas e linhas ---------- */
+function openStage(id,isNew){
+ const s=stageById(id),i=S.stages.indexOf(s);let icon=s.icon,img=s.img||'';
+ const sa=[...new Set(S.flows.flatMap(f=>f.path.filter(p=>p.s===id&&p.a).map(p=>p.a)))].map(actorById).filter(Boolean);
+ const cnt=S.rows.filter(r=>S.cells[r.id+'|'+id]).length;
+ modal(isNew?'Nova etapa':`Etapa ${i+1}`,`<div class="hero" id="s_hero">${s.img?`<img src="${s.img}" alt="">`:heroSVG('#b08436',s.icon,'map','route',i+1,s.name,s.desc||'Etapa da jornada')}</div>
+ <div class="g2"><div class="f"><label>Nome da etapa</label><input id="s_n" value="${esc(s.name)}"></div><div class="f"><label>Sigla da etapa</label><input id="s_g" value="${esc(s.sigla)}" placeholder="Ex.: CTR" style="text-transform:uppercase"></div></div>
+ <div class="f"><label>Imagem da etapa</label><div class="imgrow"><input type="file" id="s_img" accept="image/*" style="max-width:240px"><button type="button" class="btn ghost" id="s_rm" ${img?'':'hidden'}>Remover imagem</button></div><span class="hint">A imagem aparece no cabeçalho da coluna e no topo deste painel.</span></div>
+ <div class="f"><label>Objetivo / descrição</label><textarea id="s_d">${esc(s.desc)}</textarea></div>
+ <div class="f"><label>Ícone</label>${iconPicker(icon)}</div>
+ <div class="sec">Atores nesta etapa</div><div class="fa" style="margin-bottom:12px">${sa.length?sa.map(atag).join(''):'<span class="hint">Nenhum ator atribuído nos fluxos desta etapa.</span>'}</div>
+ <p class="hint">${cnt} ponto(s) de contato nesta etapa.</p>`,
+ `<div style="display:flex;gap:6px"><button class="btn" id="s_l" ${i===0?'disabled':''} title="Mover para a esquerda">${ui('left')}</button><button class="btn" id="s_r" ${i===S.stages.length-1?'disabled':''} title="Mover para a direita">${ui('right')}</button><button class="btn danger" id="s_x">${ui('trash')}</button></div><div class="r"><button class="btn primary" id="s_ok">Salvar</button></div>`,sh=>{
+  bindPicker(sh,v=>icon=v);
+  const apply=()=>{s.name=sh.querySelector('#s_n').value.trim()||s.name;s.sigla=sh.querySelector('#s_g').value.trim().toUpperCase();s.desc=sh.querySelector('#s_d').value.trim();s.icon=icon;s.img=img};
+  sh.querySelector('#s_img').onchange=e=>{const fl=e.target.files[0];if(!fl)return;resizeImg(fl,d=>{img=d;sh.querySelector('#s_hero').innerHTML=`<img src="${d}" alt="">`;sh.querySelector('#s_rm').hidden=false})};
+  sh.querySelector('#s_rm').onclick=()=>{img='';sh.querySelector('#s_hero').innerHTML=heroSVG('#b08436',icon,'map','route',i+1,s.name,s.desc||'Etapa da jornada');sh.querySelector('#s_rm').hidden=true};
+  const mv=d=>{apply();S.stages.splice(i,1);S.stages.splice(i+d,0,s);save();render();openStage(id)};
+  sh.querySelector('#s_l').onclick=()=>mv(-1);sh.querySelector('#s_r').onclick=()=>mv(1);
+  sh.querySelector('#s_ok').onclick=()=>{apply();save();render();close()};
+  sh.querySelector('#s_x').onclick=()=>confirmBox(`Excluir a etapa “${esc(s.name)}” e seus pontos de contato?`,()=>{S.stages=S.stages.filter(x=>x.id!==id);Object.keys(S.cells).forEach(k=>{if(k.endsWith('|'+id))delete S.cells[k]});S.flows.forEach(f=>f.path=f.path.filter(p=>p.s!==id));save();render()});
+  if(isNew)setTimeout(()=>sh.querySelector('#s_n').select(),50);
+ });
+}
+function openRow(id,isNew){
+ const r=rowById(id),i=S.rows.indexOf(r);let icon=r.icon,color=r.color;
+ const segs=[...new Set(S.rows.map(x=>x.segment).filter(Boolean))];
+ modal(isNew?'Nova linha (cliente/canal)':'Linha: cliente · canal',`<div class="g2"><div class="f"><label>Tipo de cliente / segmento</label><input id="r_s" list="segl" value="${esc(r.segment)}"><datalist id="segl">${segs.map(x=>`<option value="${esc(x)}">`).join('')}</datalist></div>
+ <div class="f"><label>Canal</label><input id="r_c" value="${esc(r.channel)}"></div></div>
+ <div class="f"><label>Cor da linha</label>${swatches(color)}</div>
+ <div class="f"><label>Ícone</label>${iconPicker(icon)}</div>`,
+ `<div style="display:flex;gap:6px"><button class="btn" id="r_u" ${i===0?'disabled':''}>${ui('up')}</button><button class="btn" id="r_d" ${i===S.rows.length-1?'disabled':''}>${ui('down')}</button><button class="btn danger" id="r_x">${ui('trash')}</button></div><div class="r"><button class="btn primary" id="r_ok">Salvar</button></div>`,sh=>{
+  bindPicker(sh,v=>icon=v);bindSw(sh,v=>color=v);
+  const apply=()=>{r.segment=sh.querySelector('#r_s').value.trim()||'Todos';r.channel=sh.querySelector('#r_c').value.trim()||r.channel;r.icon=icon;r.color=color};
+  const mv=d=>{apply();S.rows.splice(i,1);S.rows.splice(i+d,0,r);save();render();openRow(id)};
+  sh.querySelector('#r_u').onclick=()=>mv(-1);sh.querySelector('#r_d').onclick=()=>mv(1);
+  sh.querySelector('#r_ok').onclick=()=>{apply();save();render();close()};
+  sh.querySelector('#r_x').onclick=()=>confirmBox(`Excluir a linha “${esc(r.segment)} · ${esc(r.channel)}” e seus pontos?`,()=>{S.rows=S.rows.filter(x=>x.id!==id);Object.keys(S.cells).forEach(k=>{if(k.startsWith(id+'|'))delete S.cells[k]});S.flows.forEach(f=>f.path=f.path.filter(p=>p.r!==id));save();render()});
+  if(isNew)setTimeout(()=>sh.querySelector('#r_c').select(),50);
+ });
+}
+
+/* ---------- Fluxos ---------- */
+function openFlow(id,isNew){
+ const f=flowById(id);let color=f.color;const sel=new Set(f.actors||[]);
+ const aopts=a=>`<option value="">— ator —</option>`+S.actors.map(x=>`<option value="${x.id}" ${x.id===a?'selected':''}>${esc(x.sigla)} · ${esc(x.name)}</option>`).join('');
+ const list=()=>f.path.length?`<ol class="pathlist">${f.path.map((p,i)=>`<li><span class="num" style="background:${color}">${i+1}</span><span class="l">${esc(pointLabel(p))}${(c=>c&&c.sigla?`<small>Sistema: ${esc(c.sigla)}</small>`:'')(S.cells[p.r+'|'+p.s])}</span><select data-pa="${i}" title="Ator deste passo">${aopts(p.a)}</select><button data-rm="${i}" title="Remover">${ui('x',14)}</button></li>`).join('')}</ol>`:'<p class="hint">Ainda sem percurso. Use “Traçar no mapa” e toque nas células na ordem em que o cliente passa.</p>';
+ modal(isNew?'Novo fluxo':'Editar fluxo',`<div class="g2"><div class="f"><label>Nome do fluxo / jornada</label><input id="f_n" value="${esc(f.name)}"></div><div class="f"><label>Sigla do fluxo</label><input id="f_g" value="${esc(f.sigla)}" placeholder="Ex.: JPF-DIG" style="text-transform:uppercase"></div></div>
+ <div class="f"><label>Descrição</label><textarea id="f_d" style="min-height:54px">${esc(f.desc)}</textarea></div>
+ <div class="f"><label>Cor</label>${swatches(color)}</div>
+ <div class="f"><label>Atores do fluxo</label><div class="achips" id="f_ac">${S.actors.map(a=>`<button type="button" data-a="${a.id}" class="${sel.has(a.id)||f.path.some(p=>p.a===a.id)?'sel':''}"><span class="sig">${esc(a.sigla)}</span>${esc(a.name)}</button>`).join('')}</div><span class="hint">Atores escolhidos por passo (abaixo) entram automaticamente. <a href="#" id="f_ma">Gerenciar atores</a></span></div>
+ <div class="sec">Percurso (${f.path.length} passos) · ator responsável por passo</div><div id="f_list">${list()}</div>`,
+ `<button class="btn danger" id="f_x">${ui('trash')} Excluir</button><div class="r"><button class="btn" id="f_tr">${ui('route')} Traçar no mapa</button><button class="btn primary" id="f_ok">Salvar</button></div>`,sh=>{
+  const apply=()=>{f.name=sh.querySelector('#f_n').value.trim()||f.name;f.sigla=sh.querySelector('#f_g').value.trim().toUpperCase();f.desc=sh.querySelector('#f_d').value.trim();f.color=color;f.actors=[...sel]};
+  sh.querySelectorAll('#f_ac button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(sel.has(a)){sel.delete(a);if(!f.path.some(p=>p.a===a))b.classList.remove('sel')}else{sel.add(a);b.classList.add('sel')}});
+  sh.querySelector('#f_ma').onclick=e=>{e.preventDefault();apply();save();openActors()};
+  const bindPa=()=>sh.querySelectorAll('[data-pa]').forEach(el=>el.onchange=()=>{f.path[+el.dataset.pa].a=el.value||undefined;save();render();const b=sh.querySelector(`#f_ac [data-a="${el.value}"]`);if(b)b.classList.add('sel')});
+  const bindRm=()=>sh.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{f.path.splice(+b.dataset.rm,1);save();render();sh.querySelector('#f_list').innerHTML=list();bindRm();bindPa()});
+  bindRm();bindPa();bindSw(sh,v=>{color=v;sh.querySelectorAll('.pathlist .num').forEach(n=>n.style.background=v)});
+  sh.querySelector('#f_ok').onclick=()=>{apply();save();render();close()};
+  sh.querySelector('#f_tr').onclick=()=>{apply();save();close();startTrace(id)};
+  sh.querySelector('#f_x').onclick=()=>confirmBox(`Excluir o fluxo “${esc(f.name)}”?`,()=>{S.flows=S.flows.filter(x=>x.id!==id);if(V.focus===id)V.focus=null;save();render()});
+  if(isNew)setTimeout(()=>sh.querySelector('#f_n').select(),50);
+ });
+}
+function openActors(){
+ const use=id=>S.flows.filter(f=>flowActors(f).some(a=>a.id===id)).length;
+ const groups=['Cliente','Interno','Parceiro','Sistema'];
+ const body=`<p class="hint" style="margin-top:0">Pessoas, áreas e sistemas que atuam nos fluxos. A sigla identifica cada ator no mapa.</p>`+
+  (S.actors.length?groups.map(g=>{const xs=S.actors.filter(a=>(a.type||'Interno')===g);return xs.length?`<div class="sec">${g}</div><div class="alist">${xs.map(a=>`<div class="it" data-a="${a.id}"><span class="sig">${esc(a.sigla||'—')}</span><span class="nm">${esc(a.name)}${a.desc?`<small>${esc(a.desc)}</small>`:''}</span><span class="atype">${use(a.id)} fluxo(s)</span>${ui('right',14)}</div>`).join('')}</div>`:''}).join(''):'<p class="hint">Nenhum ator cadastrado.</p>');
+ modal('Atores e siglas',body,`<div class="r"><button class="btn primary" id="a_new">${ui('plus')} Novo ator</button></div>`,sh=>{
+  sh.querySelectorAll('.it').forEach(el=>el.onclick=()=>openActor(el.dataset.a));
+  sh.querySelector('#a_new').onclick=()=>{const a={id:'a'+uid(),name:'',sigla:'',type:'Interno',desc:''};openActor(a.id,a)};
+ });
+}
+function openActor(id,fresh){
+ const a=fresh||actorById(id);
+ modal(fresh?'Novo ator':'Editar ator',`<div class="g2"><div class="f"><label>Nome do ator *</label><input id="ac_n" value="${esc(a.name)}" placeholder="Ex.: Gerente comercial"></div>
+ <div class="f"><label>Sigla *</label><input id="ac_g" value="${esc(a.sigla)}" placeholder="Ex.: GER-PJ" style="text-transform:uppercase"></div></div>
+ <div class="f"><label>Tipo</label><select id="ac_t">${['Cliente','Interno','Parceiro','Sistema'].map(t=>`<option ${t===a.type?'selected':''}>${t}</option>`).join('')}</select></div>
+ <div class="f"><label>Papel / descrição</label><textarea id="ac_d" style="min-height:54px">${esc(a.desc)}</textarea></div>`,
+ `${fresh?'':`<button class="btn danger" id="ac_x">${ui('trash')} Excluir</button>`}<div class="r"><button class="btn" id="ac_c">Voltar</button><button class="btn primary" id="ac_ok">Salvar</button></div>`,sh=>{
+  sh.querySelector('#ac_c').onclick=openActors;
+  sh.querySelector('#ac_ok').onclick=()=>{const n=sh.querySelector('#ac_n').value.trim(),g=sh.querySelector('#ac_g').value.trim().toUpperCase();if(!n||!g){toast('Preencha nome e sigla');return}
+   Object.assign(a,{name:n,sigla:g,type:sh.querySelector('#ac_t').value,desc:sh.querySelector('#ac_d').value.trim()});if(fresh)S.actors.push(a);save();render();openActors()};
+  const x=sh.querySelector('#ac_x');if(x)x.onclick=()=>confirmBox(`Excluir o ator “${esc(a.name)}”? Ele sai de todos os fluxos.`,()=>{S.actors=S.actors.filter(z=>z.id!==a.id);S.flows.forEach(f=>{f.actors=(f.actors||[]).filter(z=>z!==a.id);f.path.forEach(p=>{if(p.a===a.id)delete p.a})});save();render();setTimeout(openActors,0)});
+  setTimeout(()=>sh.querySelector('#ac_n').focus(),50);
+ });
+}
+function startTrace(id){V.trace=id;V.focus=id;const f=flowById(id);f.visible=true;render();updateTrace();$('#tracebar').classList.add('show')}
+function updateTrace(){const f=flowById(V.trace);if(!f)return;$('#traceText').innerHTML=`<span style="color:${f.color}">●</span> Traçando “${esc(f.name)}” · ${f.path.length} passo(s)<small>Toque nas células na ordem do percurso</small>`}
+function endTrace(){V.trace=null;$('#tracebar').classList.remove('show');render()}
+$('#traceUndo').onclick=()=>{const f=flowById(V.trace);f.path.pop();save();render();updateTrace()};
+$('#traceClear').onclick=()=>{const f=flowById(V.trace);f.path=[];save();render();updateTrace()};
+$('#traceDone').onclick=()=>{const id=V.trace;endTrace();toast('Fluxo salvo');openFlow(id)};
+
+/* ---------- Barra superior ---------- */
+$('#addStage').innerHTML=`${ui('plus')} Etapa`;$('#addRow').innerHTML=`${ui('plus')} Cliente/canal`;$('#addFlow').innerHTML=`${ui('route')} + Fluxo`;
+$('#actorsBtn').innerHTML=`${ic('users',15)} Atores`;$('#actorsBtn').onclick=openActors;
+$('#exportBtn').innerHTML=`${ui('copy')} Exportar`;$('#importBtn').innerHTML=`${ui('upload')} Importar`;$('#resetBtn').innerHTML=`${ui('reset')}`;
+$('#addStage').onclick=()=>{const s={id:'s'+uid(),name:'Nova etapa',icon:'map',desc:''};S.stages.push(s);save();render();openStage(s.id,true);setTimeout(()=>$('#scroller').scrollLeft=9999,60)};
+$('#addRow').onclick=()=>{const r={id:'r'+uid(),segment:V.seg!=='Todos'?V.seg:'Novo segmento',channel:'Novo canal',icon:'user',color:COLORS[S.rows.length%COLORS.length]};S.rows.push(r);save();render();openRow(r.id,true)};
+$('#addFlow').onclick=()=>{const used=S.flows.map(f=>f.color);const f={id:'f'+uid(),name:'Novo fluxo',color:COLORS.find(c=>!used.includes(c))||COLORS[S.flows.length%COLORS.length],desc:'',visible:true,path:[]};S.flows.push(f);save();render();openFlow(f.id,true)};
+$('#exportBtn').onclick=()=>{const js=JSON.stringify(S,null,1);modal('Exportar mapa',`<p class="hint" style="margin-top:0">Copie o JSON abaixo e guarde-o. Para restaurar, use “Importar”.</p><div class="f"><textarea id="x_t" readonly style="min-height:260px;font-family:ui-monospace,monospace;font-size:12px">${esc(js)}</textarea></div>`,`<div class="r"><button class="btn primary" id="x_c">${ui('copy')} Copiar</button></div>`,sh=>{sh.querySelector('#x_c').onclick=async()=>{const t=sh.querySelector('#x_t');try{await navigator.clipboard.writeText(js);toast('Copiado!')}catch(e){t.select();toast('Selecionado — use Ctrl+C')}}})};
+$('#importBtn').onclick=()=>modal('Importar mapa',`<div class="f"><label>Cole o JSON exportado</label><textarea id="i_t" style="min-height:200px;font-family:ui-monospace,monospace;font-size:12px"></textarea></div><div class="f"><label>…ou escolha um arquivo .json</label><input type="file" id="i_f" accept=".json,application/json"></div>`,`<div class="r"><button class="btn" id="i_c">Cancelar</button><button class="btn primary" id="i_ok">Carregar</button></div>`,sh=>{
+ sh.querySelector('#i_c').onclick=close;
+ sh.querySelector('#i_f').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(t=>sh.querySelector('#i_t').value=t)};
+ sh.querySelector('#i_ok').onclick=()=>{try{const d=JSON.parse(sh.querySelector('#i_t').value);if(!Array.isArray(d.stages)||!Array.isArray(d.rows)||!Array.isArray(d.flows))throw 0;S=migrate(d);V.focus=null;save();render();close();toast('Mapa importado')}catch(e){toast('JSON inválido')}};
+});
+$('#resetBtn').onclick=()=>modal('Restaurar exemplo','<p class="desc">Isto substitui o mapa atual pelo exemplo inicial. Exporte antes se quiser guardar o que fez.</p>',`<div class="r"><button class="btn" id="z_c">Cancelar</button><button class="btn primary" id="z_ok">Restaurar</button></div>`,sh=>{sh.querySelector('#z_c').onclick=close;sh.querySelector('#z_ok').onclick=()=>{S=migrate(sample());V.focus=null;V.seg='Todos';save();render();close()}});
+$('#title').addEventListener('blur',()=>{S.title=$('#title').textContent.trim()||'Mapa de fluxo';save()});
+$('#title').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur()}});
+
+render();
+
+root.__render=render;
+
+})();
+/* ===== Service Blueprint ===== */
+(function(){
+const host=document.getElementById('app-blueprint');
+const root=host.attachShadow({mode:'open'});
+root.innerHTML="<style>\n:host{--bg:#f3f5f8;--ink:#0f1c2e;--ink2:#2b3a4f;--muted:#66758a;--line:#dde2ea;--soft:#eef1f5;--accent:#1f4e8c;--gold:#b08436;--red:#9b2c35;--amber:#b7791f;--green:#2f6f55;--colw:212px;--lanew:200px}\n*{box-sizing:border-box}\n:host{height:100%;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}\nbutton{font:inherit;cursor:pointer;color:inherit}\n.mono{font-family:'IBM Plex Mono',monospace}\n/* topo */\n.top{background:var(--ink);color:#fff;padding:12px 24px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}\n.brand{display:flex;align-items:center;gap:14px;min-width:0}\n.logo{width:38px;height:38px;border-radius:8px;border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;color:var(--gold);flex:none}\n.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9fb0c6;margin:0 0 3px}\n.bpsel{display:flex;align-items:center;gap:8px}\n.bpsel select{font:inherit;font-size:16px;font-weight:650;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 28px 4px 8px;max-width:58vw;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b08436' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 8px center}\n.bpsel select option{color:#000}\n.actions{display:flex;flex-wrap:wrap;gap:6px}\n.btn{border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:6px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}\n.btn:hover{border-color:#b9c2cf}\n.btn:disabled{opacity:.4;cursor:default}\n.btn svg{width:15px;height:15px}\n.top .btn{background:transparent;color:#dce4ef;border-color:rgba(255,255,255,.18)}\n.top .btn:hover{border-color:rgba(255,255,255,.45);color:#fff}\n.top .btn.primary{background:var(--gold);border-color:var(--gold);color:var(--ink)}\n.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}\n.btn.danger{color:var(--red)}\n.btn.ghost{border-color:transparent;background:transparent}\n/* contexto + kpis */\n.ctx{background:#fff;border-bottom:1px solid var(--line);padding:10px 24px;display:flex;flex-wrap:wrap;gap:6px 26px;align-items:center;font-size:13px}\n.ctx b{font-size:10px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:6px}\n.ctx .ed{margin-left:auto}\n.kpis{display:grid;grid-template-columns:repeat(8,minmax(108px,1fr));background:#fff;border-bottom:1px solid var(--line)}\n.kpi{padding:11px 18px;border-right:1px solid var(--line)}\n.kpi:last-child{border-right:0}\n.kpi b{display:block;font-size:21px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}\n.kpi span{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}\n.kpi.warn b{color:var(--red)}\n.bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:9px 24px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}\n.lg{display:inline-flex;align-items:center;gap:6px}\n/* matriz */\n.scroller{flex:1;overflow:auto;position:relative}\n.bp{display:grid;position:relative;width:max-content;min-width:100%;padding:0 28px 48px 0;column-gap:14px}\n#emo{position:absolute;left:0;top:0;pointer-events:none;z-index:2;overflow:visible}\n.corner{position:sticky;left:0;top:0;z-index:7;background:var(--bg);padding:14px 10px 10px 24px;font-size:10px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:flex-end}\n.sh{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0 10px;cursor:pointer}\n.sh .in{background:#fff;border-top:3px solid var(--ink);box-shadow:0 1px 0 var(--line);padding:9px 11px;display:flex;gap:10px;align-items:center;min-height:62px}\n.sh::after{content:\"\";position:absolute;top:0;bottom:0;right:-14px;width:14px;background:var(--bg)}\n.corner::after{content:\"\";position:absolute;top:0;bottom:0;right:-14px;width:14px;background:var(--bg)}\n.sh:hover .in{border-top-color:var(--gold)}\n.sh.mv .in{border-top-color:var(--gold)}\n.sh .th{width:40px;height:40px;border-radius:4px;flex:none;background:var(--soft);display:grid;place-items:center;color:var(--ink2);overflow:hidden}\n.sh .th img{width:100%;height:100%;object-fit:cover}\n.sh .n{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--gold);letter-spacing:.08em}\n.sh .nm{font-weight:650;font-size:13px;line-height:1.25}\n.star{color:var(--gold);display:inline-flex;vertical-align:-2px}\n.lh{position:sticky;left:0;z-index:4;background:var(--bg);padding:0 10px 0 24px;display:flex}\n.lh .in{border-left:3px solid var(--c);background:#fff;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:4px;padding:9px 12px;width:100%;display:flex;flex-direction:column;justify-content:center}\n.lh .t{font-weight:650;font-size:13px}\n.lh .s{font-size:11.5px;color:var(--muted);margin-top:2px}\n.cell{min-height:92px;padding:6px 0;display:flex;flex-direction:column;gap:6px;cursor:pointer;border-radius:4px;position:relative;z-index:1}\n.cell.empty{border:1px dashed transparent;justify-content:center;align-items:center}\n.cell.empty:hover{border-color:#c3cad5;background:rgba(255,255,255,.55)}\n.cell.empty .plus{font-size:11.5px;color:transparent;font-weight:600}\n.cell.empty:hover .plus{color:var(--muted)}\n.it{--c:#888;background:#fff;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:4px;padding:8px 9px;font-size:12.5px;line-height:1.35;transition:box-shadow .15s}\n.cell:hover .it{box-shadow:0 4px 12px rgba(15,28,46,.07)}\n.it.fail{background:linear-gradient(0deg,#fff,#fff) padding-box;border-color:#e7c3c7;border-left-color:var(--red)}\n.it .ft{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center}\n.sig{font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;background:var(--ink);color:#fff;padding:2px 5px;border-radius:3px;white-space:nowrap}\n.sig.sys{background:#e6f0f2;color:#1d5e69;border:1px solid #c6dde1}\n.sig.l{background:var(--soft);color:var(--ink2);border:1px solid var(--line)}\n.fl{width:17px;height:17px;border-radius:50%;display:inline-grid;place-items:center;font-size:9.5px;font-weight:700;color:#fff;font-family:'IBM Plex Mono',monospace}\n.fl.f{background:var(--red)}.fl.w{background:var(--amber)}.fl.d{background:var(--ink2);border-radius:3px;transform:rotate(45deg)}.fl.d i{transform:rotate(-45deg);font-style:normal}\n/* linhas do blueprint */\n.ln{position:relative;height:30px;display:flex;align-items:center;justify-content:center;z-index:1}\n.ln::before{content:\"\";position:absolute;left:-14px;right:0;top:50%;border-top:1.5px dashed var(--lc)}\n.ln.lab{position:sticky;left:0;z-index:4;background:var(--bg);justify-content:flex-start;padding-left:24px}\n.ln.lab::before{left:24px;right:-14px}\n.ln.lab span{position:relative;background:var(--bg);padding-right:8px;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lc)}\n.ln .ar{position:relative;width:20px;height:20px;border-radius:50%;background:var(--bg);display:grid;place-items:center;color:var(--lc)}\n/* emo\u00e7\u00e3o */\n.emo{min-height:96px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:8px 0;position:relative;z-index:3}\n.emo button{width:22px;height:14px;border:0;background:transparent;display:grid;place-items:center;padding:0}\n.emo button i{width:7px;height:7px;border-radius:50%;background:#cfd6e0;display:block;transition:transform .12s}\n.emo button:hover i{transform:scale(1.6)}\n.emo button.sel i{width:14px;height:14px;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--ec);background:var(--ec)}\n.emoax{display:flex;flex-direction:column;justify-content:space-between;height:100%;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:right;padding:8px 0}\n.lh.emoh .in{flex-direction:row;align-items:stretch;justify-content:space-between}\n/* m\u00e9tricas */\n.met{padding:10px 2px;display:flex;flex-direction:column;justify-content:center;gap:6px;font-size:12px;cursor:pointer}\n.met .row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px}\n.met .trk{height:6px;background:var(--soft);border-radius:3px;position:relative;overflow:visible}\n.met .trk i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent)}\n.met .trk em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}\n.met.over .trk i{background:var(--red)}\n.met.over .row b{color:var(--red)}\n/* overlays */\n.ov{position:fixed;inset:0;background:rgba(10,18,30,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}\n.ov.show{display:flex}\n.sheet{background:#fff;border-radius:8px;width:min(680px,100%);max-height:90vh;overflow:auto;box-shadow:0 30px 70px rgba(0,0,0,.28);animation:pop .18s ease}\n@keyframes pop{from{transform:translateY(8px);opacity:0}}\n.ov.drawer{justify-content:flex-end;padding:0}\n.ov.drawer .sheet{width:min(560px,100%);height:100%;max-height:100%;border-radius:0;animation:slide .22s ease;display:flex;flex-direction:column}\n.ov.drawer .sh-body{flex:1}\n@keyframes slide{from{transform:translateX(30px);opacity:0}}\n@media (max-width:640px){.ov{align-items:flex-end;padding:0}.sheet{border-radius:12px 12px 0 0;max-height:92vh}.ov.drawer .sheet{border-radius:0}}\n.sh-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}\n.sh-head h2{font-size:11px;margin:0;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}\n.sh-body{padding:20px}\n.sh-foot{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;padding:12px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff}\n.sh-foot .r{display:flex;gap:8px;margin-left:auto}\n.x{border:1px solid var(--line);background:#fff;width:30px;height:30px;border-radius:6px;display:grid;place-items:center;flex:none}\n.f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}\n.f label{font-size:11px;font-weight:650;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}\n.f input,.f textarea,.f select{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:#fff;color:var(--ink);width:100%}\n.f textarea{min-height:64px;resize:vertical}\n.f input:focus,.f textarea:focus,.f select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,78,140,.14)}\n.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}\n.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px}\n@media (max-width:480px){.g2,.g3{grid-template-columns:1fr}}\n.hint{font-size:12px;color:var(--muted)}\n.ied{border:1px solid var(--line);border-left:3px solid var(--c);border-radius:6px;padding:10px;margin-bottom:10px;background:#fbfcfd}\n.ied textarea{min-height:46px}\n.ied .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}\n.ied .tools label.ck{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--ink2);text-transform:none;letter-spacing:0}\n.ied .tools .sp{flex:1}\n.ied .tools button{border:1px solid var(--line);background:#fff;border-radius:5px;width:28px;height:28px;display:grid;place-items:center}\n.ied select,.ied input[type=text]{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:5px;padding:5px 7px;background:#fff}\n.hero{border-radius:6px;overflow:hidden;margin-bottom:16px;background:var(--ink)}\n.hero img{width:100%;height:190px;object-fit:cover;display:block}\n.dt{font-size:21px;font-weight:650;margin:0 0 4px;letter-spacing:-.015em}\n.desc{color:var(--ink2);font-size:14px;line-height:1.6;margin:0 0 16px}\n.kv{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:16px}\n.kv div{padding:10px 12px;font-size:14px;font-weight:600;border-right:1px solid var(--line)}\n.kv div:last-child{border-right:0}\n.kv b{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:650;margin-bottom:3px}\n.slice{border-left:3px solid var(--c);padding:2px 0 2px 12px;margin-bottom:14px}\n.slice h4{margin:0 0 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--c)}\n.slice .it{margin-bottom:6px}\n.sline{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px;margin:4px 0 14px}\n.sline::after{content:\"\";flex:1;border-top:1.5px dashed #c3cad5}\n.ins{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:pointer}\n.ins:hover{background:var(--soft)}\n.ins .sv{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--c);min-width:46px;padding-top:2px}\n.ins .tx{font-size:13.5px;line-height:1.45}\n.ins .tx small{display:block;color:var(--muted);font-size:12px;margin-top:2px}\n.sec{font-size:10.5px;font-weight:650;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:6px 0 8px}\n.alist{border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}\n.alist .ai{display:flex;align-items:center;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line)}\n.alist .ai:last-child{border-bottom:0}\n.alist .ai input{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:5px;padding:5px 7px}\n.alist .ai select{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:5px;padding:5px}\n.alist .ai button{border:0;background:transparent;color:var(--muted);padding:4px}\n.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;font-weight:600;z-index:80;opacity:0;transition:opacity .2s;pointer-events:none}\n.toast.show{opacity:1}\n.imgrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}\n@media (max-width:760px){\n .top{padding:10px 14px}.eyebrow{display:none}.bpsel select{font-size:14px}\n .actions{flex-wrap:nowrap;overflow-x:auto;width:100%;scrollbar-width:none}.actions::-webkit-scrollbar{display:none}\n .kpis{display:flex;overflow-x:auto;scrollbar-width:none}.kpi{flex:none;padding:8px 14px}.kpi b{font-size:17px}\n .ctx,.bar{padding:8px 14px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:none}\n :host{--lanew:130px;--colw:186px}.lh,.corner{padding-left:10px}.ln.lab{padding-left:10px}.ln.lab::before{left:10px}.lh .s{display:none}\n}\n</style>\n<header class=\"top\">\n  <div class=\"brand\">\n    <div class=\"logo\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\"><path d=\"M3 5h18M3 10h18M3 15h18M3 20h18\" stroke-dasharray=\"2 2.5\"/><rect x=\"6\" y=\"3\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\"/><rect x=\"14\" y=\"8\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\"/><rect x=\"9\" y=\"13\" width=\"4\" height=\"4\" rx=\"1\" fill=\"currentColor\"/></svg></div>\n    <div style=\"min-width:0\"><p class=\"eyebrow\">Service Blueprint</p><div class=\"bpsel\"><select id=\"bpSel\" aria-label=\"Blueprint\"></select></div></div>\n  </div>\n  <div class=\"actions\">\n    <button class=\"btn primary\" id=\"addStep\"></button>\n    <button class=\"btn\" id=\"diagBtn\"></button>\n    <button class=\"btn\" id=\"actorsBtn\"></button>\n    <button class=\"btn\" id=\"newBp\"></button>\n    <button class=\"btn\" id=\"dupBp\"></button>\n    <button class=\"btn\" id=\"exportBtn\"></button>\n    <button class=\"btn\" id=\"importBtn\"></button>\n    <button class=\"btn ghost\" id=\"resetBtn\" title=\"Restaurar exemplo\"></button>\n  </div>\n</header>\n<div class=\"ctx\" id=\"ctx\"></div>\n<section class=\"kpis\" id=\"kpis\"></section>\n<div class=\"bar\" id=\"legend\"></div>\n<main class=\"scroller\" id=\"scroller\"><div class=\"bp\" id=\"bp\"></div></main>\n<div class=\"ov\" id=\"ov\"><div class=\"sheet\" id=\"sheet\" role=\"dialog\" aria-modal=\"true\"></div></div>\n<div class=\"toast\" id=\"toast\"></div>\n\n";
+APPS['blueprint']=root;
+
+/* ---------- ícones ---------- */
+const ICONS={
+ megaphone:'<path d="M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1z"/><path d="M15 9a4 4 0 010 6M18 6a8 8 0 010 12"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3 4h2l2.5 11h11l2-8H6.5"/>',
+ card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/>',phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
+ download:'<path d="M12 4v11M7 10l5 5 5-5M4 20h16"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/>',
+ doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+ shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+ headset:'<path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="13" width="4" height="6" rx="1.5"/><rect x="17" y="13" width="4" height="6" rx="1.5"/>',
+ chat:'<path d="M4 5h16v11H9l-5 4z"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+ chart:'<path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17.5v.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',left:'<path d="M15 6l-6 6 6 6"/>',right:'<path d="M9 6l6 6-6 6"/>',up:'<path d="M6 15l6-6 6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
+ upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',reset:'<path d="M4 4v6h6"/><path d="M20 12a8 8 0 01-14.9 4M4.6 10A8 8 0 0120 12"/>',
+ trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5 6.5-5s5.7 1.5 6.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.3 4.5 4"/>',
+ pulse:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',layers:'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',updown:'<path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/>',down2:'<path d="M12 5v14M7 14l5 5 5-5"/>'
+};
+const ic=(n,s=16)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[n]||ICONS.doc}</svg>`;
+const STEPICONS=['megaphone','search','download','user','doc','shield','pen','check','bolt','phone','card','cart','chat','headset','mail','chart','star','clock'];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=s=>root.querySelector(s);
+const fmt=m=>{m=+m||0;if(!m)return '—';if(m<60)return `${m} min`;if(m<1440)return `${(m/60).toFixed(m%60?1:0).replace('.',',')} h`;return `${(m/1440).toFixed(m%1440?1:0).replace('.',',')} d`};
+
+/* ---------- raias ---------- */
+const LANES=[
+ {id:'evid',name:'Evidências',sub:'O que o cliente vê ou recebe',c:'#7a8699'},
+ {id:'cli',name:'Ações do cliente',sub:'O que o cliente faz',c:'#b08436'},
+ {line:'Linha de interação',lc:'#b08436',a:'cli',b:'front'},
+ {id:'front',name:'Frontstage',sub:'Contato visível · atores',c:'#1f4e8c'},
+ {line:'Linha de visibilidade',lc:'#1f4e8c',a:'front',b:'back'},
+ {id:'back',name:'Backstage',sub:'Ações invisíveis ao cliente',c:'#4b5d73'},
+ {line:'Linha de interação interna',lc:'#4b5d73',a:'back',b:'sup'},
+ {id:'sup',name:'Processos de suporte',sub:'Sistemas e siglas',c:'#2a7f8f'},
+ {special:'emo',name:'Emoção do cliente',sub:'de −2 a +2'},
+ {special:'met',name:'Tempo × SLA',sub:'por etapa'},
+ {id:'opp',name:'Oportunidades',sub:'Melhorias propostas',c:'#3f7d58'}
+];
+const laneById=id=>LANES.find(l=>l.id===id);
+
+/* ---------- exemplo ---------- */
+function sample(){
+ const actors=[['a1','Cliente PF','CLI-PF','Cliente'],['a2','Squad Aquisição','SQ-AQS','Interno'],['a3','Analista de crédito','ANL-CRD','Interno'],['a4','Back-office de cadastro','OPS-BKO','Interno'],['a5','Time de Marketing','MKT','Interno'],['a6','Agente de relacionamento','AGT-CRC','Interno'],['a7','Assistente virtual','BOT','Sistema']].map(([id,name,sigla,type])=>({id,name,sigla,type}));
+ const st=[['p1','Descobre a oferta','DES','megaphone',2,5,1,0,'Cliente é impactado por campanha e acessa a landing page.'],
+  ['p2','Baixa o app','INS','download',3,5,0,0,'Instala o app pela loja e abre pela primeira vez.'],
+  ['p3','Faz o cadastro','CAD','user',6,5,-1,0,'Informa dados pessoais, cria senha e aceita os termos.'],
+  ['p4','Envia documentos','DOC','doc',4,4,-2,1,'Foto do documento e selfie para validação biométrica.'],
+  ['p5','Aguarda análise','ANL','shield',15,10,-1,0,'Análise de crédito e antifraude, automática ou manual.'],
+  ['p6','Assina o contrato','ASS','pen',3,5,1,1,'Revisa condições e assina digitalmente.'],
+  ['p7','Ativa a conta','ATV','check',1440,1440,1,0,'Recebe confirmação, cartão virtual e configura o acesso.'],
+  ['p8','Primeiro uso','USO','bolt',5,10,2,1,'Faz a primeira transação e conhece os benefícios.']]
+  .map(([id,name,sigla,icon,dur,sla,emo,mv,desc])=>({id,name,sigla,icon,dur,sla,emo,mv:!!mv,desc,img:''}));
+ const I=(t,actor,sys,fail,wait,dec)=>({t,actor:actor||'',sys:sys||'',fail:!!fail,wait:!!wait,dec:!!dec});
+ const cells={
+  'evid|p1':[I('Anúncio em rede social e landing page','','ADS')],'evid|p2':[I('Página do app na loja, ícone e avaliações','','STORE')],
+  'evid|p3':[I('Telas de cadastro e termos de uso','','APP')],'evid|p4':[I('Câmera guiada e tela de “enviando…”','','APP')],
+  'evid|p5':[I('Tela de status e notificação push','','NOTIF')],'evid|p6':[I('Contrato em PDF e tela de assinatura','','ASSIN')],
+  'evid|p7':[I('E-mail de boas-vindas e cartão virtual','','NOTIF')],'evid|p8':[I('Home personalizada e comprovante','','APP')],
+  'cli|p1':[I('Clica no anúncio e lê a oferta','a1')],'cli|p2':[I('Instala e abre o app','a1')],
+  'cli|p3':[I('Preenche dados e cria senha','a1','',1),I('Aceita os termos','a1','','','',1)],
+  'cli|p4':[I('Fotografa documento e tira selfie','a1','',1)],'cli|p5':[I('Espera o resultado','a1','','',1)],
+  'cli|p6':[I('Lê condições e assina','a1')],'cli|p7':[I('Cria PIN e ativa notificações','a1')],'cli|p8':[I('Faz o primeiro Pix','a1')],
+  'front|p1':[I('Campanha segmentada','a5','ADS')],'front|p3':[I('Assistente virtual tira dúvidas no cadastro','a7','BOT')],
+  'front|p4':[I('Orientação na tela para captura correta','a2','APP')],'front|p5':[I('Notificação de status da análise','a2','NOTIF','',1)],
+  'front|p7':[I('Mensagem de boas-vindas','a6','CRM')],'front|p8':[I('Dica contextual de primeiro uso','a2','APP')],
+  'back|p1':[I('Rastreamento de origem da campanha','a5','CRM')],'back|p3':[I('Validação de CPF e duplicidade','a4','KYC')],
+  'back|p4':[I('OCR e biometria facial','a4','BIO',1),I('Fila de revisão manual quando OCR falha','a4','BKO','',1)],
+  'back|p5':[I('Score e política de crédito','a3','MCR','','',1),I('Análise manual de casos em zona cinza','a3','MCR',1,1)],
+  'back|p6':[I('Geração do contrato com as condições aprovadas','a4','ASSIN')],'back|p7':[I('Abertura da conta no core','a4','CORE')],
+  'sup|p1':[I('Mídia paga e analytics','','ADS')],'sup|p2':[I('Lojas de aplicativos','','STORE')],'sup|p3':[I('Cadastro e antifraude','','KYC')],
+  'sup|p4':[I('Biometria e OCR','','BIO')],'sup|p5':[I('Motor de crédito e bureau','','MCR')],'sup|p6':[I('Assinatura digital','','ASSIN')],
+  'sup|p7':[I('Core bancário e CRM','','CORE')],'sup|p8':[I('Pagamentos instantâneos','','PIX')],
+  'opp|p3':[I('Reduzir o cadastro para 3 passos com preenchimento automático')],'opp|p4':[I('Captura automática do documento e feedback de qualidade em tempo real')],
+  'opp|p5':[I('Estimativa de prazo na tela e aprovação instantânea para baixo risco')],'opp|p8':[I('Jornada guiada de primeiros 7 dias')]
+ };
+ return {actors,current:'b1',bps:[{id:'b1',name:'Abertura de conta PF pelo app',sigla:'BP-PF-APP',persona:'Cliente pessoa física digital',goal:'Conta aberta e usada em até 24 h',channel:'App mobile',steps:st,cells}]};
+}
+/* ---------- estado ---------- */
+const KEY='service-blueprint-v1';let S;const V={};
+try{const r=localStorage.getItem(KEY);S=r?JSON.parse(r):sample()}catch(e){S=sample()}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const B=()=>S.bps.find(b=>b.id===S.current)||S.bps[0];
+const actorById=id=>S.actors.find(a=>a.id===id);
+const items=(l,p)=>B().cells[l+'|'+p]||[];
+const allItems=()=>Object.entries(B().cells).flatMap(([k,v])=>v.map(i=>({...i,lane:k.split('|')[0],step:k.split('|')[1]})));
+
+/* ---------- render ---------- */
+function render(){renderTop();renderKpis();renderLegend();renderBp();requestAnimationFrame(drawEmo)}
+function renderTop(){
+ $('#bpSel').innerHTML=S.bps.map(b=>`<option value="${b.id}" ${b.id===B().id?'selected':''}>${esc(b.name)}</option>`).join('');
+ const b=B();
+ $('#ctx').innerHTML=`<span><b>Sigla</b><span class="sig">${esc(b.sigla||'—')}</span></span><span><b>Persona</b>${esc(b.persona||'—')}</span><span><b>Canal</b>${esc(b.channel||'—')}</span><span><b>Objetivo</b>${esc(b.goal||'—')}</span><button class="btn ghost ed" id="editBp">${ic('edit',14)} Editar blueprint</button>`;
+ $('#editBp').onclick=openBpInfo;
+}
+function stats(){
+ const b=B(),its=allItems();
+ const total=b.steps.reduce((a,s)=>a+(+s.dur||0),0);
+ const over=b.steps.filter(s=>+s.sla&&+s.dur>+s.sla);
+ const sys=new Set(its.map(i=>i.sys).filter(Boolean)),act=new Set(its.map(i=>i.actor).filter(Boolean));
+ const emo=b.steps.length?b.steps.reduce((a,s)=>a+(+s.emo||0),0)/b.steps.length:0;
+ return {total,over,fails:its.filter(i=>i.fail).length,waits:its.filter(i=>i.wait).length,mv:b.steps.filter(s=>s.mv).length,sys,act,emo,its};
+}
+function renderKpis(){
+ const s=stats(),b=B();
+ const k=[[b.steps.length,'Etapas'],[fmt(s.total),'Tempo total'],[s.over.length,'Acima do SLA',s.over.length],[s.fails,'Pontos de falha',s.fails],[s.waits,'Esperas'],[s.mv,'Momentos da verdade'],[s.sys.size+' · '+s.act.size,'Sistemas · atores'],[(s.emo>0?'+':'')+s.emo.toFixed(1).replace('.',','),'Emoção média',s.emo<0]];
+ $('#kpis').innerHTML=k.map(([n,l,w])=>`<div class="kpi ${w?'warn':''}"><b>${n}</b><span>${l}</span></div>`).join('');
+}
+function renderLegend(){
+ $('#legend').innerHTML=`<span class="lg"><span class="fl f">F</span> Ponto de falha</span><span class="lg"><span class="fl w">E</span> Espera</span><span class="lg"><span class="fl d"><i>?</i></span> Decisão</span><span class="lg"><span class="star">${ic('star',14)}</span> Momento da verdade</span><span class="lg"><span class="sig">GER</span> Ator</span><span class="lg"><span class="sig sys">SIS</span> Sistema</span><span class="lg" style="margin-left:auto">Toque numa etapa para ver a fatia completa · toque numa célula para editar</span>`;
+}
+function itemHTML(i,lane){
+ const a=actorById(i.actor);const c=laneById(lane)?.c||'#888';
+ const flags=(i.fail?'<span class="fl f" title="Ponto de falha">F</span>':'')+(i.wait?'<span class="fl w" title="Espera">E</span>':'')+(i.dec?'<span class="fl d" title="Decisão"><i>?</i></span>':'');
+ const ft=(a?`<span class="sig" title="${esc(a.name)}">${esc(a.sigla)}</span>`:'')+(i.sys?`<span class="sig sys" title="Sistema">${esc(i.sys)}</span>`:'')+flags;
+ return `<div class="it ${i.fail?'fail':''}" style="--c:${c}">${esc(i.t)}${ft?`<div class="ft">${ft}</div>`:''}</div>`;
+}
+function renderBp(){
+ const b=B(),el=$('#bp');
+ el.style.gridTemplateColumns=`var(--lanew) repeat(${b.steps.length},var(--colw))`;
+ let h=`<svg id="emo"></svg><div class="corner">Raia ↓ · Etapa →</div>`;
+ b.steps.forEach((s,i)=>h+=`<div class="sh ${s.mv?'mv':''}" data-step="${s.id}"><div class="in"><div class="th">${s.img?`<img src="${s.img}" alt="">`:ic(s.icon||'doc',20)}</div><div><div class="n">${String(i+1).padStart(2,'0')}${s.sigla?' · '+esc(s.sigla):''} ${s.mv?`<span class="star" title="Momento da verdade">${ic('star',12)}</span>`:''}</div><div class="nm">${esc(s.name)}</div></div></div></div>`);
+ LANES.forEach(L=>{
+  if(L.line){
+   h+=`<div class="ln lab" style="--lc:${L.lc}"><span>${L.line}</span></div>`;
+   b.steps.forEach(s=>{const show=items(L.a,s.id).length&&items(L.b,s.id).length;h+=`<div class="ln" style="--lc:${L.lc}">${show?`<span class="ar">${ic('updown',14)}</span>`:''}</div>`});
+   return;
+  }
+  if(L.special==='emo'){
+   h+=`<div class="lh emoh" style="--c:#8c2f39"><div class="in"><div><div class="t">${L.name}</div><div class="s">${L.sub}</div></div><div class="emoax"><span>+2</span><span>0</span><span>−2</span></div></div></div>`;
+   b.steps.forEach(s=>{const e=+s.emo||0,ec=e>0?'#2f6f55':e<0?'#9b2c35':'#66758a';h+=`<div class="emo" data-emo="${s.id}" style="--ec:${ec}">${[2,1,0,-1,-2].map(v=>`<button data-v="${v}" class="${v===e?'sel':''}" title="Emoção ${v>0?'+':''}${v}"><i></i></button>`).join('')}</div>`});
+   return;
+  }
+  if(L.special==='met'){
+   h+=`<div class="lh" style="--c:#0f1c2e"><div class="in"><div class="t">${L.name}</div><div class="s">${L.sub}</div></div></div>`;
+   b.steps.forEach(s=>{const d=+s.dur||0,sl=+s.sla||0,over=sl&&d>sl,mx=Math.max(d,sl,1);h+=`<div class="met ${over?'over':''}" data-step="${s.id}" title="Tempo realizado × meta"><div class="row"><b>${fmt(d)}</b><span>meta ${fmt(sl)}</span></div><div class="trk"><i style="width:${d/mx*100}%"></i>${sl?`<em style="left:calc(${sl/mx*100}% - 1px)"></em>`:''}</div>${over?`<span class="hint" style="color:var(--red);font-weight:600">+${fmt(d-sl)} acima</span>`:''}</div>`});
+   return;
+  }
+  h+=`<div class="lh" style="--c:${L.c}"><div class="in"><div class="t">${L.name}</div><div class="s">${L.sub}</div></div></div>`;
+  b.steps.forEach(s=>{const its=items(L.id,s.id);h+=its.length?`<div class="cell" data-cell="${L.id}|${s.id}">${its.map(i=>itemHTML(i,L.id)).join('')}</div>`:`<div class="cell empty" data-cell="${L.id}|${s.id}"><span class="plus">+ adicionar</span></div>`});
+ });
+ el.innerHTML=h;
+ el.querySelectorAll('.sh,.met').forEach(x=>x.onclick=()=>openSlice(x.dataset.step));
+ el.querySelectorAll('.cell').forEach(x=>x.onclick=()=>openCell(x.dataset.cell));
+ el.querySelectorAll('.emo button').forEach(bt=>bt.onclick=()=>{const s=B().steps.find(z=>z.id===bt.parentNode.dataset.emo);s.emo=+bt.dataset.v;save();render()});
+}
+function drawEmo(){
+ const el=$('#bp'),svg=$('#emo');if(!svg)return;
+ svg.setAttribute('width',el.scrollWidth);svg.setAttribute('height',el.scrollHeight);
+ const pts=[...el.querySelectorAll('.emo button.sel')].map(b=>{let x=b.offsetLeft+b.offsetWidth/2,y=b.offsetTop+b.offsetHeight/2;const p=b.parentNode;return{x:x+p.offsetLeft,y:y+p.offsetTop}});
+ if(pts.length<2){svg.innerHTML='';return}
+ let d=`M${pts[0].x} ${pts[0].y}`;for(let i=1;i<pts.length;i++){const a=pts[i-1],c=pts[i],mx=(a.x+c.x)/2;d+=` C${mx} ${a.y} ${mx} ${c.y} ${c.x} ${c.y}`}
+ const p0=el.querySelector('.emo');const mid=p0?p0.offsetTop+p0.offsetHeight/2:0;
+ svg.innerHTML=`<path d="M${pts[0].x} ${mid}H${pts[pts.length-1].x}" stroke="#c3cad5" stroke-dasharray="2 4" fill="none"/><path d="${d}" fill="none" stroke="#0f1c2e" stroke-width="2" stroke-linecap="round" opacity=".75"/>`;
+}
+new ResizeObserver(()=>drawEmo()).observe($('#bp'));
+if(document.fonts)document.fonts.ready.then(drawEmo);
+
+/* ---------- modal ---------- */
+function modal(title,body,foot,mount,drawer){
+ $('#sheet').innerHTML=`<div class="sh-head"><h2>${title}</h2><button class="x" id="mx" aria-label="Fechar">${ic('x',16)}</button></div><div class="sh-body">${body}</div>${foot?`<div class="sh-foot">${foot}</div>`:''}`;
+ $('#ov').classList.toggle('drawer',!!drawer);$('#ov').classList.add('show');$('#mx').onclick=close;$('#sheet').scrollTop=0;mount&&mount($('#sheet'));
+}
+function close(){$('#ov').classList.remove('show')}
+$('#ov').addEventListener('mousedown',e=>{if(e.target.id==='ov')close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),1600)}
+function confirmBox(msg,yes){modal('Confirmar',`<p class="desc">${msg}</p>`,`<div class="r"><button class="btn" id="cn">Cancelar</button><button class="btn primary" id="cy" style="background:#9b2c35;border-color:#9b2c35">Excluir</button></div>`,s=>{s.querySelector('#cn').onclick=close;s.querySelector('#cy').onclick=()=>{close();yes()}})}
+function resizeImg(file,cb){const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const M=720,sc=Math.min(1,M/Math.max(im.width,im.height));const cv=document.createElement('canvas');cv.width=im.width*sc;cv.height=im.height*sc;cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);cb(cv.toDataURL('image/jpeg',.82))};im.src=fr.result};fr.readAsDataURL(file)}
+function heroSVG(s,i){
+ let g='';for(let x=0;x<=600;x+=30)g+=`<path d="M${x} 0V190"/>`;for(let y=0;y<=190;y+=30)g+=`<path d="M0 ${y}H600"/>`;
+ const lanes=['#7a8699','#b08436','#1f4e8c','#4b5d73','#2a7f8f'];
+ return `<svg viewBox="0 0 600 190" width="100%" height="190" preserveAspectRatio="xMinYMid slice" style="display:block"><rect width="600" height="190" fill="#0f1c2e"/><g stroke="#fff" stroke-opacity=".05">${g}</g>
+ <text x="30" y="46" font-family="Inter,sans-serif" font-size="11" font-weight="600" letter-spacing="2.4" fill="#b08436">ETAPA ${String(i+1).padStart(2,'0')}${s.sigla?' · '+esc(s.sigla):''}</text>
+ <text x="30" y="76" font-family="Inter,sans-serif" font-size="22" font-weight="650" fill="#fff">${esc(s.name)}</text>
+ ${lanes.map((c,k)=>`<rect x="30" y="${100+k*14}" width="${60+((k*37+i*23)%90)}" height="7" rx="2" fill="${c}" opacity=".9"/>`).join('')}
+ <path d="M200 103H240M200 145H240" stroke="#fff" stroke-opacity=".25" stroke-dasharray="3 4"/>
+ <circle cx="470" cy="95" r="58" fill="#fff" fill-opacity=".05" stroke="#b08436" stroke-width="1.5"/><circle cx="470" cy="95" r="74" fill="none" stroke="#fff" stroke-opacity=".1"/>
+ <svg x="440" y="65" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[s.icon]||ICONS.doc}</svg></svg>`;
+}
+
+/* ---------- fatia da etapa ---------- */
+function openSlice(id){
+ const b=B(),i=b.steps.findIndex(s=>s.id===id),s=b.steps[i];if(!s)return;
+ const over=+s.sla&&+s.dur>+s.sla;
+ let body=`<div class="hero">${s.img?`<img src="${s.img}" alt="">`:heroSVG(s,i)}</div>
+ <h3 class="dt">${s.mv?`<span class="star">${ic('star',18)}</span> `:''}${esc(s.name)}</h3>${s.desc?`<p class="desc">${esc(s.desc)}</p>`:''}
+ <div class="kv"><div><b>Tempo</b><span style="${over?'color:var(--red)':''}">${fmt(s.dur)}</span></div><div><b>Meta (SLA)</b>${fmt(s.sla)}</div><div><b>Emoção</b>${(+s.emo>0?'+':'')+(+s.emo||0)}</div></div>`;
+ LANES.forEach(L=>{
+  if(L.line){body+=`<div class="sline" style="color:${L.lc}">${L.line}</div>`;return}
+  if(L.special)return;
+  const its=items(L.id,s.id);
+  body+=`<div class="slice" style="--c:${L.c}"><h4>${L.name}</h4>${its.length?its.map(x=>itemHTML(x,L.id)).join(''):'<span class="hint">—</span>'}</div>`;
+ });
+ modal(`Etapa ${i+1} de ${b.steps.length}`,body,`<div style="display:flex;gap:6px"><button class="btn" id="sp" ${i===0?'disabled':''}>${ic('left')}</button><button class="btn" id="sn" ${i===b.steps.length-1?'disabled':''}>${ic('right')}</button></div><div class="r"><button class="btn primary" id="se">${ic('edit')} Editar etapa</button></div>`,sh=>{
+  sh.querySelector('#sp').onclick=()=>openSlice(b.steps[i-1].id);sh.querySelector('#sn').onclick=()=>openSlice(b.steps[i+1].id);
+  sh.querySelector('#se').onclick=()=>openStep(id);
+ },true);
+}
+function openStep(id,isNew){
+ const b=B(),i=b.steps.findIndex(s=>s.id===id),s=b.steps[i];let icon=s.icon||'doc',img=s.img||'';
+ modal(isNew?'Nova etapa':`Editar etapa ${i+1}`,`<div class="g2"><div class="f"><label>Nome da etapa *</label><input id="s_n" value="${esc(s.name)}"></div><div class="f"><label>Sigla</label><input id="s_g" value="${esc(s.sigla)}" style="text-transform:uppercase" placeholder="Ex.: CAD"></div></div>
+ <div class="f"><label>Descrição</label><textarea id="s_d">${esc(s.desc)}</textarea></div>
+ <div class="g3"><div class="f"><label>Tempo realizado (min)</label><input id="s_t" type="number" min="0" value="${+s.dur||0}"></div><div class="f"><label>Meta / SLA (min)</label><input id="s_s" type="number" min="0" value="${+s.sla||0}"></div><div class="f"><label>Emoção</label><select id="s_e">${[2,1,0,-1,-2].map(v=>`<option value="${v}" ${v===(+s.emo||0)?'selected':''}>${v>0?'+':''}${v}</option>`).join('')}</select></div></div>
+ <div class="f"><label style="display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--ink)"><input type="checkbox" id="s_m" ${s.mv?'checked':''} style="width:auto"> Momento da verdade (ponto decisivo para o cliente)</label></div>
+ <div class="f"><label>Imagem da etapa</label><div class="imgrow"><span id="s_prev">${img?`<img src="${img}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">`:''}</span><input type="file" id="s_img" accept="image/*" style="max-width:230px"><button class="btn ghost" id="s_rm" ${img?'':'hidden'}>Remover</button></div></div>
+ <div class="f"><label>Ícone (quando não há imagem)</label><div style="display:flex;flex-wrap:wrap;gap:5px" id="s_ic">${STEPICONS.map(n=>`<button type="button" class="btn" data-i="${n}" style="${n===icon?'border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)':''};padding:7px">${ic(n,18)}</button>`).join('')}</div></div>
+ <p class="hint">1 h = 60 min · 1 dia = 1.440 min</p>`,
+ `<div style="display:flex;gap:6px"><button class="btn" id="s_l" ${i===0?'disabled':''} title="Mover para a esquerda">${ic('left')}</button><button class="btn" id="s_r" ${i===b.steps.length-1?'disabled':''} title="Mover para a direita">${ic('right')}</button><button class="btn danger" id="s_x">${ic('trash')}</button></div><div class="r"><button class="btn primary" id="s_ok">Salvar</button></div>`,sh=>{
+  sh.querySelectorAll('#s_ic button').forEach(bt=>bt.onclick=()=>{icon=bt.dataset.i;sh.querySelectorAll('#s_ic button').forEach(x=>x.style.cssText='padding:7px');bt.style.cssText='padding:7px;border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)'});
+  sh.querySelector('#s_img').onchange=e=>{const fl=e.target.files[0];if(fl)resizeImg(fl,d=>{img=d;sh.querySelector('#s_prev').innerHTML=`<img src="${d}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">`;sh.querySelector('#s_rm').hidden=false})};
+  sh.querySelector('#s_rm').onclick=()=>{img='';sh.querySelector('#s_prev').innerHTML='';sh.querySelector('#s_rm').hidden=true};
+  const apply=()=>{const v=q=>sh.querySelector(q).value;Object.assign(s,{name:v('#s_n').trim()||s.name,sigla:v('#s_g').trim().toUpperCase(),desc:v('#s_d').trim(),dur:+v('#s_t')||0,sla:+v('#s_s')||0,emo:+v('#s_e'),mv:sh.querySelector('#s_m').checked,icon,img})};
+  const mv=d=>{apply();b.steps.splice(i,1);b.steps.splice(i+d,0,s);save();render();openStep(id)};
+  sh.querySelector('#s_l').onclick=()=>mv(-1);sh.querySelector('#s_r').onclick=()=>mv(1);
+  sh.querySelector('#s_ok').onclick=()=>{apply();save();render();openSlice(id)};
+  sh.querySelector('#s_x').onclick=()=>confirmBox(`Excluir a etapa “${esc(s.name)}” e tudo o que há nela?`,()=>{b.steps=b.steps.filter(x=>x.id!==id);Object.keys(b.cells).forEach(k=>{if(k.endsWith('|'+id))delete b.cells[k]});save();render()});
+  if(isNew)setTimeout(()=>sh.querySelector('#s_n').select(),50);
+ });
+}
+
+/* ---------- edição de célula ---------- */
+function openCell(key){
+ const[lid,sid]=key.split('|'),L=laneById(lid),b=B(),s=b.steps.find(x=>x.id===sid);
+ let its=JSON.parse(JSON.stringify(items(lid,sid)));if(!its.length)its=[{t:'',actor:'',sys:'',fail:false,wait:false,dec:false}];
+ const sysList=[...new Set(Object.values(b.cells).flat().map(i=>i.sys).filter(Boolean))].sort();
+ const draw=sh=>{
+  sh.querySelector('#il').innerHTML=its.map((x,k)=>`<div class="ied" style="--c:${L.c}" data-k="${k}">
+   <div class="f" style="margin-bottom:8px"><textarea data-f="t" placeholder="Descreva a ação, evidência ou sistema">${esc(x.t)}</textarea></div>
+   <div class="tools"><select data-f="actor" title="Ator"><option value="">— ator —</option>${S.actors.map(a=>`<option value="${a.id}" ${a.id===x.actor?'selected':''}>${esc(a.sigla)} · ${esc(a.name)}</option>`).join('')}</select>
+   <input type="text" data-f="sys" list="sysl" value="${esc(x.sys)}" placeholder="Sigla do sistema" style="width:130px;text-transform:uppercase">
+   <label class="ck"><input type="checkbox" data-f="fail" ${x.fail?'checked':''}> Falha</label><label class="ck"><input type="checkbox" data-f="wait" ${x.wait?'checked':''}> Espera</label><label class="ck"><input type="checkbox" data-f="dec" ${x.dec?'checked':''}> Decisão</label>
+   <span class="sp"></span><button type="button" data-m="-1" title="Subir">${ic('up',14)}</button><button type="button" data-m="1" title="Descer">${ic('down',14)}</button><button type="button" data-del title="Remover">${ic('trash',14)}</button></div></div>`).join('');
+  sh.querySelectorAll('.ied').forEach(el=>{const k=+el.dataset.k;
+   el.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=inp.onchange=()=>{its[k][inp.dataset.f]=inp.type==='checkbox'?inp.checked:inp.dataset.f==='sys'?inp.value.toUpperCase():inp.value});
+   el.querySelectorAll('[data-m]').forEach(bt=>bt.onclick=()=>{const j=k+ +bt.dataset.m;if(j<0||j>=its.length)return;[its[k],its[j]]=[its[j],its[k]];draw(sh)});
+   el.querySelector('[data-del]').onclick=()=>{its.splice(k,1);draw(sh)};
+  });
+ };
+ modal(`${L.name} · ${esc(s.name)}`,`<p class="hint" style="margin-top:0">${L.sub}. Marque falhas, esperas e decisões para alimentar o diagnóstico.</p><datalist id="sysl">${sysList.map(x=>`<option value="${esc(x)}">`).join('')}</datalist><div id="il"></div><button class="btn" id="iadd">${ic('plus')} Adicionar item</button>`,
+ `<div class="r"><button class="btn" id="ic">Cancelar</button><button class="btn primary" id="iok">Salvar</button></div>`,sh=>{
+  draw(sh);
+  sh.querySelector('#iadd').onclick=()=>{its.push({t:'',actor:'',sys:'',fail:false,wait:false,dec:false});draw(sh);const t=sh.querySelectorAll('.ied textarea');t[t.length-1].focus()};
+  sh.querySelector('#ic').onclick=close;
+  sh.querySelector('#iok').onclick=()=>{const clean=its.filter(x=>x.t.trim()||x.sys.trim());if(clean.length)b.cells[key]=clean.map(x=>({...x,t:x.t.trim(),sys:x.sys.trim()}));else delete b.cells[key];save();render();close();toast('Salvo')};
+  setTimeout(()=>{const t=sh.querySelector('.ied textarea');t&&t.focus()},50);
+ });
+}
+
+/* ---------- diagnóstico ---------- */
+function openDiag(){
+ const b=B(),st=stats(),out=[];const nm=id=>{const i=b.steps.findIndex(s=>s.id===id);return `${String(i+1).padStart(2,'0')} · ${b.steps[i].name}`};
+ st.over.forEach(s=>out.push(['Alta','#9b2c35',`Tempo acima do SLA em “${s.name}”`,`${fmt(s.dur)} realizado contra meta de ${fmt(s.sla)} (+${Math.round((s.dur/s.sla-1)*100)}%).`,s.id]));
+ b.steps.forEach(s=>{const f=['cli','front','back','sup'].flatMap(l=>items(l,s.id)).filter(i=>i.fail).length;if(f&&!items('opp',s.id).length)out.push(['Alta','#9b2c35',`${f} ponto(s) de falha sem oportunidade mapeada`,`Etapa ${nm(s.id)}: registre uma ação de melhoria na raia Oportunidades.`,s.id])});
+ b.steps.filter(s=>s.mv&&+s.emo<0).forEach(s=>out.push(['Alta','#9b2c35',`Momento da verdade com emoção negativa`,`Etapa ${nm(s.id)} é decisiva e hoje gera emoção ${s.emo}.`,s.id]));
+ b.steps.filter(s=>!s.mv&&+s.emo<=-1).forEach(s=>out.push(['Média','#b7791f',`Emoção negativa em “${s.name}”`,`Emoção ${s.emo}. Avalie esperas e falhas desta etapa.`,s.id]));
+ b.steps.forEach(s=>{const w=['cli','front','back','sup'].flatMap(l=>items(l,s.id)).filter(i=>i.wait).length;if(w>=2)out.push(['Média','#b7791f',`${w} esperas na mesma etapa`,`Etapa ${nm(s.id)}: candidata a paralelizar ou automatizar.`,s.id])});
+ b.steps.forEach(s=>{if(items('cli',s.id).length&&!items('back',s.id).length&&!items('sup',s.id).length)out.push(['Média','#b7791f','Ação do cliente sem suporte interno mapeado',`Etapa ${nm(s.id)}: preencha Backstage ou Processos de suporte.`,s.id])});
+ b.steps.forEach(s=>{if(items('front',s.id).some(i=>!i.actor))out.push(['Info','#1f4e8c','Frontstage sem ator definido',`Etapa ${nm(s.id)}: atribua um ator com sigla.`,s.id])});
+ const cnt={};st.its.forEach(i=>{if(i.sys)cnt[i.sys]=(cnt[i.sys]||0)+1});const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,3);
+ if(top.length)out.push(['Info','#2a7f8f','Sistemas mais críticos (mais citados)',top.map(([k,v])=>`${k} (${v})`).join(' · ')+' — priorize disponibilidade e monitoração.',null]);
+ const ac={};st.its.forEach(i=>{if(i.actor)ac[i.actor]=(ac[i.actor]||0)+1});const ta=Object.entries(ac).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>{const a=actorById(k);return a?`${a.sigla} (${v})`:''}).filter(Boolean);
+ if(ta.length)out.push(['Info','#2a7f8f','Atores com maior carga no fluxo',ta.join(' · '),null]);
+ const order={Alta:0,'Média':1,Info:2};out.sort((a,b)=>order[a[0]]-order[b[0]]);
+ const n=k=>out.filter(o=>o[0]===k).length;
+ modal('Diagnóstico do blueprint',`<div class="kv"><div><b>Alta</b><span style="color:#9b2c35">${n('Alta')}</span></div><div><b>Média</b><span style="color:#b7791f">${n('Média')}</span></div><div><b>Informativo</b>${n('Info')}</div></div>`+
+  (out.length?out.map(([sv,c,t,d,sid])=>`<div class="ins" style="--c:${c}" ${sid?`data-s="${sid}"`:''}><span class="sv">${sv}</span><div class="tx">${esc(t)}<small>${esc(d)}</small></div></div>`).join(''):'<p class="hint">Nenhum alerta — blueprint consistente.</p>'),'',sh=>{
+  sh.querySelectorAll('.ins[data-s]').forEach(x=>x.onclick=()=>openSlice(x.dataset.s));
+ },true);
+}
+
+/* ---------- atores ---------- */
+function openActors(){
+ const draw=sh=>{sh.querySelector('#al').innerHTML=S.actors.length?S.actors.map((a,k)=>`<div class="ai" data-k="${k}"><input data-f="sigla" value="${esc(a.sigla)}" style="width:96px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace" placeholder="SIGLA"><input data-f="name" value="${esc(a.name)}" style="flex:1;min-width:120px" placeholder="Nome"><select data-f="type">${['Cliente','Interno','Parceiro','Sistema'].map(t=>`<option ${t===a.type?'selected':''}>${t}</option>`).join('')}</select><button data-del title="Remover">${ic('trash',15)}</button></div>`).join(''):'<div class="ai hint">Nenhum ator.</div>';
+  sh.querySelectorAll('.ai[data-k]').forEach(el=>{const a=S.actors[+el.dataset.k];el.querySelectorAll('[data-f]').forEach(inp=>inp.oninput=inp.onchange=()=>{a[inp.dataset.f]=inp.dataset.f==='sigla'?inp.value.toUpperCase():inp.value});el.querySelector('[data-del]').onclick=()=>{S.actors.splice(+el.dataset.k,1);S.bps.forEach(bp=>Object.values(bp.cells).flat().forEach(i=>{if(i.actor===a.id)i.actor=''}));draw(sh)}})};
+ modal('Atores e siglas',`<p class="hint" style="margin-top:0">Atores são compartilhados entre todos os blueprints. A sigla aparece em cada item da matriz.</p><div class="alist" id="al"></div><button class="btn" id="aadd">${ic('plus')} Novo ator</button>`,`<div class="r"><button class="btn primary" id="aok">Concluir</button></div>`,sh=>{
+  draw(sh);sh.querySelector('#aadd').onclick=()=>{S.actors.push({id:'a'+uid(),name:'',sigla:'',type:'Interno'});draw(sh);const ins=sh.querySelectorAll('.ai input[data-f="sigla"]');ins[ins.length-1].focus()};
+  sh.querySelector('#aok').onclick=()=>{S.actors=S.actors.filter(a=>a.name.trim()||a.sigla.trim());save();render();close()};
+ });
+}
+/* ---------- blueprints ---------- */
+function openBpInfo(){
+ const b=B();
+ modal('Dados do blueprint',`<div class="g2"><div class="f"><label>Nome *</label><input id="b_n" value="${esc(b.name)}"></div><div class="f"><label>Sigla</label><input id="b_g" value="${esc(b.sigla)}" style="text-transform:uppercase"></div></div>
+ <div class="g2"><div class="f"><label>Persona / tipo de cliente</label><input id="b_p" value="${esc(b.persona)}"></div><div class="f"><label>Canal principal</label><input id="b_c" value="${esc(b.channel)}"></div></div>
+ <div class="f"><label>Objetivo do processo</label><input id="b_o" value="${esc(b.goal)}"></div>`,
+ `${S.bps.length>1?`<button class="btn danger" id="b_x">${ic('trash')} Excluir blueprint</button>`:''}<div class="r"><button class="btn primary" id="b_ok">Salvar</button></div>`,sh=>{
+  sh.querySelector('#b_ok').onclick=()=>{const v=q=>sh.querySelector(q).value.trim();Object.assign(b,{name:v('#b_n')||b.name,sigla:v('#b_g').toUpperCase(),persona:v('#b_p'),channel:v('#b_c'),goal:v('#b_o')});save();render();close()};
+  const x=sh.querySelector('#b_x');if(x)x.onclick=()=>confirmBox(`Excluir o blueprint “${esc(b.name)}”?`,()=>{S.bps=S.bps.filter(z=>z.id!==b.id);S.current=S.bps[0].id;save();render()});
+ });
+}
+$('#bpSel').onchange=e=>{S.current=e.target.value;save();render()};
+$('#newBp').onclick=()=>{const names=['Descoberta','Contratação','Ativação','Uso','Suporte'];const b={id:'b'+uid(),name:'Novo blueprint',sigla:'',persona:'',goal:'',channel:'',steps:names.map((n,i)=>({id:'p'+uid(),name:n,sigla:'',icon:STEPICONS[i],dur:0,sla:0,emo:0,mv:false,desc:'',img:''})),cells:{}};S.bps.push(b);S.current=b.id;save();render();openBpInfo()};
+$('#dupBp').onclick=()=>{const b=JSON.parse(JSON.stringify(B()));b.id='b'+uid();b.name+=' (cópia)';S.bps.push(b);S.current=b.id;save();render();toast('Blueprint duplicado')};
+$('#addStep').onclick=()=>{const s={id:'p'+uid(),name:'Nova etapa',sigla:'',icon:'doc',dur:0,sla:0,emo:0,mv:false,desc:'',img:''};B().steps.push(s);save();render();openStep(s.id,true);setTimeout(()=>$('#scroller').scrollLeft=99999,60)};
+$('#diagBtn').onclick=openDiag;$('#actorsBtn').onclick=openActors;
+$('#exportBtn').onclick=()=>{const js=JSON.stringify(S,null,1);modal('Exportar',`<p class="hint" style="margin-top:0">Copie o JSON abaixo para guardar ou levar a outro navegador. Use “Importar” para restaurar.</p><div class="f"><textarea id="x_t" readonly style="min-height:260px;font-family:'IBM Plex Mono',monospace;font-size:11.5px">${esc(js)}</textarea></div>`,`<div class="r"><button class="btn primary" id="x_c">${ic('copy')} Copiar</button></div>`,sh=>{sh.querySelector('#x_c').onclick=async()=>{try{await navigator.clipboard.writeText(js);toast('Copiado!')}catch(e){sh.querySelector('#x_t').select();toast('Selecionado — use Ctrl+C')}}})};
+$('#importBtn').onclick=()=>modal('Importar',`<div class="f"><label>Cole o JSON exportado</label><textarea id="i_t" style="min-height:200px;font-family:'IBM Plex Mono',monospace;font-size:11.5px"></textarea></div><div class="f"><label>…ou escolha um arquivo .json</label><input type="file" id="i_f" accept=".json,application/json"></div>`,`<div class="r"><button class="btn" id="i_c">Cancelar</button><button class="btn primary" id="i_ok">Carregar</button></div>`,sh=>{
+ sh.querySelector('#i_c').onclick=close;sh.querySelector('#i_f').onchange=e=>{const f=e.target.files[0];if(f)f.text().then(t=>sh.querySelector('#i_t').value=t)};
+ sh.querySelector('#i_ok').onclick=()=>{try{const d=JSON.parse(sh.querySelector('#i_t').value);if(!Array.isArray(d.bps)||!d.bps.length)throw 0;d.actors=d.actors||[];d.current=d.current||d.bps[0].id;S=d;save();render();close();toast('Importado')}catch(e){toast('JSON inválido')}};
+});
+$('#resetBtn').onclick=()=>modal('Restaurar exemplo','<p class="desc">Substitui todos os blueprints pelo exemplo inicial. Exporte antes se quiser guardar o que fez.</p>',`<div class="r"><button class="btn" id="z_c">Cancelar</button><button class="btn primary" id="z_ok">Restaurar</button></div>`,sh=>{sh.querySelector('#z_c').onclick=close;sh.querySelector('#z_ok').onclick=()=>{S=sample();save();render();close()}});
+$('#addStep').innerHTML=`${ic('plus')} Etapa`;$('#diagBtn').innerHTML=`${ic('pulse')} Diagnóstico`;$('#actorsBtn').innerHTML=`${ic('users')} Atores`;
+$('#newBp').innerHTML=`${ic('layers')} Novo`;$('#dupBp').innerHTML=`${ic('copy')} Duplicar`;$('#exportBtn').innerHTML=`${ic('copy')} Exportar`;$('#importBtn').innerHTML=`${ic('upload')} Importar`;$('#resetBtn').innerHTML=ic('reset');
+render();
+
+root.__render=render;
+
+})();
+/* ===== alternância ===== */
+function show(k){
+ if(!APPS[k])k='mapa';
+ document.querySelectorAll('.app').forEach(a=>a.classList.toggle('on',a.id==='app-'+k));
+ document.querySelectorAll('.switch button').forEach(b=>{b.classList.toggle('on',b.dataset.app===k);b.setAttribute('aria-selected',b.dataset.app===k)});
+ try{localStorage.setItem('ferramenta-ativa',k)}catch(e){}
+ try{if(location.hash!=='#'+k)history.replaceState(null,'','#'+k)}catch(e){}
+ requestAnimationFrame(()=>APPS[k].__render&&APPS[k].__render());
+}
+document.querySelectorAll('.switch button').forEach(b=>b.onclick=()=>show(b.dataset.app));
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(APPS[h])show(h)});
+let start=location.hash.slice(1);if(!APPS[start]){try{start=localStorage.getItem('ferramenta-ativa')||'mapa'}catch(e){start='mapa'}}
+show(start);
+</script>
+</body>
+</html>
